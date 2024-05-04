@@ -1,0 +1,22 @@
+Package: PAM50subtyping
+Type: Package
+Title: Methods for breast cancer PAM50 subtyping
+Description: Collection of methods for breast cancer PAM50 subtyping
+Encoding: UTF-8
+Version: 0.0.1
+Authors@R: c(
+    person("Yang", "Qiao", role=c("aut", "cre"), email="qiao.yang@ki.se") 
+  )
+biocViews:
+Depends:
+    R (>= 4.1),
+Imports:
+    dplyr (>= 0.7),
+    magrittr (>= 1.5),
+    stringr,
+    rlang,
+    genefu
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+LazyData: true
+RoxygenNote: 7.2.3
