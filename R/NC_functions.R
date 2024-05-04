@@ -1152,181 +1152,8 @@ visualition = function(y,out,short ){
 #' Function for predicting PAM50 intrinsic subtypes and calculation of proliferation 
 #' 
 
-#### function to run subtypePrediction_distributed.R ####
 
-subtypePrediction_distributed = function(mat, df.al,calibration = "None",internal = NA,external=NA, short="PAM50", hasClinical = FALSE,vis = FALSE){
-  
-  
-  #calibrationFile<- paste(	Dir,"mediansPerDataset_15Nov17.txt",sep="/")#mediansPerDataset_v2.txt
-  #trainCentroids<- paste(paramDir,"pam50_centroids.txt",sep="/")#_PNmdfd
-  #trainFile<- paste(paramDir,"220arrays_nonUBCcommon+12normal_50g.txt",sep="/")
-  proliferationGenes<-c("CCNB1","UBE2C","BIRC5","KNTC2","CDC20","PTTG1","RRM2","MKI67","TYMS","CEP55","CDCA1")
-  proliferationGenes.prosigna = c("ANLN", "CEP55", "ORC6L", "CCNE1", "EXO1", "PTTG1", "CDC20", "KIF2C", "RRM2", "CDC6", "KNTC2", "TYMS", "CDCA1", "MELK", "UBE2C", "CENPF", "MKI67", "UBE2T")
-  stdArray<-T # just for visualization, and only set to F if many missing genes
-  #predFiles<- paste(inputDir,inputFile,sep="/")
-  
-
-  inputDir = paste( getwd(), "Call_wth_IHCMd", sep = "/") 
-  
-  ###
-  # some constants
-  ###
-  
-  # for subtype only model
-  glthreshold<- -0.15
-  ghthreshold<-  0.1
-  
-  # for subtype + proliferation model
-  gplthreshold<- -0.25
-  gphthreshold<-  0.1
-  
-  # for combined model
-  clthreshold<- -0.1
-  chthreshold<-  0.2
-  
-  # for combined + proliferation model
-  cplthreshold<- -0.2
-  cphthreshold<-  0.2
-  
-  # for combined + proliferation model + prosigna without node status
-  cplthreshold.prosigna = 40
-  cphthreshold.prosigna = 60
-  
-  # for combined + proliferation model + prosigna with node status
-  ## first 4 or more nodes would be assigned as high-risk
-  cplthreshold.prosigna.NODE = 15
-  cphthreshold.prosigna.NODE = 40
-  
-  
-  # begin analyses
-
-  # load the published centroids for classifcation
-  pamout.centroids = PCA_PAM50$pamout.centroids #pam50_centroids.txt
-  
-  pdfname1<-paste(inputDir,paste("predictionScores_pam50RankCorrelation_1_",short,".pdf",sep=""),sep="/")
-  pdfname2<-paste(inputDir,paste("predictionScores_pam50RankCorrelation_2_",short,".pdf",sep=""),sep="/")
-  clustername<-paste(inputDir,paste(short,"_PAM50_normalized_heatmap",sep=""),sep="/")
-  outFile<- paste(inputDir,paste(short,"_pam50scores.txt",sep=""),sep="/")
-  
-  # read in the data file
-  if(hasClinical){
-    xhr=2
-  }else{
-    xhr=1
-  }
-  #y<-readarray(predFiles,hr=xhr,method=collapseMethod,impute=F) ## Test.matrix
-  y =  readarray(mat)
-  # normalization
-  y$xd = docalibration( y$xd, df.al, calibration)
-  num.missing<- NA
-  
-  if(stdArray){
-    y$xd<-standardize(y$xd)
-  }
-  
-  erScore<-as.vector(t(y$xd["ESR1",]))
-  her2Score<-as.vector(t(y$xd["ERBB2",]))
-  
-  # assign the subtype scores and calculate the proliferation score
-  this.proliferationGenes<-dimnames(y$xd)[[1]] %in% proliferationGenes
-  
-  prolifScore<-apply(y$xd[this.proliferationGenes,],2,mean,na.rm=T)
-  
-  out<-sspPredict(pamout.centroids,classes="",y$xd,std=F,distm="spearman",centroids=T)
-  out$distances<- -1*out$distances
-  
-  call.conf<-c()
-  for(j in 1:length(out$predictions)){
-    call.conf[j]<- 1-cor.test(out$testData[,j],out$centroids[,which(colnames(pamout.centroids)==out$predictions[j])],method="spearman")$p.value
-  }
-  call.conf<-round(call.conf,2)
-  
-  # calculate the risk scores
-  genomic <- 0.04210193*out$distances[,1] + 0.12466938*out$distances[,2] + -0.35235561*out$distances[,3] + 0.14213283*out$distances[,4]
-  ## ?? where weights ?
-  genomicWprolif <- -0.0009299747*out$distances[,1] + 0.0692289192*out$distances[,2] + -0.0951505484*out$distances[,3] +  0.0493487685*out$distances[,4] + 0.3385116381*prolifScore
-  if(hasClinical){
-    xT<-as.numeric(as.vector(y$classes$T))
-    combined <- 0.0442770*out$distances[,1] + 0.1170297*out$distances[,2] + -0.2608388*out$distances[,3] + 0.1055908*out$distances[,4] + 0.1813751*xT
-    combinedWprolif <- -0.009383416*out$distances[,1] +  0.073725503*out$distances[,2] + -0.090436516*out$distances[,3] + 0.053013865*out$distances[,4] + 0.131605960*xT + 0.327259375*prolifScore
-  }
-  
-  # threshold the risk score
-  griskgroups<-genomic
-  griskgroups[genomic>ghthreshold]<-"high"
-  griskgroups[genomic>glthreshold & genomic<ghthreshold]<-"med"
-  griskgroups[genomic<glthreshold]<-"low"
-  gpriskgroups<-genomicWprolif
-  gpriskgroups[genomicWprolif>gphthreshold]<-"high"
-  gpriskgroups[genomicWprolif>gplthreshold & genomicWprolif<gphthreshold]<-"med"
-  gpriskgroups[genomicWprolif<gplthreshold]<-"low"
-  
-  genomic<- 100* (genomic + 0.35 ) / 0.85
-  genomicWprolif<- 100* (genomicWprolif + 0.35 ) / 0.85
-  
-
-  ## calculate risk score for Prosigna
-  this.proliferationGenes.prosigna <-dimnames(y$xd)[[1]] %in% proliferationGenes.prosigna
-  
-  prolifScore.prosigna <- apply(y$xd[this.proliferationGenes.prosigna,],2,mean,na.rm=T)
-  
-  # if(hasClinical){ ## Tumor size + node status
-  #   xT<-as.numeric(as.vector(y$classes$T))
-  #   combinedWprolif.prosigna = 54.7690 * (-0.0067 * out$distances[,1] + 0.4317*out$distances[,2] - 0.3172*out$distances[,3] + 0.4894*out$distances[,4] + 0.1981*prolifScore.prosigna + 0.1133*xT + 0.8826)
-  #   
-  # }
-  # 
-  
-  
-  # make output 
-  if(hasClinical){
-    criskgroups<-combined
-    criskgroups[combined>chthreshold]<-"high"
-    criskgroups[combined>clthreshold & combined<chthreshold]<-"med"
-    criskgroups[combined<clthreshold]<-"low"
-    cpriskgroups<-combinedWprolif
-    cpriskgroups[combinedWprolif>cphthreshold]<-"high"
-    cpriskgroups[combinedWprolif>cplthreshold & combinedWprolif<cphthreshold]<-"med"
-    cpriskgroups[combinedWprolif<cplthreshold]<-"low"
-    
-    
-    combined<- 100* (combined + 0.35 ) / 0.85
-    combinedWprolif<- 100* (combinedWprolif + 0.35 ) / 0.85
-    
-    outtable<-cbind(out$distances, out$predictions, call.conf, genomic, griskgroups, prolifScore, genomicWprolif, gpriskgroups, combined, criskgroups, combinedWprolif, cpriskgroups, erScore, her2Score)
-    dimnames(outtable)[[2]]<-c("Basal","Her2","LumA","LumB","Normal","Call","Confidence",
-                               "ROR-S (Subtype Only)","ROR-S Group (Subtype Only)","Proliferation Score", 
-                               "ROR-P (Subtype + Proliferation)","ROR-P Group (Subtype + Proliferation)",
-                               "ROR-C (Subtype + Clinical)","ROR-C Group (Subtype + Clinical)",
-                               "ROR-PC (Subtype + Clinical + Proliferation)","ROR-PC Group (Subtype + Clinical + Proliferation)",
-                               
-                               "ER","Her2")
-  }else{
-    outtable<-cbind(out$distances, out$predictions, call.conf, genomic, griskgroups, prolifScore, genomicWprolif, gpriskgroups, erScore, her2Score)
-    dimnames(outtable)[[2]]<-c("Basal","Her2","LumA","LumB","Normal","Call","Confidence",
-                               "ROR-S (Subtype Only)","ROR-S Group (Subtype Only)","Proliferation Score", 
-                               "ROR-P (Subtype + Proliferation)","ROR-P Group (Subtype + Proliferation)",
-                               "ER","Her2")
-  }
-
-  
-  
-  ## if make plots for evaluation
-  if(vis == TRUE){
-    visualition(y, out, short)
-  }
-
-  
-  return( list(outtable = as.data.frame(outtable), out=out ))
-}
-
-#### functions to run subtypePrediction_functions.R ####
-
-
-####function to make calls with external medians
-####
-
-
+####function to make calls using near-centroid strategy #### 
 #' Function for calling PAM50 subtypes by parker based methods
 #' Here, we integrated parker-based methods and genefu PAM50 model
 #' @param mat gene expression matrix, log of normalized
@@ -1464,13 +1291,15 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   df.al = merge(fl.mdn, df.mdns , by = "X")
   rownames(df.al) = df.al$X
   df.al = df.al[,-1]
-
-
+  
+  ## centroids
+  centroids = IBC.parker$centroid #pam50_centroids.txt
+  
 
   ## normalization
   mat = docalibration( mat, df.al, calibration,internal)
   
-  out = sspPredict( IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+  out = sspPredict( centroids, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
   
   if(hasClinical) {
     out$distances.prosigna =  -1 * out$distances.prosigna
@@ -1514,9 +1343,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iterative = 100, ratio = 54/64,
   
   
   # load the published centroids for classifcation
-  pamout.centroids = PCA_PAM50$pamout.centroids #pam50_centroids.txt
   centroids = IBC.parker$centroid #pam50_centroids.txt
-  
   
   ## preprocess the input matrix
   ### get ER- samples
@@ -1600,9 +1427,9 @@ makeCalls.ihc.iterative = function( mat, df.cln, iterative = 100, ratio = 54/64,
   ## group by ROR
   ## save all scores
   if(hasClinical ) {
-    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = pamout.centroids )
+    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = centroids )
   }else{
-    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, centroids = pamout.centroids )
+    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, centroids = centroids )
   }
   
   ##calculate and grouping
@@ -1894,10 +1721,10 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
   # s = "ER"
   
   # ## test data
-  # mat = data_input$x_parker
-  # df.cln = clinic
-  # s = "ER"
-  # hasClinical =T
+  mat = data_input$x_parker
+  df.cln = clinic.scanb
+  s = "ER"
+  hasClinical =T
 
   gene.sigma = IBC.parker$ssBC.subgroupQuantile
   
