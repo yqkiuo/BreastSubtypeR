@@ -1721,10 +1721,10 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
   # s = "ER"
   
   # ## test data
-  mat = data_input$x_parker
-  df.cln = clinic.scanb
-  s = "ER"
-  hasClinical =T
+  # mat = data_input$x_parker
+  # df.cln = clinic.scanb
+  # s = "ER"
+  # hasClinical =T
 
   gene.sigma = IBC.parker$ssBC.subgroupQuantile
   
