@@ -214,7 +214,7 @@ domapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbos
     ##AIMS
     missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
     if( length(missing_ID_AIMS) == 0 & verbose ){ 
-      print("AMIS-based signatures are covered")
+      print("AIMS-based signatures are covered")
     } else if(verbose) {
       print("These signatures are missing for AIMS-based methods :")
       print(missing_ID_AIMS)
@@ -276,7 +276,7 @@ domapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbos
     ##AIMS
     missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
     if( length(missing_ID_AIMS) == 0 & verbose ){ 
-      print("AMIS-based signatures are covered")
+      print("AIMS-based signatures are covered")
     } else if(verbose) {
       print("These signatures are missing for AIMS-based methods :")
       print(missing_ID_AIMS)
@@ -291,9 +291,9 @@ domapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbos
     rownames(x_parker) = IBC.parker$genes.sig50$Symbol[which( rownames(x_parker) %in% IBC.parker$genes.sig50$EntrezGene.ID ) ]
 
     ## get matrix for AIMS (entrezID as colnames)
-    x_AMIS = x[rownames(x) %in% as.character( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID) ,]
+    x_AIMS = x[rownames(x) %in% as.character( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID) ,]
   
-    result = list(x_parker = x_parker,x_AMIS = x_AMIS )
+    result = list(x_parker = x_parker,x_AIMS = x_AIMS )
   
     return(result)
   }
@@ -686,7 +686,7 @@ sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="e
   
   # ## test data
   # x = IBC.parker$centroid
-  # y = mat
+  # y = mat.q
   # classes=""
   # nGenes=""
   # priors="equal"
@@ -761,6 +761,7 @@ sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="e
     classLevels<-dimnames(centroids)[[2]]
   }
   
+
   distances<-matrix(ncol=nClasses,nrow=dim(tdataMatrix)[2])
   for(j in 1:nClasses){
     if(distm=="euclidean"){
@@ -1179,9 +1180,9 @@ makeCalls.parker = function(mat,df.cln, calibration = "None", internal = NA,exte
   # hasClinical = FALSE
   # 
   # mat = data_input$x_parker
-  # df.cln = clinic
+  # df.cln = clinic.oslo
   # calibration = "Internal"
-  # internal = "meanCtr"
+  # internal = "qCtr"
   # external= NA
   # medians = NA
   # hasClinical = T

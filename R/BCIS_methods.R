@@ -360,17 +360,17 @@ PAM50_Ensembl = function(data_input, phenodata, POP = TRUE, methods = NA, hasCli
       return(PAM50_ssBC( data_input$x_parker, phenodata, s= "ER_JAMA", hasClinical = hasClinical ))
     }
     
-    if(method == "AMIS"){
+    if(method == "AIMS"){
       print(paste0(method," is running!"))
       data("genes.signature")
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
-      return(PAM50_AIMS(data_input$x_AMIS[ genes,], genes ))
+      return(PAM50_AIMS(data_input$x_AIMS[ genes,], genes ))
     }
     
     if(method == "sspbc"){
       print(paste0(method," is running!"))
-      return(PAM50_sspbc( gene_expression_matrix = as.matrix(data_input$x_AMIS) ))
+      return(PAM50_sspbc( gene_expression_matrix = as.matrix(data_input$x_AIMS) ))
     }
   
     
