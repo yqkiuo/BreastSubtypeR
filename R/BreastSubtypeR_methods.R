@@ -1,10 +1,9 @@
-#' Collection of breast cancer PAM50 subtyping methods
+#' Collection of breast cancer intrinsic subtyping methods
 #' 
-#' @title Collection of breast cancer PAM50 subtyping methods
-#' @description PAM50subtyping is a R package that integrates the access to PAM50 subtyping methods and 
-#' visualization ...
+#' @title Collection of breast cancer intrinsic subtyping methods
+#' @description BreastSubtypeR is an R package that integrates the access to intrinsic subtyping methods. 
 #' 
-#' @name PAM50subtyping
+#' @name BreastSubtypeR
 #' 
 #' @docType package
 #' 
@@ -21,19 +20,19 @@ NULL
 #' Mapping
 #' @name Mapping
 #' @description
-#' function for mapping ID and supplementing missing data if necessary
-#' @param x Gene expression matrix
-#' @param y Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
-#' @param method Method to deduplicated probes for microarray or RNAseq. Please select IQR for Affy and select mean for Agilent)
+#' function for mapping gene ID 
+#' @param gene_expression_matrix Gene expression matrix
+#' @param featuredata Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
+#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy,  "mean" for Agilent and "max" for RNAseq)
 #' @param impute Logic. Please specify if there are NA data adn want keep them
 #' @param verbose Logic. 
 #' @export
 
-Mapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE, ...){
+Mapping = function(gene_expression_matrix ,featuredata, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE, ...){
   
   arguments = rlang::dots_list(
-    x = x,
-    y = y,
+    x = gene_expression_matrix,
+    y = featuredata,
     method = method,
     mapping = mapping,
     impute = impute,
@@ -48,10 +47,10 @@ Mapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbose 
 }
 
 
-#' PAM50_parker
-#' @name PAM50_parker
+#' BS_parker
+#' @name BS_parker
 #' @description
-#' This calls parker-based PAM50 subtyping methods, including None, medianCtr, meanCtr, qCtr, Given.mdns, or chosen platform to do calibration. 
+#' This calls parker-based intrinsic subtyping methods. The methods for gene calibration include "None", "medianCtr", "meanCtr", "qCtr", "Given.mdns", or chosen platform. 
 #' 
 #' 
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column, log of normalized
@@ -63,10 +62,10 @@ Mapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbose 
 #' @param medians If you specify "external" parameter as "Given.mdns", you should input matrix/table, 50 signatures in the first column and "Given.mdns" values in the second column.
 #' @param do.mapping Logical. If it is microarray data or expression matrix at transcript level, please specify TRUE (this will call dochecking() function and run mapping step )
 #' @param hasClinical Logical. Please specify if you prepared clinical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The subtypes estimated by parker-based PAM50 subtyping
+#' @return The subtypes estimated by parker-based subtyping
 #' @export
 
-PAM50_parker = function(gene_expression_matrix, phenodata, calibration = "None", internal = NA, external=NA, medians = NA, hasClinical = FALSE, ...){
+BS_parker = function(gene_expression_matrix, phenodata, calibration = "None", internal = NA, external=NA, medians = NA, hasClinical = FALSE, ...){
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -86,10 +85,10 @@ PAM50_parker = function(gene_expression_matrix, phenodata, calibration = "None",
   
 }
 
-#' PAM50_IHC
-#' @name PAM50_IHC
+#' BS_IHC
+#' @name BS_IHC
 #' @description
-#' This predicts intrinsic breast cancer subtypes with ER balanced subset for gene centering
+#' This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
 #' @param featuredata Annotate genes
 #' @param phenodata Clinical information table, with IHC column
@@ -97,7 +96,7 @@ PAM50_parker = function(gene_expression_matrix, phenodata, calibration = "None",
 #' @return The intrinsic subtype, confidential level, percentages.
 #' @export
 
-PAM50_IHC = function(gene_expression_matrix, phenodata, hasClinical = FALSE, ...){
+BS_IHC = function(gene_expression_matrix, phenodata, hasClinical = FALSE, ...){
 
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -114,20 +113,20 @@ PAM50_IHC = function(gene_expression_matrix, phenodata, hasClinical = FALSE, ...
 }
 
 
-#' PAM50_IHC.itr
-#' @name PAM50_IHC.itr
+#' BS_IHC.itr
+#' @name BS_IHC.itr
 #' @description
-#' This predicts intrinsic breast cancer subtypes with ER balanced subset for gene centering
+#' This predicts breast cancer intrinsic subtypes with ER subset for gene centering. It supports the selection of ER subset ratio. 
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
 #' @param featuredata Annotate genes
 #' @param phenodata Clinical information table, with IHC column
-#' @param iterative times to do iterative ER balanced procedure with certain ratio
-#' @param ratio The options are either 1:1 or 54(ER+):64(ER-) (change it as default). The latter is ER ratio used for UNC230 train cohort
-#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The intrinsic subtype, confidential level, percentages.
+#' @param iterative Times to do iterative ER balanced procedure with certain ratio
+#' @param ratio The options are either 1:1 or 54(ER+):64(ER-) (default). The latter wass ER ratio used for UNC230 train cohort.
+#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as "T" column, lymphatic node status as "NODE" column. 
+#' @return The intrinsic subtypes, confidential level, percentages.
 #' @export
 
-PAM50_IHC.itr = function(gene_expression_matrix, phenodata, iterative = 100, ratio = 54/64, hasClinical = FALSE, ...){
+BS_IHC.itr = function(gene_expression_matrix, phenodata, iterative = 100, ratio = 54/64, hasClinical = FALSE, ...){
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -148,10 +147,10 @@ PAM50_IHC.itr = function(gene_expression_matrix, phenodata, iterative = 100, rat
 
 ## PCA-PAM50
 
-#' PAM50_PCA
-#' @name PAM50_PCA-PAM50
+#' BS_PCAPAM50
+#' @name BS_PCAPAM50
 #' @description
-#' This calls PCA-PAM50 (Raj-Kumar, PK.) to do PAM50 subtyping. 
+#' This calls PCA-PAM50 (Raj-Kumar, PK.) to do intrinsic subtyping. 
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
 #' @param featuredata Annotate genes
 #' @param phenodata Clinical information table, with ER information or IHC column
@@ -159,7 +158,7 @@ PAM50_IHC.itr = function(gene_expression_matrix, phenodata, iterative = 100, rat
 #' @return The intrinsic subtypes estimated by PCA-PAM50
 #' @export
 
-PAM50_PCA_PAM50 = function(gene_expression_matrix, phenodata, hasClinical =FALSE){
+BS_PCAPAM50 = function(gene_expression_matrix, phenodata, hasClinical =FALSE){
   
   # ## test data
   # gene_expression_matrix = data_input$x_parker
@@ -178,9 +177,9 @@ PAM50_PCA_PAM50 = function(gene_expression_matrix, phenodata, hasClinical =FALSE
   
   
   ## second step
-  df.pc1pam = data.frame(PatientID=res_PC1IHC$Int.sbs$PatientID, PAM50=res_PC1IHC$Int.sbs$Int.SBS.PC1ihc,
-                         IHC=res_PC1IHC$Int.sbs$IHC,ER = phenodata[res_PC1IHC$Int.sbs$PatientID,]$ER, 
-                         T = phenodata[res_PC1IHC$Int.sbs$PatientID,]$T, NODE= phenodata[res_PC1IHC$Int.sbs$PatientID,]$NODE,
+  df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS.PC1ihc,
+                         IHC=res_PC1IHC$BS.all$IHC,ER = phenodata[res_PC1IHC$BS.all$PatientID,]$ER, 
+                         T = phenodata[res_PC1IHC$BS.all$PatientID,]$T, NODE= phenodata[res_PC1IHC$BS.all$PatientID,]$NODE,
                          stringsAsFactors=F)
   
   #View(df.pc1pam)
@@ -192,19 +191,19 @@ PAM50_PCA_PAM50 = function(gene_expression_matrix, phenodata, hasClinical =FALSE
   )
   
   call = rlang::call2(makeCalls.v1PAM, !!!arguments2)
-  res_PCA_PAM50 = eval(call)
+  res_PCAPAM50 = eval(call)
 
   
-  return(res_PCA_PAM50)
+  return(res_PCAPAM50)
   
 }
 
 
 #' 
-#' PAM50_ssBC
-#' @name PAM50_ssBC
+#' BS_ssBC
+#' @name BS_ssBC
 #' @description
-#' This calls ssBC to do PAM50 subtyping. 
+#' This calls ssBC to do intrinsic subtyping. 
 #' It is better to group cohorts by ER+/- or TN/nTN. 
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
 #' @param featuredata Annotate genes
@@ -216,7 +215,7 @@ PAM50_PCA_PAM50 = function(gene_expression_matrix, phenodata, hasClinical =FALSE
 
 ## only ER and TN
 
-PAM50_ssBC = function(gene_expression_matrix, phenodata, s , hasClinical =FALSE, ...) {
+BS_ssBC = function(gene_expression_matrix, phenodata, s , hasClinical =FALSE, ...) {
 
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -233,10 +232,10 @@ PAM50_ssBC = function(gene_expression_matrix, phenodata, s , hasClinical =FALSE,
 }
 
 
-#' PAM50_AIMS
-#' @name PAM50_AIMS
+#' BS_AIMS
+#' @name BS_AIMS
 #' @description
-#' This calls AIMS to do PAM50 subtyping. 
+#' This calls AIMS to do intrinsic subtyping. 
 #' 
 #' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
 #' @param featuredata Annotate genes
@@ -246,7 +245,7 @@ PAM50_ssBC = function(gene_expression_matrix, phenodata, s , hasClinical =FALSE,
 
 ## need to match EntrezID here
 
-PAM50_AIMS = function(gene_expression_matrix,EntrezID ,...){
+BS_AIMS = function(gene_expression_matrix,EntrezID ,...){
   
   require(AIMS)
   
@@ -256,26 +255,26 @@ PAM50_AIMS = function(gene_expression_matrix,EntrezID ,...){
   )
   
   call = rlang::call2(AIMS::applyAIMS, !!!arguments)
-  res_PAM50_AIMS = eval(call)
+  res_AIMS = eval(call)
 
 }
 
 
-#' PAM50_sspbc
-#' @name PAM50_sspbc
+#' BS_sspbc
+#' @name BS_sspbc
 #' @description
-#' This calls sspbc to do PAM50 subtyping. 
+#' This calls sspbc to do intrinsic subtyping. 
 #' 
 #' @param gene_expression_matrix Gene expression matrix, gene in row sample in column
 #' @return The subtypes estimated by sspbc
 #' @export
 
-PAM50_sspbc = function(gene_expression_matrix, ...){
+BS_sspbc = function(gene_expression_matrix, ...){
   
   ## check dependencies
   ## must do
   if (!requireNamespace("sspbc", quietly = TRUE)) {
-    sspbc_1.0.tar.gz = system.file("extdata", "sspbc","sspbc_1.0.tar.gz", package = "PAM50subtyping", mustWork = TRUE)
+    sspbc_1.0.tar.gz = system.file("extdata", "sspbc","sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
     install.packages(sspbc_1.0.tar.gz, repos = NULL, type="source")
     if (!requireNamespace("sspbc", quietly = TRUE)) {
       stop("Package 'sspbc' should be installed manually.")
@@ -285,6 +284,7 @@ PAM50_sspbc = function(gene_expression_matrix, ...){
   #data(sspbc.models)
   require(sspbc)
   
+  ## adding subtype - prosigna ???
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
     id = rownames(gene_expression_matrix),
@@ -293,22 +293,22 @@ PAM50_sspbc = function(gene_expression_matrix, ...){
   )
   
   call = rlang::call2(sspbc::applySSP, !!!arguments)
-  res_PAM50_sspbc = eval(call)
+  res_sspbc = eval(call)
   
 }
 
 
 
-#' PAM50_ensembl
-#' @name PAM50_ensembl
+#' BS_Check
+#' @name BS_Check
 #' @description
 #' This calls Ensembl method to predict BC intrinsic subtype. 
 #' 
-#' @param data_input  list of two Gene expression matrix, output of Mapping function
+#' @param data_input  list of two Gene expression matrix, output of Mapping function; "x_parker" object should be log2 transformed manually. 
 #' @return The subtypes estimated by selected methods
 #' @export
 
-PAM50_Ensembl = function(data_input, phenodata, POP = TRUE, methods = NA, hasClinical = FALSE,... ){
+BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, hasClinical = FALSE,... ){
   
   
   if(length(methods) < 2 ){
@@ -322,21 +322,21 @@ PAM50_Ensembl = function(data_input, phenodata, POP = TRUE, methods = NA, hasCli
     ## try NC-based
     if( method == "parker.median") {
       print(paste0(method," is running!"))
-      return(PAM50_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "medianCtr", hasClinical = hasClinical))
+      return(BS_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "medianCtr", hasClinical = hasClinical))
     }
     if( method == "parker.mean"){
       print(paste0(method," is running!"))
-      return(PAM50_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "meanCtr", hasClinical = hasClinical))
+      return(BS_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "meanCtr", hasClinical = hasClinical))
     }
     if( method == "parker.quantile"){
       print(paste0(method," is running!"))
-      return(PAM50_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "qCtr", hasClinical = hasClinical))
+      return(BS_parker(data_input$x_parker, phenodata, calibration = "Internal", internal = "qCtr", hasClinical = hasClinical))
     }
     
     if(method == "cIHC"){
       ## try conventional IHC
       print(paste0(method," is running!"))
-      return(PAM50_IHC(data_input$x_parker, phenodata, hasClinical = hasClinical))
+      return(BS_IHC(data_input$x_parker, phenodata, hasClinical = hasClinical))
     }
     
     if(method == "IHC.itr"){
@@ -347,17 +347,17 @@ PAM50_Ensembl = function(data_input, phenodata, POP = TRUE, methods = NA, hasCli
     
     if(method == "PCAPAM50"){
       print(paste0(method," is running!"))
-      return(PAM50_PCA_PAM50(data_input$x_parker, phenodata, hasClinical = hasClinical))
+      return(BS_PCAPAM50(data_input$x_parker, phenodata, hasClinical = hasClinical))
     }
     
     if(method == "ssBC"){
       print(paste0(method," is running!"))
-      return(PAM50_ssBC( data_input$x_parker, phenodata, s= "ER", hasClinical = hasClinical ))
+      return(BS_ssBC( data_input$x_parker, phenodata, s= "ER", hasClinical = hasClinical ))
     }
     
     if(method == "ssBC_JAMA"){
       print(paste0(method," is running!"))
-      return(PAM50_ssBC( data_input$x_parker, phenodata, s= "ER_JAMA", hasClinical = hasClinical ))
+      return(BS_ssBC( data_input$x_parker, phenodata, s= "ER_JAMA", hasClinical = hasClinical ))
     }
     
     if(method == "AIMS"){
@@ -365,12 +365,12 @@ PAM50_Ensembl = function(data_input, phenodata, POP = TRUE, methods = NA, hasCli
       data("genes.signature")
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
-      return(PAM50_AIMS(data_input$x_AIMS[ genes,], genes ))
+      return(BS_AIMS(data_input$x_AIMS[genes,], genes ))
     }
     
     if(method == "sspbc"){
       print(paste0(method," is running!"))
-      return(PAM50_sspbc( gene_expression_matrix = as.matrix(data_input$x_AIMS) ))
+      return(BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_AIMS) ))
     }
   
     

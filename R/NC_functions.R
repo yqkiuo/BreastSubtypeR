@@ -21,7 +21,8 @@ NULL
 #' @param short description
 #' @param pro description
 #' @noRd
-myplot<-function(y,short,pro){
+
+myplot = function(y,short,pro){
   par(mfrow=c(3,2),mar=c(5,3,2,2),las=3)
   y$prediction<-factor(y$prediction,levels=c("Basal","Her2","LumA","LumB","Normal"))
   boxplot(y$distances[,1]~y$prediction,border=8,ylab="Basal Correlation",main=paste(short,": Basal",sep=""))
@@ -37,266 +38,6 @@ myplot<-function(y,short,pro){
   boxplot(pro~y$prediction,border=8,ylab="Proliferation Index",main=paste(short,": Proliferation Index",sep=""))
   stripchart(pro~y$prediction,vertical=T,method="jitter",pch=3,add=T)
 }
-
-#' function for central median
-#' @param x gene expression matrix
-#' @noRd 
-medianCtr<-function(x){
-  annAll <- dimnames(x)
-  medians <- apply(x,1,median,na.rm=T)
-  x <- t(scale(t(x),center=medians,scale=F))
-  dimnames(x) <- annAll
-  return(x)
-}
-
-#' function for quantile central
-#' this is adapted from genefu package
-#' @param x gene expression matrix or vector
-#' @noRd 
-rescale <- function(x, na.rm=FALSE, q=0) {
-    if(q == 0) {
-      ma <- max(x, na.rm=na.rm)
-      mi <- min(x, na.rm=na.rm)
-    } else {
-      ma <- quantile(x, probs=1-(q/2), na.rm=na.rm)
-      mi <- quantile(x, probs=q/2, na.rm=na.rm)
-    }
-    xx <- (x - mi) / (ma - mi)
-    attributes(xx) <- list("names"=names(x), "q1"=mi,"q2"=ma)
-    return(xx)
-  }
-
-#' function for calibration methods
-#' @noRd 
-docalibration = function( y, df.al,calibration = "None", internal=internal, external=external){
-  mq = 0.05 ## presetting in genefu robust model
-  switch( calibration,
-          "None" = {print("No calibration") }, # genefu none
-          "Internal" = { ## internal
-            if(internal == "medianCtr"){ y = medianCtr(y) } ## parker default method
-            else if(internal == "meanCtr") {y = scale(y, center=TRUE, scale=TRUE) } ## "scale" in genefu method
-            else if(internal == "qCtr") {y = apply(y, 2, function(x) { return((rescale(x, q=mq, na.rm=TRUE) - 0.5) * 2) }) } ## "robust" in genefu method; mp = 0.05
-            else if(internal == internal) { ## which column to use
-              medians =  readarray(df.al)
-              #print(paste("calibration to:",internal))
-              tm<-overlapSets(medians$xd,y)
-              y<-(tm$y-tm$x[,internal])
-              }
-            else { print( "Please choose internal calibration stategy: medianCtr, meanCtr, qCtr or ER+/- relevant ")}
-          },
-          "External" = { ## external
-            medians =  readarray(df.al) 
-            #print(paste("calibration to:",external)) ## pre-prepared medians and givenmedians
-            tm<-overlapSets(medians$xd,y)
-            y<-(tm$y-tm$x[,external]) }
-          
-  )
-  
-  return(as.matrix( y) )
-  
-}
-
-
-
-#' function for mapping ID and supplementing missing data if necessary
-#' @param x Gene expression matrix
-#' @param y Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
-#' @param method Method to deduplicated probes for microarray or RNAseq. Please select IQR for Affy and select mean for Agilent)
-#' @param impute Logic. Please specify if there are NA data adn want keep them
-#' @param verbose Logic. 
-#' @noRd
-domapping = function(x ,y, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE ){
-       
-  # ## test data for microarray
-  # library(genefu)
-  # # load VDX dataset
-  # data(vdxs)
-  # x = t(data.vdxs)
-  # y = annot.vdxs # "probe" "EntrezGene.ID"
-  # method="iqr"
-  # mapping=TRUE
-  # impute = TRUE
-  # verbose = TRUE
-  # ## test data if NA cells exist to impute
-  # x[c(1,2),c(1,2)] = NA
-  # 
-  # 
-  # ## test data for RNAseq
-  # x = data ## from IBC_ensembl TCGA cohort
-  # y = anno_feature ## "SYMBOL"   "ENTREZID"
-  # method="mean"
-  # mapping = FALSE
-  # impute = TRUE
-  # verbose = TRUE
-  # ## test data if NA cells exist to impute
-  # #x[c(1,2),c(1,2)] = NA
-  
-  ## loading genes.signature
-  data("genes.signature")
-  
-  ## first step 
-  ## for empty cells. imput or not ?
-  if(sum(apply(x,2,is.na))>0 & impute){
-    
-    library(impute)
-    if(verbose){
-      probeid_NA = rownames(x)[rowSums(is.na(x))]
-      sample_NA = colnames(x)[colSums(is.na(x))]
-      print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
-    }
-    
-    x = impute.knn(x)
-    x = x$data
-  }
-  
-  ## no provided y and !mapping(RNAseq)
-  if(length(y) == 0 & !mapping ){
-    y =AnnotationDbi::select(org.Hs.eg.db, keys =rownames(x), columns = c( "ENTREZID","SYMBOL"), keytype='SYMBOL' ) 
-  } else if(length(y) == 0 & mapping) {
-    print("Please provide feature annotation")
-  }
-  
-  ## second step 
-  ## if mapping (microarray or transcript )
-  
-  if( mapping){
-    
-    probeid = rownames(x)
-    entrezid = y$EntrezGene.ID
-    names(entrezid) = y$probe
-    
-    ## process probeid in input data
-    entrezid = entrezid[probeid]
-    ##remove NA
-    entrezid = entrezid[!(is.na(entrezid))]
-    x = x[names(entrezid),]
-    entrezid = factor( entrezid, levels =  unique(entrezid) ) ## names are unique probeid and content are redundant entrezid 
-  
-    
-    ## This is for probeID or transcriptID 
-    ## split expression matrix
-    split_mat <- split( as.data.frame(x), entrezid, drop = F)
-    
-    # function to calculate the desired statistic
-    calculate_stat <- function(mat, method) {
-      switch(method,
-             "mean" = apply(mat, 2, mean, na.rm = TRUE),
-             "median" = apply(mat, 2, median, na.rm = TRUE),
-             "stdev" = {
-               temp = mat
-               stdevs = apply(mat, 1, sd, na.rm = TRUE)
-               vals =  temp[match(max(stdevs),stdevs),]
-               return( vals)
-             },
-             "iqr" = {
-               temp = mat
-               iqrs = apply(mat, 1, function(x) { quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE) })
-               vals =  temp[match(max(iqrs),iqrs),]
-               return( vals)
-             }
-      )
-    }
-    
-    ## keep processed x
-    x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
-    x = as.data.frame(t(x))
-    
-    ##print necessary information
-    ##Parker
-    missing_ID_parker = setdiff( IBC.parker$genes.sig50$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_parker) == 0 & verbose ){ 
-      print("PAM50 signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing :")
-      print(missing_ID_parker)
-    }
-    
-    ##AIMS
-    missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_AIMS) == 0 & verbose ){ 
-      print("AIMS-based signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing for AIMS-based methods :")
-      print(missing_ID_AIMS)
-    }
-    
-    } else { ## mapping FALSE 
-    
-    ## for RNAseq, gene expression at gene level
-    ## check if y is empty
-
-    x = merge(y, x, by.y = "row.names", by.x = "SYMBOL", all.x = TRUE)
-    
-
-    genes.signature_check = separate_rows(genes.signature, Alias, sep = ", ")
-    
-    ## find entrezID first
-    x_temp_entrezid = x[ x$ENTREZID %in% genes.signature_check$EntrezGene.ID, ]
-    
-    missing_ID = setdiff( genes.signature_check$EntrezGene.ID, x_temp_entrezid$ENTREZID )
-    
-    if( length(x$ENTREZID[is.na(x$ENTREZID)])>0 ){
-      
-      symbol.input = x$SYMBOL[is.na(x$ENTREZID)] 
-      
-      res_ID_missing = sapply(symbol.input, function(symbol){
-        
-        ID = genes.signature_check[(symbol == genes.signature_check$Symbol ) | 
-                              (symbol == genes.signature_check$Alias ), ]$EntrezGene.ID
-        
-        if(length(ID) ==0){ID=NULL}
-        
-        return(ID)
-      },simplify = FALSE, USE.NAMES = TRUE)
-      
-      ## assign entrezID
-      x[is.na(x$ENTREZID),]$ENTREZID = res_ID_missing
-      
-    }
-    
-
-    ## find entrez ID again
-    x_temp_entrezid = x[ x$ENTREZID %in% genes.signature_check$EntrezGene.ID ,]
-    rownames(x_temp_entrezid) = x_temp_entrezid$ENTREZID
-    x = x_temp_entrezid[,-c(1,2)]
-
-    ## create two parker matrix and AIMS matrix
-    ## print necessary information
-    ## process data
-    ## print necessary info
-    ## Parker
-    missing_ID_parker = setdiff( IBC.parker$genes.sig50$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_parker) == 0 & verbose ){ 
-      print("PAM50 signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing :")
-      print(missing_ID_parker)
-    }
-    
-    ##AIMS
-    missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_AIMS) == 0 & verbose ){ 
-      print("AIMS-based signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing for AIMS-based methods :")
-      print(missing_ID_AIMS)
-    }
-    
-    }
-  
-  
-    ## get matrix for parker (symbol as colnames)
-    x_parker = x[rownames(x) %in% as.character(IBC.parker$genes.sig50$EntrezGene.ID),]
-    #x_parker_temp = x_parker
-    rownames(x_parker) = IBC.parker$genes.sig50$Symbol[which( rownames(x_parker) %in% IBC.parker$genes.sig50$EntrezGene.ID ) ]
-
-    ## get matrix for AIMS (entrezID as colnames)
-    x_AIMS = x[rownames(x) %in% as.character( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID) ,]
-  
-    result = list(x_parker = x_parker,x_AIMS = x_AIMS )
-  
-    return(result)
-  }
 
 #' function for PCA plots
 #' @noRd
@@ -416,6 +157,284 @@ myHeatmap<-function(x,t.colors=NA,fileName="cluster.cdt",linkage="average",dista
 }
 
 
+#' function for central median
+#' @param x gene expression matrix
+#' @noRd 
+medianCtr<-function(x){
+  annAll <- dimnames(x)
+  medians <- apply(x,1,median,na.rm=T)
+  x <- t(scale(t(x),center=medians,scale=F))
+  dimnames(x) <- annAll
+  return(x)
+}
+
+#' function for quantile central
+#' this is adapted from genefu package
+#' @param x Gene expression matrix or vector
+#' @noRd 
+rescale <- function(x, na.rm=FALSE, q=0) {
+  # x = mat[1,]
+  # q = 0.05
+  # na.rm =TRUE
+  
+  if(q == 0) {
+      ma <- max(x, na.rm=na.rm)
+      mi <- min(x, na.rm=na.rm)
+    } else {
+      ma <- quantile(x, probs=1-(q/2), na.rm=na.rm)
+      mi <- quantile(x, probs=q/2, na.rm=na.rm)
+    }
+    xx <- (x - mi) / (ma - mi)
+    #attributes(xx) <- list("names"=names(x), "q1"=mi,"q2"=ma)
+    return(xx)
+}
+
+
+#' function for calibration methods
+#' @param y Gene expression matrix 
+#' @param df.al Medians for calibration
+#' @param calibration How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort. 
+#' @param internal Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr
+#' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
+#' @noRd 
+docalibration = function( y, df.al,calibration = "None", internal=internal, external=external){
+  # y = mat
+  # df.al = df.al
+  # internal = "meanCtr"
+
+  mq = 0.05 ## presetting in genefu robust model
+  switch( calibration,
+          "None" = {print("No calibration") }, # genefu none
+          "Internal" = { ## internal
+            if(internal == "medianCtr"){ y = medianCtr(y) } ## parker default method
+            else if(internal == "meanCtr") { y =  t(scale( t(y), center=TRUE, scale=TRUE))} ## "scale" in genefu method
+            else if(internal == "qCtr") { y = t(apply(y, 1, function(x) {  return( (rescale(x, q=mq, na.rm=TRUE) - 0.5) * 2 ) }) )  } ## "robust" in genefu method; mp = 0.05
+            else if(internal == internal) { ## which column to use
+              medians =  readarray(df.al)
+              #print(paste("calibration to:",internal))
+              tm<-overlapSets(medians$xd,y)
+              y<-(tm$y-tm$x[,internal])
+              }
+            else { print( "Please choose internal calibration stategy: medianCtr, meanCtr, qCtr or ER+/- relevant ")}
+          },
+          "External" = { ## external
+            medians =  readarray(df.al) 
+            #print(paste("calibration to:",external)) ## pre-prepared medians and givenmedians
+            tm<-overlapSets(medians$xd,y)
+            y<-(tm$y-tm$x[,external]) }
+          
+  )
+  
+  return(as.matrix( y) )
+  
+}
+
+
+
+#' function for mapping ID and supplementing missing data if necessary
+#' @param x Gene expression matrix
+#' @param y Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
+#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy and "mean" for Agilent)
+#' @param mapping Logic. Please specify if it needs to do mapping probeID or transcripID to gene symbol. 
+#' @param impute Logic. Please specify if there are NA data adn want keep them
+#' @param verbose Logic. 
+#' @noRd
+domapping = function(x ,y = NA, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE ){
+       
+  # ## test data for microarray
+  # library(genefu)
+  # # load VDX dataset
+  # data(vdxs)
+  # x = t(data.vdxs)
+  # y = annot.vdxs # "probe" "EntrezGene.ID"
+  # method="iqr"
+  # mapping=TRUE
+  # impute = TRUE
+  # verbose = TRUE
+  # ## test data if NA cells exist to impute
+  # x[c(1,2),c(1,2)] = NA
+  # 
+  # 
+  # ## test data for RNAseq
+  # x = data ## from IBC_ensembl TCGA cohort
+  # y = anno_feature ## "SYMBOL"   "ENTREZID"
+  # method="mean"
+  # mapping = FALSE
+  # impute = TRUE
+  # verbose = TRUE
+  # ## test data if NA cells exist to impute
+  # #x[c(1,2),c(1,2)] = NA
+  
+  ## loading genes.signature
+  data("genes.signature")
+  
+  ## first step 
+  ## for empty cells. imput or not ?
+  if(sum(apply(x,2,is.na))>0 & impute){
+    
+    library(impute)
+    if(verbose){
+      probeid_NA = rownames(x)[rowSums(is.na(x))]
+      sample_NA = colnames(x)[colSums(is.na(x))]
+      print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
+    }
+    
+    x = impute.knn(x)
+    x = x$data
+  }
+  
+  ## no provided y and !mapping(RNAseq)
+  if(length(y) == 0 & !mapping ){
+    y =AnnotationDbi::select(org.Hs.eg.db, keys =rownames(x), columns = c( "ENTREZID","SYMBOL"), keytype='SYMBOL' ) 
+  } else if(length(y) == 0 & mapping) {
+    print("Please provide feature annotation")
+  }
+  
+  ## second step 
+  ## if mapping (microarray or transcript )
+  
+  if( mapping){
+    
+    probeid = rownames(x)
+    entrezid = y$EntrezGene.ID
+    names(entrezid) = y$probe
+    
+    ## process probeid in input data
+    entrezid = entrezid[probeid]
+    ##remove NA
+    entrezid = entrezid[!(is.na(entrezid))]
+    x = x[names(entrezid),]
+    entrezid = factor( entrezid, levels =  unique(entrezid) ) 
+    ## names are unique probeid and content are redundant entrezid 
+  
+    
+    ## This is for probeID or transcriptID 
+    ## split expression matrix
+    split_mat <- split( as.data.frame(x), entrezid, drop = F)
+    
+    # function to calculate the desired statistic
+    calculate_stat <- function(mat, method) {
+      switch(method,
+             "mean" = apply(mat, 2, mean, na.rm = TRUE),
+             "median" = apply(mat, 2, median, na.rm = TRUE),
+             "stdev" = {
+               temp = mat
+               stdevs = apply(mat, 1, sd, na.rm = TRUE)
+               vals =  temp[match(max(stdevs),stdevs),]
+               return( vals)
+             },
+             "iqr" = {
+               temp = mat
+               iqrs = apply(mat, 1, function(x) { quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE) })
+               vals =  temp[match(max(iqrs),iqrs),]
+               return( vals)
+             }
+      )
+    }
+    
+    ## keep processed x
+    x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
+    x = as.data.frame(t(x))
+    
+    ##print necessary information
+    ##Parker
+    missing_ID_parker = setdiff( IBC.parker$genes.sig50$EntrezGene.ID, rownames(x) )
+    if( length(missing_ID_parker) == 0 & verbose ){ 
+      print("PAM50 signatures are covered")
+    } else if(verbose) {
+      print("These signatures are missing :")
+      print(missing_ID_parker)
+    }
+    
+    ##AIMS
+    missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
+    if( length(missing_ID_AIMS) == 0 & verbose ){ 
+      print("AIMS-based signatures are covered")
+    } else if(verbose) {
+      print("These signatures are missing for AIMS-based methods :")
+      print(missing_ID_AIMS)
+    }
+    
+    } else { ## mapping FALSE for RNAseq (gene level, no replicates)
+    
+
+    x = merge(y, x, by.y = "row.names", by.x = "SYMBOL", all.x = TRUE)
+    
+
+    genes.signature_check = separate_rows(genes.signature, Alias, sep = ", ")
+    
+    ## find entrezID first
+    x_temp_entrezid = x[ x$ENTREZID %in% genes.signature_check$EntrezGene.ID, ]
+    
+    missing_ID = setdiff( genes.signature_check$EntrezGene.ID, x_temp_entrezid$ENTREZID )
+    
+    if( length(x$ENTREZID[is.na(x$ENTREZID)])>0 ){
+      
+      symbol.input = x$SYMBOL[is.na(x$ENTREZID)] 
+      
+      res_ID_missing = sapply(symbol.input, function(symbol){
+        
+        ID = genes.signature_check[(symbol == genes.signature_check$Symbol ) | 
+                              (symbol == genes.signature_check$Alias ), ]$EntrezGene.ID
+        
+        if(length(ID) ==0){ID=NULL}
+        
+        return(ID)
+      },simplify = FALSE, USE.NAMES = TRUE)
+      
+      ## assign entrezID
+      x[is.na(x$ENTREZID),]$ENTREZID = res_ID_missing
+      
+    }
+    
+
+    ## find entrez ID again
+    x_temp_entrezid = x[ x$ENTREZID %in% genes.signature_check$EntrezGene.ID ,]
+    rownames(x_temp_entrezid) = x_temp_entrezid$ENTREZID
+    x = x_temp_entrezid[,-c(1,2)]
+
+    ## create parker matrix and AIMS matrix
+    ## print necessary information
+    ## process data
+    ## print necessary info
+    ## Parker
+    missing_ID_parker = setdiff( IBC.parker$genes.sig50$EntrezGene.ID, rownames(x) )
+    if( length(missing_ID_parker) == 0 & verbose ){ 
+      print("PAM50 signatures are covered")
+    } else if(verbose) {
+      print("These signatures are missing :")
+      print(missing_ID_parker)
+    }
+    
+    ##AIMS
+    missing_ID_AIMS = setdiff( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID, rownames(x) )
+    if( length(missing_ID_AIMS) == 0 & verbose ){ 
+      print("AIMS-based signatures are covered")
+    } else if(verbose) {
+      print("These signatures are missing for AIMS-based methods :")
+      print(missing_ID_AIMS)
+    }
+    
+    }
+  
+  
+    ## get matrix for parker (symbol as colnames)
+    x_parker = x[rownames(x) %in% as.character(IBC.parker$genes.sig50$EntrezGene.ID),]
+    #x_parker_temp = x_parker
+    rownames(x_parker) = IBC.parker$genes.sig50$Symbol[which( rownames(x_parker) %in% IBC.parker$genes.sig50$EntrezGene.ID ) ]
+
+    ## get matrix for AIMS (entrezID as colnames)
+    x_AIMS = x[rownames(x) %in% as.character( genes.signature[ genes.signature$AIMS_based == "Yes",]$EntrezGene.ID) ,]
+  
+    result = list(x_parker = x_parker,x_AIMS = x_AIMS )
+  
+    return(result)
+    
+    
+  }
+
+
+
 #' function for standardize
 #' @param x description
 #' @noRd
@@ -429,7 +448,7 @@ standardize<-function(x){
 
 #' Function for ordering gene in expression matrix as PAM50 gene signature 
 #' @param x PAM50 centroid matrix
-#' @param y enpression matrix
+#' @param y Gene expression matrix
 #' @noRd
 overlapSets<-function(x,y){
   
@@ -445,8 +464,9 @@ overlapSets<-function(x,y){
 }
 
 #'
-#' Function for de-duplicated genes in gene expression matrix
-#' method : mean, median, stdev, iqr
+#' Function for de-duplicated genes in medians of train cohort
+#' @param x Median of train cohort
+#' @param method mean, median, stdev, iqr
 #' @noRd 
 collapseIDs<-function(x,method="mean"){
   
@@ -495,8 +515,8 @@ collapseIDs<-function(x,method="mean"){
   
 }
 
-#' Function for new data structure
-#' @param data gene expression matrix or median of train dataset
+#' Function for data structure of medians of train cohort
+#' @param data Median of train cohort
 #' @noRd
 readarray<-function(data,designFile=NA,impute=T,method="mean"){
   
@@ -570,7 +590,7 @@ get_entropy_subtype <- function(patient_row) {
   }
 
 #' Function to get the average correlation and ROR
-get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinical =F) {
+get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, Prosigna =F) {
 
   ## correlation and ROR to be averaged
   ## if hasclini ?? need to be added later
@@ -625,8 +645,8 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
   mean_cols_save.testdata = Reduce(`+`, sum_cols_list.testdata) / length(sum_cols_list.testdata)
 
  
-  ## when hasClinical
-  if(hasClinical) { 
+  ## when Prosigna
+  if(Prosigna) { 
   
     sum_cols_list.prosigna = mapply(function(res_ihc){
       
@@ -636,7 +656,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
       
       ## if FALSE, make the cell as NULL
       keep = res_ihc$predictions == consensus_subtypes
-      res_ihc$distances.prosigna[ !keep, ] = as.list(rep(NA, 5 ))
+      res_ihc$distances.prosigna[ !keep, ] = as.list(rep(NA, 4 ))
       
       res = res_ihc$distances.prosigna %>%
         mutate_at(vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
@@ -644,6 +664,13 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
       return(res )
       
     }, res_ihc_iterative , SIMPLIFY = FALSE, USE.NAMES = FALSE )
+    
+    ## count_na
+    count_weight_save.prosigna <- Reduce(`+`, lapply(sum_cols_list.prosigna, function(x) {
+      x[!is.na(x)] <- 1
+      x[is.na(x)] <- 0
+      return(x)
+    }))
     
     
     ## sum all for each cell
@@ -657,7 +684,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
     
     ## get the mean for each cell
     ## only when subtype is supported by consensus_subtypes for each iteration and each patient
-    sum_cols_save.prosigna = sum_cols_save.prosigna / count_weight_save
+    sum_cols_save.prosigna = sum_cols_save.prosigna / count_weight_save.prosigna
     
     
     res = list( mean_distance = mean_cols_save, mean_distance.prosigna = sum_cols_save.prosigna, testdata =  mean_cols_save.testdata) 
@@ -665,7 +692,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
     
   } else{
     
-    res = list(mean_distance = mean_cols_save,testdata =  mean_cols_save.testdata)
+    res = list(mean_distance = mean_cols_save, testdata =  mean_cols_save.testdata)
     
   }
   
@@ -679,20 +706,22 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes, hasClinic
 #' @param nGenes None
 #' @param priors description
 #' @param distm "euclidean" or "spearman"
-#' @param std logical value
-#' @param centrids logical value
+#' @param Prosigna Logic. Please specify if it predicts prosigna-like subtype
+#' @param std Logical value
+#' @param centrids Logical value
 #' @noRd
-sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="euclidean",centroids=F, hasClinical = F){
+sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="euclidean",centroids=F, Prosigna = T, hasClinical = F){
   
   # ## test data
   # x = IBC.parker$centroid
-  # y = mat.q
+  # y = data_input$x_parker
   # classes=""
   # nGenes=""
   # priors="equal"
   # std=F
   # distm="spearman"
   # centroids=T
+  # Prosigna=T
 
   dataMatrix<-x
   features<- dim(x)[1]
@@ -780,7 +809,7 @@ sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="e
   names(prediction)<-tsampleNames
   
   
-  if(hasClinical){
+  if(Prosigna){
     ## genes to be excluded
     genes.ex = c("BIRC5", "CCNB1", "GRB7","MYBL2")
     
@@ -792,31 +821,40 @@ sspPredict<-function(x, classes="", y, nGenes="", priors="equal",std=F, distm="e
     dataMatrix <- temp$x
     tdataMatrix <- temp$y
 
-    nGenes<-dim(dataMatrix)[1]
-    #print(paste("Number of genes used for prosigna-like:",nGenes))
-    centroids_prosigna<-dataMatrix
 
-    distances.prosigna <-matrix(ncol=nClasses,nrow=dim(tdataMatrix)[2])
+    ## remove normal subtype
+    dataMatrix = dataMatrix[,1:4]
+    nGenes<-dim(dataMatrix)[1]
+    centroids.prosigna<-dataMatrix
+    nClasses<-dim(centroids.prosigna)[2] ## five subtypes; for prosigna, keep normal when calculating
+    classLevels<-dimnames(centroids.prosigna)[[2]]
+
+    
+    distances.prosigna <-matrix(ncol= nClasses,nrow=dim(tdataMatrix)[2])
     for(j in 1:nClasses){
       if(distm=="euclidean"){
-        distances.prosigna[,j]<-dist(t(cbind(dataMatrix[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
+        distances.prosigna[,j]<-dist(t(cbind(centroids.prosigna[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
       }
       if(distm=="correlation" | distm=="pearson"){
-        distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(dataMatrix[,j], x, method = "pearson", use = "pairwise.complete.obs"))
+        distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.prosigna[,j], x, method = "pearson", use = "pairwise.complete.obs"))
         }
       if(distm=="spearman"){
-        distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(dataMatrix[,j], x, method = "spearman", use = "pairwise.complete.obs"))
+        distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.prosigna[,j], x, method = "spearman", use = "pairwise.complete.obs"))
         }
     }
+    
+    ## prosigna.subtype
+    prediction.prosigna = classLevels[apply(distances.prosigna, 1, which.min,simplify = TRUE)]
+    names(prediction.prosigna)<-tsampleNames
     
   }
   
 
   ## return 
-  if ( !hasClinical) {
+  if ( !Prosigna) {
   res = list(predictions=prediction,testData= as.matrix( y),distances=distances,centroids=centroids)
   }else {
-    res = list(predictions=prediction,testData= as.matrix(y),distances=distances,distances.prosigna = distances.prosigna,centroids=centroids)
+    res = list(predictions=prediction, predictions.prosigna = prediction.prosigna,testData= as.matrix(y),distances=distances,distances.prosigna = distances.prosigna,centroids=centroids)
   }
   
   return(res)
@@ -844,10 +882,10 @@ RORgroup = function(out, df.cln , hasClinical = FALSE ){
   
   # ## test data
   # out
-  # df.cln = df.pam
+  # df.cln = df.cln
   # hasClinical = hasClinical
-  # 
-  
+
+
   Clinical = df.cln[which( df.cln$PatientID %in% names(out$predictions) ),]
   rownames(Clinical) = Clinical$PatientID
   ## prepare outtable
@@ -967,6 +1005,13 @@ RORgroup = function(out, df.cln , hasClinical = FALSE ){
     ## combined with T
     ## check order by patinets/rownames
     if ( "T" %in% colnames(Clinical) ) {
+      
+      length(out$distances[,1])
+      length(out$distances[,2])
+      length(out$distances[,3])
+      length(out$distances[,4])
+      length(xT)
+      
       
       xT= as.numeric(as.vector(Clinical$T))
       combined = 0.0442770*out$distances[,1] + 0.1170297*out$distances[,2] + -0.2608388*out$distances[,3] + 0.1055908*out$distances[,4] + 
@@ -1088,66 +1133,149 @@ RORgroup = function(out, df.cln , hasClinical = FALSE ){
 }
 
 
+
 #' Function for visualization
 
-visualition = function(y,out,short ){
+
+#' Function for boxplot of correlation per subtype
+#' @param out output of sspPredict
+#' @noRd
+#' 
+
+Vis_boxpot = function(out, Prosigna =TRUE ){
   
-  ## for visualization
-  x = PCA_PAM50$x #mediansPerDataset_v2.txt
+  df = data.frame( predictions = out$predictions, cor = apply(out$distances , 1, max))
   
+ plot =  ggplot( df, aes( x = predictions, y = cor) ) +
+    geom_boxplot()
+  
+  if( Prosigna){
+    df = data.frame( predictions = out$predictions, cor = apply(out$distances , 1, max),
+                     predictions.prosigna = out$predictions.prosigna, cor.prosigna = apply(out$distances.prosigna, 1, max)
+                     )
     
-  inputDir = paste( getwd(), "Call_wth_IHCMd", sep = "/") 
+   plot1 =  ggplot( df, aes( x = predictions, y = cor) ) +
+      geom_boxplot()
+   plot2 =  ggplot( df, aes( x = predictions.prosigna, y = cor.prosigna) ) +
+     geom_boxplot()
+
+   plot = list(boxplot1 = plot, boxplot2 = plot2 )
+  }
   
-  pdfname1<-paste(inputDir,paste("predictionScores_pam50RankCorrelation_1_",short,".pdf",sep=""),sep="/")
-  pdfname2<-paste(inputDir,paste("predictionScores_pam50RankCorrelation_2_",short,".pdf",sep=""),sep="/")
-  clustername<-paste(inputDir,paste(short,"_PAM50_normalized_heatmap",sep=""),sep="/")
-  outFile<- paste(inputDir,paste(short,"_pam50scores.txt",sep=""),sep="/")
-  
-  # make some plots for evaluation
-  print(paste("ER range:",quantile(erScore,.9,na.rm=T)-quantile(erScore,.1,na.rm=T)))
-  
-  subtypeColors<-out$predictions
-  subtypeColors[subtypeColors=="Basal"]<-"red"
-  subtypeColors[subtypeColors=="Her2"]<-"hotpink"
-  subtypeColors[subtypeColors=="LumA"]<-"darkblue"
-  subtypeColors[subtypeColors=="LumB"]<-"skyblue"
-  subtypeColors[subtypeColors=="Normal"]<-"green"
-  conf.colors<-call.conf
-  conf.colors[call.conf>=0.95]<-"black"
-  conf.colors[call.conf<0.95]<-"red"
-  
-  ## if make plots
-  pdf(paste(clustername,".pdf",sep=""))
-  myHeatmap(out$testData,cbind(subtypeColors,conf.colors),file=paste(clustername,".cdt",sep=""),rowNames=rownames(out$testData))
-  dev.off()
-  
-  pdf(pdfname1,height=10,width=12)
-  pars<-par(no.readonly=T)
-  myplot(out,short,prolifScore)
-  dev.off()
-  
-  tm<-overlapSets(x$xd,y$xd)
-  tm$x<-tm$x[,!is.na(x$classes$subtype)]
-  tm<-cbind(tm$x,	impute.knn(as.matrix(tm$y))$data)
-  classes<-matrix(nrow=4,ncol=dim(tm)[2])
-  nTrainSamples<-length(x$classes$subtype[!is.na(x$classes$subtype)])
-  
-  classes[1,]<-c(rep("train",nTrainSamples),rep(short,dim(y$xd)[2]))
-  classes[2,]<-c(x$classes$subtype[!is.na(x$classes$subtype)],rep(NA,dim(tm)[2]-dim(x$xd[,!is.na(x$classes$subtype)])[2]))
-  classes[3,]<-c(rep(NA,dim(tm)[2]-length(out$predictions)),out$predictions)
-  
-  pdf(pdfname2,height=6,width=12)
-  tm<-scale(tm,center=F)
-  par(mfrow=c(1,3))
-  pcaEA(tm,classes[1,],mainStr="Traing and Test sets",showNames=F,showClasses=F)
-  pcaEA(tm[,!is.na(as.vector(t(classes[2,])))],classes[2,!is.na(as.vector(t(classes[2,])))],mainStr="Training cases",showNames=F,showClasses=F,groupColors=c("red","hotpink","darkblue","skyblue","green"))
-  pcaEA(tm[,!is.na(as.vector(t(classes[3,])))],classes[3,!is.na(as.vector(t(classes[3,])))],mainStr="Test cases",showNames=F,showClasses=F,groupColors=c("red","hotpink","darkblue","skyblue","green"))
-  par(pars)
-  dev.off()
-    
+ return(plot)
   
 }
 
+
+#' Function for boxplot of correlation per subtype
+#' @param x gene expression matrix, log2 transformation
+#' @param out output of sspPredict, which includes "prediction" 
+#' @noRd
+#' 
+
+Vis_heatmap = function(x, out, Prosigna =TRUE ){
+  
+  library(circlize)
+
+  ## test data
+  x = data_input$x_parker
+  scaled_mat = t(scale(t(x)))
+  
+  col_fun = colorRamp2(c(min(scaled_mat), 0 , max(scaled_mat)), c("green", "black", "red"))
+  
+  ## column annotation
+  col_anno = data.frame(patientID = names(out$predictions), Subtype = out$predictions)[colnames(x), "Subtype", drop = FALSE]
+  colnames(col_anno) = "Subtype"
+  
+  anno_col = HeatmapAnnotation(df= col_anno, show_legend = FALSE,col = list(Subtype = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" ) ))
+  
+  heatmap = Heatmap(scaled_mat, name = "Subtype",
+          col = col_fun,
+          ## annotation
+          top_annotation = anno_col,
+          
+          ## clustering
+          ## as original heatmap plot
+          clustering_distance_rows = "pearson",
+          clustering_method_rows = "complete",
+          clustering_distance_columns  = "pearson",
+          clustering_method_columns = "complete",
+
+          ## general
+          show_column_names = FALSE,
+          show_heatmap_legend = FALSE,
+          row_names_gp = gpar(fontsize = 8))
+  
+  
+  if( Prosigna) {
+    ## column annotation
+    col_anno = data.frame(patientID = names(out$predictions.prosigna), Subtype = out$predictions.prosigna)[colnames(x), "Subtype", drop = FALSE]
+    colnames(col_anno) = "Subtype.prosigna"
+    
+    anno_col = HeatmapAnnotation(df= col_anno,show_legend = FALSE, col = list(Subtype.prosigna = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" ) ))
+    
+    heatmap2 = Heatmap(scaled_mat, name = "Subtype",
+                col = col_fun,
+                ## annotation
+                top_annotation = anno_col,
+                
+                ## clustering 
+                clustering_distance_rows = "pearson",
+                clustering_method_rows = "complete",
+                clustering_distance_columns  = "pearson",
+                clustering_method_columns = "complete",
+                
+                ## general
+                show_column_names = FALSE,
+                show_heatmap_legend = FALSE,
+                row_names_gp = gpar(fontsize = 8))
+    
+    heatmap = list( heatmap1 = heatmap, heatmap2 = heatmap2)
+  }
+  
+  
+  return(heatmap)
+}
+  
+
+
+
+#' Function for boxplot of correlation per subtype
+#' @param x gene expression matrix, log2 transformation
+#' @param out output of sspPredict, which includes "prediction" 
+#' @noRd
+#' 
+
+Vis_PCA = function(x, out, Prosigna = TRUE){
+  
+  library("factoextra")
+  
+  
+  Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
+  
+  x = data_input$x_parker
+  
+  x_pca = prcomp(t(x),scale. = TRUE )
+  
+  screeplot = fviz_eig(x_pca, addlabels = TRUE, ylim = c(0, 50))
+  
+  pcaplot = fviz_pca_ind(x_pca, label="none",mean.point = FALSE, pointshape = 16 ,
+               col.ind = as.factor(out$predictions )) + 
+    scale_color_manual( name = "Subtype", values = Subtype.color )
+  
+  if(Prosigna) {
+    
+    pcaplot2 = fviz_pca_ind(x_pca, label="none",mean.point = FALSE, pointshape = 16 ,
+                           col.ind = as.factor(out$predictions.prosigna )) + 
+      scale_color_manual( name = "Subtype.prosigna", values = Subtype.color )
+    
+    pcaplot = list(pcaplot1 = pcaplot, pcaplot2 = pcaplot2)
+    
+  }
+  
+  return(pcaplot)
+  
+ }
 
 #' 
 #' Function for predicting PAM50 intrinsic subtypes and calculation of proliferation 
@@ -1164,7 +1292,7 @@ visualition = function(y,out,short ){
 #' @noRd
 #' 
 
-makeCalls.parker = function(mat,df.cln, calibration = "None", internal = NA,external=NA, medians = NA, hasClinical =FALSE  ){
+makeCalls.parker = function(mat,df.cln, calibration = "None", internal = NA,external=NA, medians = NA,Prosigna = T, hasClinical =FALSE  ){
   
   ####
   # run the assignment algorithm
@@ -1186,8 +1314,8 @@ makeCalls.parker = function(mat,df.cln, calibration = "None", internal = NA,exte
   # external= NA
   # medians = NA
   # hasClinical = T
-  
-  
+  # 
+  # 
   fl.mdn = IBC.parker$medians
   ## prepare df.al
   
@@ -1221,19 +1349,23 @@ makeCalls.parker = function(mat,df.cln, calibration = "None", internal = NA,exte
   # normalization
   mat = docalibration( mat, df.al, calibration, internal=internal, external=external)
   
-  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, Prosigna = T,hasClinical = hasClinical)
   
-  if(hasClinical) {
+
+  if (Prosigna) {
     out$distances.prosigna =  -1 * out$distances.prosigna
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.parker = out$predictions, BS.prosigna = out$predictions.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+  } else {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.parker = out$predictions, IHC = df.cln$IHC , row.names = NULL )
   }
   out$distances = -1 * out$distances
   
+
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical )
   
-  Int.sbs = data.frame(PatientID = names(out$predictions), Int.SBS.ihc = out$predictions, IHC = df.cln$IHC , row.names = NULL )
-  
-  return(list(Int.sbs=Int.sbs, score.fl=out.ROR, mdns.fl= df.al, outList=out))
+
+  return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns = df.al, outList=out))
   
   
 }
@@ -1252,14 +1384,15 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
   # message("##IHC subtype column should be named ---IHC---")
   # 
-  # ##test data for TCGA Cell2015
-  # mat = data_input$x_parker
-  # df.cln = clinic
-  # seed=118
-  # calibration = "Internal"
-  # internal = "IHC.mdns"
-  # hasClinical = TRUE
-  # 
+  ##test data for TCGA Cell2015
+  mat = data_input$x_parker
+  df.cln = clinic.oslo
+  seed=118
+  calibration = "Internal"
+  internal = "IHC.mdns"
+  hasClinical = TRUE
+  Prosigna = TRUE
+  
   ERN.ihc = df.cln[which(df.cln$ER == "ER-"),] ### get ER- samples data.frame
   dim(ERN.ihc)	#[1] 153   9
   
@@ -1300,19 +1433,20 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   ## normalization
   mat = docalibration( mat, df.al, calibration,internal)
   
-  out = sspPredict( centroids, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+  out = sspPredict( centroids, classes="", mat, std=F, distm="spearman", centroids=T, Prosigna = T, hasClinical = hasClinical)
   
-  if(hasClinical) {
+  if (Prosigna) {
     out$distances.prosigna =  -1 * out$distances.prosigna
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ihc = out$predictions, BS.prosigna = out$predictions.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+  } else {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ihc = out$predictions, IHC = df.cln$IHC , row.names = NULL )
   }
   out$distances = -1 * out$distances
-  
+
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical )
   
-  Int.sbs = data.frame(PatientID = names(out$predictions), Int.SBS.ihc = out$predictions, IHC = df.cln$IHC , row.names = NULL )
-  
-  return(list(Int.sbs=Int.sbs, score.fl=out.ROR, mdns.fl= df.al,outList=out))
+  return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns= df.al,outList=out))
   
 }
 
@@ -1329,15 +1463,15 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
 
 makeCalls.ihc.iterative = function( mat, df.cln, iterative = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , hasClinical = FALSE){
 
-  # ## test data
-  # mat = Test.matrix
-  # ratio=1
-  # ratio= 54/64
-  # ##  46% ER-positive (54/118) and 54% ER-negative (64/118) from Zhao paper ,
-  # dependent = "ER.mdns"
-  # calibration = "Internal"
-  # iterative = 5
-  # hasClinical = T
+  ## test data
+  mat = data_input$x_parker
+  ratio=1
+  ratio= 54/64
+  ##  46% ER-positive (54/118) and 54% ER-negative (64/118) from Zhao paper ,
+  dependent = "ER.mdns"
+  calibration = "Internal"
+  iterative = 5
+  hasClinical = T
   
   seed = 118
   set.seed(seed)
@@ -1401,7 +1535,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iterative = 100, ratio = 54/64,
     ## normalization
     mat = docalibration( mat, df.al, calibration,internal)
     
-    out = sspPredict(centroids, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+    out = sspPredict(centroids, classes="", mat, std=F, distm="spearman", centroids=T, Prosigna = T,hasClinical = hasClinical)
     
     return( out )
     
@@ -1412,37 +1546,45 @@ makeCalls.ihc.iterative = function( mat, df.cln, iterative = 100, ratio = 54/64,
   Call_subtypes = mapply(function(res_ihs){res_ihs$predictions }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
   consensus_subtypes = apply(Call_subtypes, 1, get_consensus_subtype)
   
-  Int.sbs = data.frame(PatientID = df.cln$PatientID, Int.SBS.ihc.itr = consensus_subtypes, IHC = df.cln$IHC , row.names = NULL )
-
+  Call_subtypes.prosigna = mapply(function(res_ihs){res_ihs$predictions.prosigna }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
+  consensus_subtypes.prosigna = apply(Call_subtypes.prosigna, 1, get_consensus_subtype)
+  
+  if (Prosigna) {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ihc.itr = consensus_subtypes, BS.itr.prosigna = consensus_subtypes.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+  } else {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ihc.itr = consensus_subtypes, IHC = df.cln$IHC , row.names = NULL )
+  }
 
   ## get the entropy
   entropy_subtype  = apply(Call_subtypes, 1, get_entropy_subtype)
-
+  entropy_subtype.prosigna =  apply(Call_subtypes.prosigna, 1, get_entropy_subtype)
   ## get correlation and ROR score for each patient
   ## do average for each cell, matched with subtype
   ## how about correlation? average
   ## how about testdata? average
-  mean_eve = get_average_subtype(res_ihc_iterative, consensus_subtypes, hasClinical = hasClinical)
+  mean_eve = get_average_subtype(res_ihc_iterative, consensus_subtypes, Prosigna = TRUE)
   
   ## calculate ROR 
   ## group by ROR
   ## save all scores
-  if(hasClinical ) {
-    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = centroids )
-  }else{
+  
+  if (Prosigna) {
+    out = list(predictions = consensus_subtypes, predictions.prosigna = consensus_subtypes.prosigna, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = centroids )
+  } else {
     out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance, centroids = centroids )
   }
-  
+
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical )
   
   out.ROR$Entropy = entropy_subtype
+  out.ROR$Entropy.prosigna = entropy_subtype.prosigna
   out.ROR %<>% select( "Basal","Her2","LumA","LumB","Normal","Call","Confidence", "Entropy",everything() )
   
   ## each time, changing medians, hence,
   ## no saving medians in result (if want to save, do average then)
   ## in out, distances are average, subtypes are consensus subtype
-  return( list(Int.sbs = Int.sbs, score.fl= out.ROR, outList = out, sbs.itr = Call_subtypes ))
+  return( list(BS.all = Int.sbs, score.ROR= out.ROR, outList = out, BS.itr.keep = Call_subtypes ))
   
 }
   
@@ -1596,19 +1738,20 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   mat = docalibration( mat, df.al, calibration, internal)
   
   ## slow ??? yes
-  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, Prosigna = T,hasClinical = hasClinical)
 
-  if(hasClinical) {
+  if(Prosigna) {
     out$distances.prosigna =  -1 * out$distances.prosigna
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.PC1ihc = out$predictions, BS.PC1ihc.prosigna = out$predictions.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+  } else {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.PC1ihc = out$predictions, IHC = df.cln$IHC , row.names = NULL )
   }
   out$distances = -1 * out$distances
   
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical )
 
-  Int.sbs = data.frame(PatientID = names(out$predictions), Int.SBS.PC1ihc = out$predictions, IHC = df.cln$IHC , row.names = NULL )
-  
-  return(list(Int.sbs=Int.sbs, score.fl=out.ROR, mdns.fl= df.al,outList=out))
+  return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns= df.al,outList=out))
   
   
 }
@@ -1679,17 +1822,18 @@ makeCalls.v1PAM = function(mat, df.pam, seed=118, calibration = "Internal", inte
   ## normalization
   mat= docalibration( mat, df.al, calibration,internal)
   
-  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
+  out = sspPredict(IBC.parker$centroid, classes="", mat, std=F, distm="spearman", centroids=T, Prosigna = T, hasClinical = hasClinical)
   
-  if(hasClinical) {
+  if(Prosigna) {
     out$distances.prosigna =  -1 * out$distances.prosigna
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.pcapam50 = out$predictions, BS.pcapam50.prosigna = out$predictions.prosigna, IHC = df.pam$IHC , row.names = NULL )
+  } else {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.pcapam50 = out$predictions, IHC = df.pam$IHC , row.names = NULL )
   }
   out$distances = -1 * out$distances
   
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln = df.pam, hasClinical = hasClinical )
-  
-  Int.sbs = data.frame(PatientID = names(out$predictions), Int.SBS.ihc = out$predictions, IHC = df.pam$IHC , row.names = NULL )
   
   return(list(Int.sbs=Int.sbs, score.fl=out.ROR, mdns.fl= df.al,outList=out))
   
@@ -1721,11 +1865,11 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
   # 
   # s = "ER"
   
-  # ## test data
-  # mat = data_input$x_parker
-  # df.cln = clinic.scanb
-  # s = "ER"
-  # hasClinical =T
+  ## test data
+  mat = data_input$x_parker
+  df.cln = clinic.oslo
+  s = "ER_JAMA"
+  hasClinical =T
 
   gene.sigma = IBC.parker$ssBC.subgroupQuantile
   
@@ -1743,7 +1887,7 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
     TN_samples = rownames(df.cln)[which(df.cln$TN == "TN" )]
     samples_selected = list( TN = TN_samples)
     
-  }  else if( s == "ER_JAMA" ){
+  }  else if( s == "ER_JAMA" ){ #TNBC-JAMAOncol2024
     
     ## if there is no sample in either of both, wont influence the code
     ERN_HER2N_samples = rownames(df.cln)[which(df.cln$ER == "ER-" & df.cln$HER2 =="HER2-"  )]
@@ -1786,9 +1930,8 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
     ## it has been calibrated by selected quantile 
     
     
-    out = sspPredict(IBC.parker$centroid, classes="", x.m , std=F, distm="spearman", centroids=T, hasClinical = hasClinical)
-    
-    
+    out = sspPredict(IBC.parker$centroid, classes="", x.m , std=F, distm="spearman", centroids=T, Prosigna = T, hasClinical = hasClinical)
+
   
   }, names(samples_selected), SIMPLIFY = F, USE.NAMES = T )
   
@@ -1796,24 +1939,28 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
 
   if( s == "ER") { ## use ER selected strategy
     
-    prediction = c(res$ER_neg$predictions, res$ER_pos$predictions)
+    predictions = c(res$ER_neg$predictions, res$ER_pos$predictions)
     distances = rbind(res$ER_neg$distances, res$ER_pos$distances )
     testData = cbind(res$ER_neg$testData, res$ER_pos$testData )
     
-    if(hasClinical ){
+    if(Prosigna ){
+      predictions.prosigna = c(res$ER_neg$predictions.prosigna, res$ER_pos$predictions.prosigna)
       distances.prosigna = rbind(res$ER_neg$distances.prosigna, res$ER_pos$distances.prosigna )
+      
     }
     
   } else if(s == "ER_JAMA" ){
     
-    prediction = c(res$ERneg_HER2neg$predictions, res$ERpos_HER2neg$predictions, 
+    predictions = c(res$ERneg_HER2neg$predictions, res$ERpos_HER2neg$predictions, 
                    res$HER2pos_ERneg$predictions, res$HER2pos_ERpos$predictions)
     distances = rbind(res$ERneg_HER2neg$distances, res$ERpos_HER2neg$distances,
                       res$HER2pos_ERneg$distances, res$HER2pos_ERpos$distances)
     testData = cbind(res$ERneg_HER2neg$testData, res$ERpos_HER2neg$testData,
                      res$HER2pos_ERneg$testData, res$HER2pos_ERpos$testData)
     
-    if(hasClinical ){
+    if(Prosigna ){
+      predictions.prosigna = c(res$ERneg_HER2neg$predictions.prosigna, res$ERpos_HER2neg$predictions.prosigna, 
+                      res$HER2pos_ERneg$predictions.prosigna, res$HER2pos_ERpos$predictions.prosigna)
       distances.prosigna = rbind(res$ERneg_HER2neg$distances.prosigna, res$ERpos_HER2neg$distances.prosigna,
                                  res$HER2pos_ERneg$distances.prosigna, res$HER2pos_ERpos$distances.prosigna)
     }
@@ -1821,45 +1968,46 @@ makeCalls.ssBC = function(mat, df.cln, s , hasClinical =FALSE  ){
     
   } else if(s == "TN"){
     
-    prediction = res$TN$predictions
+    predictions = res$TN$predictions
     distances = res$TN$distances
     testData = res$TN$testData
 
-    if(hasClinical ){
+    if(Prosigna ){
+      predictions.prosigna = res$TN$predictions.prosigna
       distances.prosigna = res$TN$distances.prosigna
     }
     
   } else if (s == "TNBC")  {
     
-    prediction = res$TNBC$predictions
+    predictions = res$TNBC$predictions
     distances = res$TNBC$distances
     testData = res$TNBC$testData
     
-    if(hasClinical ){
+    if(Prosigna ){
+      predictions.prosigna = res$TNBC$predictions.prosigna
       distances.prosigna = res$TNBC$distances.prosigna
     }
   } 
   
   
-  if ( !hasClinical) {
-    out = list(predictions=prediction,testData=testData,distances=distances,centroids= IBC.parker$centroid)
-  }else {
-    out= list(predictions=prediction,testData=testData,distances=distances,distances.prosigna = distances.prosigna,centroids=IBC.parker$centroid)
-  }
   
-  
-  if(hasClinical) {
+  if(Prosigna){
     out$distances.prosigna =  -1 * out$distances.prosigna
-  }
+    out = list(predictions=predictions,predictions.prosigna = predictions.prosigna ,testData=testData,distances=distances, distances.prosigna = distances.prosigna, centroids= IBC.parker$centroid)
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ssBC = out$predictions, BS.ssBC.prosigna = out$predictions.prosigna , IHC = df.cln[ which( rownames(df.cln) %in% names(out$predictions) ) ,"IHC"], row.names = NULL )
+    
+  } else {
+    out= list(predictions=predictions, testData=testData,distances=distances, centroids=IBC.parker$centroid)
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS.ssBC = out$predictions, IHC = df.cln[ which( rownames(df.cln) %in% names(out$predictions) ) ,"IHC"], row.names = NULL )
+    }
+
   out$distances = -1 * out$distances
   
   
   ##calculate and grouping
   out.ROR = RORgroup(out,df.cln, hasClinical = hasClinical )
-  
-  Int.sbs = data.frame(PatientID = names(out$predictions), Int.SBS.ihc = out$predictions, IHC = df.cln[ which( rownames(df.cln) %in% names(out$predictions) ) ,"IHC"], row.names = NULL )
-  
-  return(list(Int.sbs=Int.sbs, score.fl=out.ROR, mdns.fl= gene.sigma,outList=out))
+
+  return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns = gene.sigma, outList=out))
   
 }
   

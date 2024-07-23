@@ -1,7 +1,7 @@
-Package: PAM50subtyping
+Package: BreastSubtypeR
 Type: Package
-Title: Methods for breast cancer PAM50 subtyping
-Description: Collection of methods for breast cancer PAM50 subtyping
+Title: Methods for breast cancer intrinsic subtyping
+Description: Collection of methods for breast cancer intrinsic subtyping
 Encoding: UTF-8
 Version: 0.0.1
 Authors@R: c(
