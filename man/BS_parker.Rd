@@ -11,6 +11,7 @@ BS_parker(
   internal = NA,
   external = NA,
   medians = NA,
+  Prosigna = FALSE,
   hasClinical = FALSE,
   ...
 )

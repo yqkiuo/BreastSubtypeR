@@ -4,7 +4,7 @@
 \alias{get_average_subtype}
 \title{Function to get the average correlation and ROR}
 \usage{
-get_average_subtype(res_ihc_iterative, consensus_subtypes, hasClinical = F)
+get_average_subtype(res_ihc_iterative, consensus_subtypes)
 }
 \description{
 Function to get the average correlation and ROR

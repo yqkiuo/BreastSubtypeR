@@ -9,9 +9,7 @@ BS_AIMS(gene_expression_matrix, EntrezID, ...)
 \arguments{
 \item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
 
-\item{featuredata}{Annotate genes}
-
-\item{phenodata}{Clinical information table, with ER information or IHC column}
+\item{EntrezID}{A list of Entrez gene ids}
 }
 \value{
 The subtypes estimated by PCA_AIMS

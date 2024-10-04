@@ -2,14 +2,17 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_IHC.itr}
 \alias{BS_IHC.itr}
+\alias{BS_cIHC.itr}
 \title{BS_IHC.itr}
 \usage{
-BS_IHC.itr(
+BS_cIHC.itr(
   gene_expression_matrix,
   phenodata,
-  iterative = 100,
+  iteration = 100,
   ratio = 54/64,
+  Prosigna = FALSE,
   hasClinical = FALSE,
+  seed = 118,
   ...
 )
 }
@@ -18,13 +21,13 @@ BS_IHC.itr(
 
 \item{phenodata}{Clinical information table, with IHC column}
 
-\item{iterative}{Times to do iterative ER balanced procedure with certain ratio}
-
 \item{ratio}{The options are either 1:1 or 54(ER+):64(ER-) (default). The latter wass ER ratio used for UNC230 train cohort.}
 
 \item{hasClinical}{Logical. Please specify if you prepared clincical information, like Tumore size as "T" column, lymphatic node status as "NODE" column.}
 
 \item{featuredata}{Annotate genes}
+
+\item{iterative}{Times to do iterative ER balanced procedure with certain ratio}
 }
 \value{
 The intrinsic subtypes, confidential level, percentages.

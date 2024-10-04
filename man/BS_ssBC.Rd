@@ -4,14 +4,21 @@
 \alias{BS_ssBC}
 \title{BS_ssBC}
 \usage{
-BS_ssBC(gene_expression_matrix, phenodata, s, hasClinical = FALSE, ...)
+BS_ssBC(
+  gene_expression_matrix,
+  phenodata,
+  s,
+  Prosigna = FALSE,
+  hasClinical = FALSE,
+  ...
+)
 }
 \arguments{
 \item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
 
 \item{phenodata}{Clinical information table, like TN,ER and HER2}
 
-\item{s}{Specify "ER" or "TN", which is included in phenodata}
+\item{s}{Specify "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
 
 \item{hasClinical}{Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column.}
 

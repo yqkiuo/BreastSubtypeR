@@ -4,7 +4,7 @@
 \alias{BS_sspbc}
 \title{BS_sspbc}
 \usage{
-BS_sspbc(gene_expression_matrix, ...)
+BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
 }
 \arguments{
 \item{gene_expression_matrix}{Gene expression matrix, gene in row sample in column}

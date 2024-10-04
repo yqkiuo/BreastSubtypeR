@@ -9,16 +9,17 @@ BS_Check(
   phenodata,
   POP = TRUE,
   methods = NA,
+  Prosigna = FALSE,
   hasClinical = FALSE,
   ...
 )
 }
 \arguments{
-\item{data_input}{list of two Gene expression matrix, output of Mapping function; "x_parker" object should be log2 transformed manually.}
+\item{data_input}{list of two Gene expression matrix, output of Mapping function; "x_NC" object should be log2 transformed manually.}
 }
 \value{
 The subtypes estimated by selected methods
 }
 \description{
-This calls Ensembl method to predict BC intrinsic subtype.
+This calls consensus subtype .
 }

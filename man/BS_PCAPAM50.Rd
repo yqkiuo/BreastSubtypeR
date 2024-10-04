@@ -4,7 +4,13 @@
 \alias{BS_PCAPAM50}
 \title{BS_PCAPAM50}
 \usage{
-BS_PCAPAM50(gene_expression_matrix, phenodata, hasClinical = FALSE)
+BS_PCAPAM50(
+  gene_expression_matrix,
+  phenodata,
+  Prosigna = FALSE,
+  hasClinical = FALSE,
+  seed = 118
+)
 }
 \arguments{
 \item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
