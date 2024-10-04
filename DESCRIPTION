@@ -3,19 +3,13 @@ Type: Package
 Title: Methods for breast cancer intrinsic subtyping
 Description: Collection of methods for breast cancer intrinsic subtyping
 Encoding: UTF-8
-Version: 0.0.1
+Version: 1.0.0
 Authors@R: c(
     person("Yang", "Qiao", role=c("aut", "cre"), email="qiao.yang@ki.se") 
   )
 biocViews:
 Depends:
-    R (>= 4.1),
-Imports:
-    dplyr (>= 0.7),
-    magrittr (>= 1.5),
-    stringr,
-    rlang,
-    genefu
+    R (>= 4.1)
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 LazyData: true
