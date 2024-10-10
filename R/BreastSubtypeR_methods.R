@@ -12,7 +12,7 @@
 #' @importFrom data.table set
 #' @importFrom rlang call2
 #' @importFrom rlang dots_list
-#' 
+#' @noRd 
 #' 
 NULL
 
