@@ -7,6 +7,7 @@
 #' @import circlize
 #' @import magrittr
 #' @import factoextra
+#' @import impute
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate_at
 NULL
@@ -87,40 +88,25 @@ docalibration = function( y, df.al,calibration = "None", internal=internal, exte
 
 
 #' function for mapping ID and supplementing missing data if necessary
-#' @param x Gene expression matrix
+#' @param x Gene expression matrix. Probe or gene symbol in row and sample in column.
 #' @param y Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
-#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy and "mean" for Agilent)
-#' @param mapping Logic. Please specify if it needs to do mapping probeID or transcripID to gene symbol. 
-#' @param impute Logic. Please specify if there are NA data adn want keep them
+#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and "max" for RNAseq. 
+#' @param impute Logic. Please specify whether to perform impute.knn on NA data
 #' @param verbose Logic. 
 #' @noRd
-domapping = function(x ,y = NA, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE ){
-       
-  # ## test data for microarray
-  # library(genefu)
-  # # load VDX dataset
-  # data(vdxs)
-  # x = t(data.vdxs)
-  # y = annot.vdxs # "probe" "EntrezGene.ID"
-  # method="iqr"
-  # mapping=TRUE
-  # impute = TRUE
-  # verbose = TRUE
-  # ## test data if NA cells exist to impute
-  # x[c(1,2),c(1,2)] = NA
-  # 
-  # 
-  ## test data for RNAseq
-  # x = expr ## from oslo
-  # y = anno_feature ## "SYMBOL"   "ENTREZID"
-  # method ="mean"
-  # mapping = FALSE
-  # impute = TRUE
-  # verbose = TRUE
-  # 
-  # # test data if NA cells exist to impute
-  # x[c(1,2),c(1,2)] = NA
 
+#### wrap the code 
+#### use probeid as input in feature table
+
+domapping = function(x, y = NA, method = "max", impute = TRUE, verbose = TRUE ){
+  
+  # x = expr
+  # y = anno_feature #probe ENTREZID
+  # method="max"
+  # mapping= TRUE
+  # impute = TRUE
+  # verbose = TRUE
+  # 
   ## loading genes.signature
   genes.signature = BreastSubtypeR$genes.signature
   
@@ -128,10 +114,9 @@ domapping = function(x ,y = NA, method = "mean", mapping = TRUE,impute = TRUE, v
   ## for empty cells. imput or not ?
   if(sum(apply(x,2,is.na))>0 & impute){
     
-    library(impute)
     if(verbose){
-      probeid_NA = rownames(x)[rowSums(is.na(x))]
-      sample_NA = colnames(x)[colSums(is.na(x))]
+      probeid_NA = rownames(x)[rowSums(is.na(x)) > 0]
+      sample_NA = colnames(x)[colSums(is.na(x)) > 0]
       print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
     }
     
@@ -146,150 +131,81 @@ domapping = function(x ,y = NA, method = "mean", mapping = TRUE,impute = TRUE, v
     print("Please provide feature annotation to map probeID or transcripID ")
   }
   
-  ## second step 
-  ## if mapping (microarray or transcript )
+  ## deduplicated
+  probeid = rownames(x) ## probes, ensembl, symbol
+  entrezid = y$ENTREZID
+  names(entrezid) = y$probe
   
-  if( mapping){
-    
-    probeid = rownames(x)
-    entrezid = y$EntrezGene.ID
-    names(entrezid) = y$probe
-    
-    ## process probeid in input data
-    entrezid = entrezid[probeid]
-    ##remove NA
-    entrezid = entrezid[!(is.na(entrezid))]
-    x = x[names(entrezid),]
-    entrezid = factor( entrezid, levels =  unique(entrezid) ) 
-    ## names are unique probeid and content are redundant entrezid 
-  
-    
-    ## This is for probeID or transcriptID 
-    ## split expression matrix
-    split_mat <- split( as.data.frame(x), entrezid, drop = F)
-    
-    # function to calculate the desired statistic
-    calculate_stat <- function(mat, method) {
-      switch(method,
-             "mean" = apply(mat, 2, mean, na.rm = TRUE),
-             "median" = apply(mat, 2, median, na.rm = TRUE),
-             "stdev" = {
-               temp = mat
-               stdevs = apply(mat, 1, sd, na.rm = TRUE)
-               vals =  temp[match(max(stdevs),stdevs),]
-               return( vals)
-             },
-             "iqr" = {
-               temp = mat
-               iqrs = apply(mat, 1, function(x) { quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE) })
-               vals =  temp[match(max(iqrs),iqrs),]
-               return( vals)
-             }
-      )
-    }
-    
-    ## keep processed x
-    x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
-    x = as.data.frame(t(x))
-    
-    ##print necessary information
-    ##Parker
-    missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_parker) == 0 & verbose ){ 
-      print("PAM50 signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing :")
-      print(missing_ID_parker)
-    }
-    
-    ##AIMS
-    missing_ID_AIMS = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_AIMS) == 0 & verbose ){ 
-      print("AIMS-based signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing for AIMS-based methods :")
-      print(missing_ID_AIMS)
-    }
-    
-    } else { 
-      ## mapping FALSE for RNAseq (gene level, no replicates)
-
-    x = merge(y, x, by.y = "row.names", by.x = "SYMBOL", all.x = TRUE)
-    
-
-    genes.signature_check = separate_rows(genes.signature, Alias, sep = ", ")
-    
-    ## find entrezID first (find 365 genes only, in fact )
-    x_temp_entrezid = x[c(x$ENTREZID %in% genes.signature_check$EntrezGene.ID ), ]
-
-    
-    missing_ID = setdiff( genes.signature_check$EntrezGene.ID, x_temp_entrezid$ENTREZID )
-    
-    
-    ## supplement ENTREZID in x
-    if( length(missing_ID) >0 & length(x$ENTREZID[is.na(x$ENTREZID)])>0 ){
-      
-      symbol.input = x$SYMBOL[is.na(x$ENTREZID)] 
-      
-      res_ID_missing = sapply(symbol.input, function(symbol){
-        
-        #symbol = "ANLN"
-        ID = unique(genes.signature_check$EntrezGene.ID[which(symbol == genes.signature_check$Symbol  | symbol == genes.signature_check$Alias )] )
-        
-        if(length(ID) ==0){ID=NULL}
-        
-        return(ID)
-      },simplify = FALSE, USE.NAMES = TRUE)
-      
-      ## assign entrezID
-      x[is.na(x$ENTREZID),]$ENTREZID = res_ID_missing
-      
-    }
-    
-
-    ## find entrez ID again
-    x_temp_entrezid = x[x$ENTREZID %in% genes.signature_check$EntrezGene.ID,]
-    rownames(x_temp_entrezid) = x_temp_entrezid$ENTREZID
-    x = x_temp_entrezid[,-c(1,2)]
-
-    ## create NC-based matrix and AIMS-based matrix
-    ## print necessary information
-    ## process data
-    ## print necessary info
-    ## Parker
-    missing_ID_NC = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_NC) == 0 & verbose ){ 
-      print("PAM50 signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing :")
-      print(missing_ID_NC)
-    }
-    
-    ##AIMS
-    missing_ID_SSP = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
-    if( length(missing_ID_SSP) == 0 & verbose ){ 
-      print("AIMS-based signatures are covered")
-    } else if(verbose) {
-      print("These signatures are missing for AIMS-based methods :")
-      print(missing_ID_SSP)
-    }
-    
-    }
+  ## process probeid in input data
+  entrezid = entrezid[probeid]
+  ##remove NA
+  entrezid = entrezid[!(is.na(entrezid))]
+  x = x[names(entrezid),]
+  entrezid = factor( entrezid, levels =  unique(entrezid) ) 
+  ## names are unique probeid and content are redundant entrezid 
   
   
-    ## get matrix for NC (symbol as rows, sample as col)
-    x_NC = x[ match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) ) ,]
-    rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[ match( rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID )  ]
-
-    ## get matrix for AIMS (entrezID as colnames)
-    x_SSP = x[ match(as.character( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID) , rownames(x)  ),]
+  ## This is for probeID or transcriptID or symbol
+  ## split expression matrix
+  split_mat = split( data.frame(x), entrezid, drop = F)
   
-    result = list(x_NC = x_NC, x_NC.log = log2(x_NC +1) , x_SSP = x_SSP )
-  
-    return(result)
-    
+  # function to calculate the desired statistic
+  calculate_stat = function(mat, method) {
+    switch(method,
+           "mean" = apply(mat, 2, mean, na.rm = TRUE),
+           "median" = apply(mat, 2, median, na.rm = TRUE),
+           "stdev" = {
+             temp = mat
+             stdevs = apply(mat, 1, sd, na.rm = TRUE)
+             vals =  temp[match(max(stdevs),stdevs),]
+             return( vals)
+           },
+           "iqr" = {
+             temp = mat
+             iqrs = apply(mat, 1, function(x) { quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE) })
+             vals =  temp[match(max(iqrs),iqrs),]
+             return( vals)
+           },
+           "max" = mat[ which.max( rowSums(mat) ),]
+    )
   }
+  
+  ## keep processed x
+  x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
+  x = apply(x, 1, unlist) 
+  
+  ##print necessary information
+  ##Parker
+  missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_parker) == 0 & verbose ){ 
+    print("Genes used in NC-based methods are covered")
+  } else {
+    print("These genes are missing for NC-based methods:")
+    print(missing_ID_parker)
+  }
+  
+  ##AIMS
+  missing_ID_AIMS = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_AIMS) == 0 & verbose ){ 
+    print("Genes used in SSP-based methods are covered")
+  } else  {
+    print("These genes are missing for SSP-based methods:")
+    print(missing_ID_AIMS)
+  }
+  
+  
+  ## get matrix for NC (symbol as rows, sample as col)
+  x_NC = x[ match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) ) ,]
+  rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[ match( rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID ) ]
 
+  ## get matrix for AIMS (entrezID as colnames)
+  x_SSP = x[ match(as.character( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID) , rownames(x)  ),]
+  
+  result = list(x_NC = data.frame(x_NC), x_NC.log = log2( data.frame(x_NC) +1) , x_SSP =data.frame( x_SSP) )
+  
+  return(result)
+  
+}
 
 
 #' function for standardize
@@ -996,6 +912,7 @@ Vis_heatmap = function(x, out){
 #' @export
 #' 
 
+## reduce dependency ???
 Vis_PCA = function(x, out, Eigen = FALSE){
   
   

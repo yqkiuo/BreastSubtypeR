@@ -21,10 +21,10 @@ NULL
 #' @name Mapping
 #' @description
 #' function for mapping gene ID 
-#' @param gene_expression_matrix Gene expression matrix
+#' @param gene_expression_matrix Gene expression matrix. Probe or gene symbol in row and sample in column.
 #' @param featuredata Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
-#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy,  "mean" for Agilent and "max" for RNAseq)
-#' @param impute Logic. Please specify if there are NA data adn want keep them
+#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and "max" for RNAseq. 
+#' @param impute Logic. Please specify whether to perform impute.knn on NA data
 #' @param verbose Logic. 
 #' @export
 
@@ -34,7 +34,6 @@ Mapping = function(gene_expression_matrix, featuredata, method = "mean", mapping
     x = gene_expression_matrix,
     y = featuredata,
     method = method,
-    mapping = mapping,
     impute = impute,
     verbose = verbose, ..., .homonyms = "last"
   )
@@ -337,6 +336,9 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
   if(length(methods) < 2 ){
     stop("Please select proper methods")
   } 
+  
+  ## check ER distribution and make sure 
+  ## check HER2 information and make sure???
   
   
   if(POP){ ## if it is population based cohort
