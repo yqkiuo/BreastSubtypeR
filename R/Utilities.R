@@ -14,7 +14,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   
   ## check feature data
   if(length(y) == 0) {
-    stop(("Please provide feature annotation to do probe ID mapping ")
+    stop("Please provide feature annotation to do probe ID mapping ")
   }
   
   ## loading genes.signature
