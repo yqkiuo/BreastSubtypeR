@@ -15,13 +15,13 @@ Mapping(
 )
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix}
+\item{gene_expression_matrix}{Gene expression matrix. Probe or gene symbol in row and sample in column.}
 
 \item{featuredata}{Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol.}
 
-\item{method}{Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy,  "mean" for Agilent and "max" for RNAseq)}
+\item{method}{Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and "max" for RNAseq.}
 
-\item{impute}{Logic. Please specify if there are NA data adn want keep them}
+\item{impute}{Logic. Please specify whether to perform impute.knn on NA data}
 
 \item{verbose}{Logic.}
 }
