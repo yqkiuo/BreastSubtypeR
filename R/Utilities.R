@@ -125,6 +125,7 @@ get_consensus_subtype <- function(patient_row) {
 
 
 #' Function to get the average correlation and ROR
+#' @noRd 
 get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 
   ## correlation and ROR to be averaged
