@@ -1,6 +1,6 @@
 #' 
-#' Functions adapted from original parker-based PAM50 subtyping
-#' @name PCA50
+#' Functions adapted from original NC-based subtyping methods
+#' @name NC-based
 #' @import ggplot2
 #' @import ComplexHeatmap
 #' @import RColorBrewer
@@ -10,6 +10,7 @@
 #' @import impute
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate_at
+#' @noRd 
 NULL
 
 #' 
