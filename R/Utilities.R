@@ -1,4 +1,119 @@
 
+
+#' function for mapping ID and supplementing missing data if necessary
+#' @param gene_expression_matrix Gene expression matrix
+#' @param featuredata Feature data provided by user. The table should contain at least two column, probe and ENTREZID. 
+#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and max for RNAseq
+#' @param impute Logic. Please specify if there are NA data adn want keep them
+#' @param verbose Logic. 
+#' @export
+Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
+
+  x = gene_expression_matrix
+  y = featuredata
+  
+  ## check feature data
+  if(length(y) == 0) {
+    stop(("Please provide feature annotation to do probe ID mapping ")
+  }
+  
+  ## loading genes.signature
+  genes.signature = BreastSubtypeR$genes.signature
+  
+  ## first step 
+  ## for empty cells. imput or not ?
+  if(sum(apply(x,2,is.na))>0 & impute){
+    
+    library(impute)
+    if(verbose){
+      probeid_NA = rownames(x)[rowSums(is.na(x))]
+      sample_NA = colnames(x)[colSums(is.na(x))]
+      print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
+    }
+    
+    x = impute.knn(x)
+    x = x$data
+  }
+  
+
+  # 
+  ## second step 
+  ## if mapping (microarray or transcript )
+ 
+  probeid = rownames(x)
+  entrezid = y$ENTREZID
+  names(entrezid) = y$probe
+  
+  ## process probeid in input data
+  entrezid = entrezid[probeid]
+  ##remove NA
+  entrezid = entrezid[!(is.na(entrezid))]
+  x = x[names(entrezid),]
+  entrezid = factor( entrezid, levels =  unique(entrezid) ) 
+  ## names are unique probeid and content are redundant entrezid 
+  
+  
+  ## This is for probeID or transcriptID 
+  ## split expression matrix
+  split_mat <- split( as.data.frame(x), entrezid, drop = F)
+  
+  # function to calculate the desired statistic
+  calculate_stat <- function(mat, method) {
+    switch(method,
+           "mean" = apply(mat, 2, mean, na.rm = TRUE),
+           "median" = apply(mat, 2, median, na.rm = TRUE),
+           "max" = mat[which.max( rowSums(mat) ), ],
+           "stdev" = {
+             temp = mat
+             stdevs = apply(mat, 1, sd, na.rm = TRUE)
+             vals =  temp[match(max(stdevs),stdevs),]
+             return( vals)
+           },
+           "iqr" = {
+             temp = mat
+             iqrs = apply(mat, 1, function(x) { quantile(x, 0.75, na.rm = TRUE) - quantile(x, 0.25, na.rm = TRUE) })
+             vals =  temp[match(max(iqrs),iqrs),]
+             return( vals)
+           }
+    )
+  }
+  
+  ## keep processed x
+  x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
+  x = apply(x, 1, unlist)
+  
+  ##print necessary information
+  ##Parker
+  missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_parker) == 0 & verbose ){ 
+    print("Genes used in NC-based methods are covered")
+  } else if(verbose) {
+    print("These genes are missing for NC-based methods:")
+    print(missing_ID_parker)
+  }
+  
+  ##AIMS
+  missing_ID_AIMS = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_AIMS) == 0 & verbose ){ 
+    print("Genes used in SSP-based methods are covered")
+  } else if(verbose) {
+    print("These genes are missing for SSP-based methods:")
+    print(missing_ID_AIMS)
+  }
+  
+  ## get matrix for NC (symbol as rows, sample as col)
+  x_NC = x[ match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) ) ,]
+  rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[ match( rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID )  ]
+  
+  ## get matrix for AIMS (entrezID as colnames)
+  x_SSP = x[ match(as.character( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID) , rownames(x)  ),]
+  
+  result = list(x_NC = data.frame( x_NC), x_NC.log = log2(data.frame( x_NC) +1) , x_SSP = data.frame( x_SSP) )
+  
+  return(result)
+}
+
+
 #' Function for consensus subtype
 #' @noRd 
 get_consensus_subtype <- function(patient_row) {
