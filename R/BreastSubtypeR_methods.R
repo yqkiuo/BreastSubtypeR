@@ -324,7 +324,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 ## return entropy level
 
 
-BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = FALSE, hasClinical = FALSE,... ){
+BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasClinical = FALSE,... ){
   # 
   # data_input = data_input
   # phenodata = clinic.oslo
@@ -334,14 +334,21 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
   # hasClinical = TRUE
   
   if(length(methods) < 2 ){
-    stop("Please select proper methods")
+    stop("Please select two methods at least")
   } 
   
-  ## check ER distribution and make sure 
-  ## check HER2 information and make sure???
+  ## check ER and if NC-based methods are feasible
+  if(  !("ER" %in% colnames(phenodata)) ) {
+    ## parker can be running 
+    if ( length(methods[str_detect(methods, pattern =  "AIMS|sspbc")] ) != 2 )
+    stop("Please select SSP-based methods")
+  } 
   
-  
-  if(POP){ ## if it is population based cohort
+  if(  !("HER2" %in% colnames(phenodata)) & ( "ssBC_JAMA" %in% methods  ) ) {
+    stop("ssBC_JAMA is not supported")
+  }
+
+  ## run each method
   results = sapply(methods, function(method) {
     
     ## try NC-based
@@ -396,7 +403,6 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
       if( Prosigna){
         res_AIMS$BS.all$BS.prosigna = res_AIMS$BS.all$BS
       }
-      
       return(res_AIMS)
     }
     
@@ -420,7 +426,6 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
     
   }, simplify = FALSE, USE.NAMES = TRUE)
   
-  }
   names(results) = paste0(names(results))
   
 
@@ -437,7 +442,6 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
       }
     }
   }
-
 
   ## adding consensus
   res_subtypes = as.data.frame(res_subtypes)
