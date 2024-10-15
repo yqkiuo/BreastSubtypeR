@@ -511,6 +511,8 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
       
       if ("NODE" %in% colnames(Clinical)  ) {
         
+        Clinical$NODE = as.numeric(Clinical$NODE)
+        
         cpriskgroups.prosigna = combinedWprolif.prosigna
         
         ## check if NODE 
@@ -768,10 +770,11 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   out = sspPredict( centroids, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
   
   if (Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, IHC = df.cln$IHC, row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, IHC = df.cln$IHC , row.names = NULL )
   }
+  
   out$distances.prosigna =  -1 * out$distances.prosigna
   out$distances = -1 * out$distances
   
@@ -833,7 +836,11 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
   
   ## check ratio
   ## make sure a reasonable ratio
-  if(ratio > dim(ERP.ihc)[1]/dim(ERN.ihc)[1] ) {stop( "please specify a ratio less than max(n_ER-, n_ER+ )/min(n_ER-, n_ER+)" ) }
+  if(ratio > dim(ERP.ihc)[1]/dim(ERN.ihc)[1] ) {
+    n_ERP = dim(ERP.ihc)[1]
+    n_ERN = dim(ERN.ihc)[1]
+    stop( paste0( "please specify a ratio less than ", max(n_ERP, n_ERN )/min(n_ERP, n_ERN )   )  ) 
+    }
   
   
   res_ihc_iterative = mapply(function (itr){
@@ -1344,7 +1351,6 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
   out$distances = out$distances[orde.No,]
   out$testData =  out$testData[,colnames(mat) ]
   out$predictions =  out$predictions[colnames(mat)]
-  
   
   return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns = gene.sigma, outList=out))
   
