@@ -452,7 +452,7 @@ BS_Check = function(data_input, phenodata, POP = TRUE, methods = NA, Prosigna = 
     rownames(res_subtypes.prosigna) = colnames(data_input$x_NC); res_subtypes.prosigna[,1]= NULL
 
     consensus.subtype_prosigna = apply(res_subtypes.prosigna, 1, get_consensus_subtype)
-    res_subtypes.prosigna$consensus.subtype_prosigna = consensus.subtype_prosigna
+    res_subtypes.prosigna$consensus.subtype = consensus.subtype_prosigna
   }
   
   if (Prosigna) {
