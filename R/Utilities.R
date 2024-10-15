@@ -380,17 +380,37 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 
 Vis_pie = function(out){
   
+  # out= data.frame(PatientID = rownames(res$results$sspbc$BS.all),
+  #                 Subtype = res$results$sspbc$BS.all$BS )
+  
   data = data.frame( table(out$Subtype))
-  data = data %>% mutate(perc = round( `Freq` / sum(`Freq`) * 100, 2) ) 
+  data = data %>% 
+    mutate(perc = round( `Freq` / sum(`Freq`) * 100, 2),
+           csum = rev(cumsum(rev(perc))), 
+           pos = perc/2 + lead(csum, 1),
+           pos = if_else(is.na(pos), perc/2, pos)) 
+    
+    
   
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
   
+  library(ggrepel)
   
-  {pie(data$Freq,  labels = paste0(data$Freq, " (", data$perc, "%" ,")" )  , 
-      col = Subtype.color, clockwise = TRUE, font = 2)
-  legend("topright", names(Subtype.color), cex = 0.8,
-         fill = Subtype.color)}
+ plot =  ggplot(data, aes(x = "", y = perc, fill = Var1)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(name = "Subtype", values = Subtype.color ) +
+    geom_text_repel(data = data,
+                     aes(y = pos, label = paste0(Freq, " (", perc, "%" ,")" ) ),
+                     size = 4.5, nudge_x =0.6, show.legend = FALSE , segment.color = NA) +
+    coord_polar("y", direction = -1) +
+    theme_void() +
+    theme(
+          legend.title = element_text(size = 14),
+          legend.text =  element_text(size = 12)
+    )
   
+  
+  return(plot)
   
 }
 
@@ -402,7 +422,7 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
-  #data = res$res_subtypes
+  data = res$res_subtypes
   
   ## preset
   categories = data.frame(
@@ -426,24 +446,16 @@ Vis_consensus = function(data){
 
   data = data[order(data$consensus.subtype ),]
   
-  p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = colors,
-                          
-                          ## row
+  p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
                           row_names_gp = gpar(fontsize = 12,fontface = "bold" ),
-                          
-                          ##column
-                          show_column_names = FALSE,
-                          
-                          ## annotation
+                          right_annotation = row_anno,show_column_names = FALSE,
                           heatmap_legend_param = list(title = "Intrinsic Subtype", labels = names(Subtype.color),
                                                       title_gp = gpar(fontsize = 14, fontface = "bold"),
-                                                      gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white"),
-                          
-                          right_annotation = row_anno
-                          
-  )
+                                                      gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white")
+                          )
   
  return(p)
-  
-  
 }
+
+
+
