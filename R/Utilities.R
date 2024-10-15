@@ -236,12 +236,22 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 
 Vis_boxpot = function(out, correlations ){
   
+  # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
+  #                 Subtype = res$results$parker.median$BS.all$BS )
+  # correlations =res$results$parker.median$outList$distances
+  
   df = data.frame( predictions = out$Subtype, cor = apply(correlations, 1, max))
   
   plot =  ggplot( df, aes( x = predictions, y = cor) ) +
-    geom_boxplot()
-  
- return(plot)
+    geom_boxplot()+
+    labs(x = "", y = "Correlation")+
+    theme_classic() +
+    theme( 
+      axis.text = element_text( size = 12)
+      )
+  #plot(plot)
+ 
+  return(plot)
   
 }
 
@@ -258,35 +268,36 @@ Vis_heatmap = function(x, out){
   # x = data_input$x_NC
   # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
   #                 Subtype = res$results$parker.median$BS.all$BS )
-  # 
-  
-  scaled_mat = t(scale(t(x)))
-  
-  col_fun = colorRamp2(c(min(scaled_mat), 0 , max(scaled_mat)), c("green", "black", "red"))
+  # linkage="average",distance="spearman" original myheatmap() function
 
+  scaled_mat = t(scale(t(x[,out$PatientID])))
+
+  ## color
+  col_fun = colorRamp2(c(min(scaled_mat), 0 , max(scaled_mat)), c("green", "black", "red"))
+  
   ## column annotation
   col_anno = data.frame( row.names = out$PatientID, Subtype = out$Subtype )
-
   anno_col = HeatmapAnnotation(df= col_anno, show_legend = FALSE,col = list(Subtype = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" ) ))
   
-  heatmap = Heatmap(scaled_mat, name = "Subtype",
+  heatmap = Heatmap(scaled_mat, name = "Expr",
           col = col_fun,
           ## annotation
           top_annotation = anno_col,
           
           ## clustering
           ## as original heatmap plot
-          clustering_distance_rows = "pearson",
-          clustering_method_rows = "complete",
+          clustering_distance_rows = "spearman",
+          clustering_method_rows = "average",
+          show_row_dend = FALSE,
           
           cluster_column_slices = TRUE,
           column_split = col_anno$Subtype,
-          clustering_distance_columns  = "pearson",
-          clustering_method_columns = "complete",
+          clustering_distance_columns  = "spearman",
+          clustering_method_columns = "average",
 
           ## general
           show_column_names = FALSE,
-          show_heatmap_legend = FALSE,
+          show_heatmap_legend = TRUE,
           row_names_gp = gpar(fontsize = 8))
   
   return(heatmap)
@@ -302,22 +313,57 @@ Vis_heatmap = function(x, out){
 #' @export
 #' 
 
-## reduce dependency ???
 Vis_PCA = function(x, out, Eigen = FALSE){
+  
+  x = data_input$x_NC.log
+  out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
+                  Subtype = res$results$parker.median$BS.all$BS )
   
   
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
+
   
-  #x = data_input$x_parker
+  pca = prcomp(t(x), center = T, scale. = T)
   
-  x_pca = prcomp(t(x),scale. = TRUE )
+  # Scree plot
+  variance = pca$sdev^2/ sum(pca$sdev^2) *100
+  scree_data = data.frame(PC =  seq_along(variance) ,Variance = variance)
   
-  screeplot = fviz_eig(x_pca, addlabels = TRUE, ylim = c(0, 50))
+  screeplot = ggplot(scree_data[1:10,], aes(x = PC, y = Variance)) +
+    geom_bar(stat = "identity", width = 0.5, fill = "steelblue")+
+    geom_line() +
+    geom_point(size=2)+
+    scale_x_continuous(breaks = seq(1,10, 1) )+
+    geom_text( aes(x = PC, label= paste0( round( Variance,2), "%") ),  nudge_y = 1) +
+    labs(x ="Principal Component", y = "Percentage of variance Explained") +
+    theme_classic()+
+    theme(axis.text = element_text(size =12),
+          axis.title = element_text(size = 14)
+          )
   
-  pcaplot = fviz_pca_ind(x_pca, label="none",mean.point = FALSE, pointshape = 16 ,
-               col.ind = as.factor(out$Subtype )) + 
-    scale_color_manual( name = "Subtype", values = Subtype.color )
- 
+  
+  ## PCA plot
+  scores = as.data.frame(pca$x)
+  scores$PatientID = rownames(scores)
+  scores = left_join(scores, out, by ="PatientID" )
+  rownames(scores) = scores$PatientID
+  
+  pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
+    geom_point( size = 2) +
+    geom_vline( xintercept = 0, linetype="dashed") +
+    geom_hline( yintercept = 0, linetype="dashed")+
+    scale_color_manual( name = "Subtype", values = Subtype.color )+
+    labs(x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 2), "% variance)"),
+         y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 2), "% variance)")) +
+    theme_minimal() +
+    theme(axis.text = element_text(size =12),
+          axis.title = element_text(size = 14),
+          legend.title = element_text(size = 14),
+          legend.text =  element_text(size = 12)
+    )
+  
+  
+  
   if(Eigen){
     return(screeplot)
   } else {
@@ -327,5 +373,77 @@ Vis_PCA = function(x, out, Eigen = FALSE){
   
  }
 
+#' Function for pieplot 
+#' @param out a data table includes "patientID" and "Subtype"
+#' @export
+#' 
+
+Vis_pie = function(out){
+  
+  data = data.frame( table(out$Subtype))
+  data = data %>% mutate(perc = round( `Freq` / sum(`Freq`) * 100, 2) ) 
+  
+  Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
+  
+  
+  {pie(data$Freq,  labels = paste0(data$Freq, " (", data$perc, "%" ,")" )  , 
+      col = Subtype.color, clockwise = TRUE, font = 2)
+  legend("topright", names(Subtype.color), cex = 0.8,
+         fill = Subtype.color)}
+  
+  
+}
 
 
+#' Function for pieplot 
+#' @param out a data table includes "patientID" and "Subtype"
+#' @export
+#' 
+
+Vis_consensus = function(data){
+
+  #data = res$res_subtypes
+  
+  ## preset
+  categories = data.frame(
+    Category = rep( c("NC-based", "SSP-based", "consensus") , c(8,2,1)),
+    row.names = c("parker.median","parker.mean", "parker.quantile", 
+                  "cIHC","cIHC.itr", "PCAPAM50", 
+                  "ssBC", "ssBC_JAMA", 
+                  "AIMS", "sspbc", "consensus.subtype")
+  )
+  categories$Category = factor(categories$Category, levels =  c("NC-based", "SSP-based", "consensus") )
+  
+  ## color
+  Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
+  Category.color = setNames( c("#fb9a99", "#a6cee3", "#b2df8a") , c("NC-based", "SSP-based", "consensus") )
+  
+  ## make row annotation
+  row_anno = data.frame(Category = categories[colnames(data),], row.names = colnames(data) )
+  row_anno = HeatmapAnnotation(df =row_anno, which = c("row"), col =list(Category = Category.color ),
+                               annotation_legend_param = list(title_gp = gpar(fontsize = 14, fontface = "bold"),
+                                                              gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white"))
+
+  data = data[order(data$consensus.subtype ),]
+  
+  p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = colors,
+                          
+                          ## row
+                          row_names_gp = gpar(fontsize = 12,fontface = "bold" ),
+                          
+                          ##column
+                          show_column_names = FALSE,
+                          
+                          ## annotation
+                          heatmap_legend_param = list(title = "Intrinsic Subtype", labels = names(Subtype.color),
+                                                      title_gp = gpar(fontsize = 14, fontface = "bold"),
+                                                      gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white"),
+                          
+                          right_annotation = row_anno
+                          
+  )
+  
+ return(p)
+  
+  
+}
