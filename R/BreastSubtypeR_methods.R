@@ -406,8 +406,8 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
       res_AIMS = BS_AIMS(data_input$x_SSP[genes,], genes )
-      res_AIMS$BS.all = as.data.frame( res_AIMS$cl)
-      colnames(res_AIMS$BS.all) = "BS"
+      res_AIMS$BS.all = data.frame( PatientID = rownames(res_AIMS$cl) ,
+                                    BS = res_AIMS$cl[,1])
       
       if( Prosigna){
         res_AIMS$BS.all$BS.prosigna = res_AIMS$BS.all$BS
@@ -421,9 +421,10 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
       
       res_sspbc = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50"  )
       
-      BS.all = as.data.frame(res_sspbc)
-      colnames(BS.all) = "BS"
-      
+      BS.all = data.frame( PatinetID = rownames(res_sspbc),
+                           BS = res_sspbc,
+                           row.names = rownames(res_sspbc) )
+
       if(Prosigna) {
         res_sspbc.prosigna = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.subtype"  )
         BS.all$BS.prosigna = res_sspbc.prosigna[,1]
