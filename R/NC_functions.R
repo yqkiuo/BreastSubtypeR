@@ -953,7 +953,7 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   
   # ## test data
   # mat = data_input$x_NC.log
-  # df.cln = clinic.oslo
+  # df.cln = clinic.scanb
   # calibration = "Internal"
   # internal="PC1ihc.mdns"
   # seed=118
@@ -967,46 +967,6 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   df.pc1  = data.frame(PatientID=rownames(pc12),PC1 = pc12[,1],stringsAsFactors=F)
   df.pca1 = merge(df.cln,df.pc1,by="PatientID")
   
-  # ## visualization
-  # ## http://www.sthda.com/english/articles/31-principal-component-methods-in-r-practical-guide/112-pca-principal-component-analysis-essentials/
-  # factoextra::fviz_eig(pca)
-  # factoextra::fviz_pca_var(pca, col.var = "black")
-  # factoextra::fviz_cos2(pca, choice = "var", axes = 1:2)
-  # # Contributions of variables to PC1
-  # factoextra::fviz_contrib(pca, choice = "var", axes = 1, top = 10)
-  # # Contributions of variables to PC2
-  # factoextra::fviz_contrib(pca, choice = "var", axes = 2, top = 10)
-  # 
-  # factoextra::fviz_pca_var(pca, col.var = "contrib",
-  #              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07") )
-  # 
-  # factoextra::fviz_pca_ind(pca, col.ind = "cos2", 
-  #              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-  #              repel = FALSE # Avoid text overlapping (slow if many points)
-  # )
-  # factoextra::fviz_pca_ind(pca,
-  #              geom.ind = "point", # show points only (nbut not "text")
-  #              col.ind = df.cln$IHC, # color by groups
-  #              palette = c("#00AFBB", "#E7B800", "#FC4E07", "black","red"),
-  #              addEllipses = FALSE, # Concentration ellipses
-  #              legend.title = "Groups"
-  # )
-  # 
-  # factoextra::fviz_cos2(pca, choice = "ind")
-  # 
-  # factoextra::fviz_contrib(pca, choice = "ind", axes = 1:2)
-  # 
-  ### function to count the number of mis-classified cases on a given PC1 point ---find the cutoff
-  
-  # getno = function(x){
-  #   #x = 20
-  #   p.rgt = length(which(df.pca1$IHC %in% c("LB1","LB2","LA") & df.pca1$PC1 >x))/length(which(df.pca1$IHC %in% c("LB1","LB2","LA") ))
-  #   n.lft = length(which(df.pca1$IHC %in% c("Her2+","TN") & df.pca1$PC1 <x))/ length(which(df.pca1$IHC %in% c("Her2+","TN")))
-  #   tot   = (p.rgt + n.lft) * 100
-  #   return(list(PC1=x,Mis=tot))
-  # }
-  # 
-  
   getno = function(x){
     p.rgt = length(which(df.pca1$ER == "ER+" & df.pca1$PC1 >x))/length(which(df.pca1$ER == "ER+"))
     n.lft = length(which(df.pca1$ER == "ER-" & df.pca1$PC1 <x))/ length(which(df.pca1$ER == "ER-"))
@@ -1014,12 +974,11 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
     return(list(PC1=x,Mis=tot))
   }
   
-  
   ## calculate the 
   df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
   
   ## ??? improve
-  if(min(df.mis$Mis) < 100 ) {
+  if(min(df.mis$Mis) < 50 ) {
     num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
   } else {
     num.min = df.mis$PC1[which(df.mis$Mis == max(df.mis$Mis))]
