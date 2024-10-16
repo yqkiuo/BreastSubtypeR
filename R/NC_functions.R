@@ -368,10 +368,7 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
   # out
   # df.cln = df.cln
   # hasClinical = hasClinical
-  
-  
-  Clinical = df.cln[match(names(out$predictions),df.cln$PatientID ),]
-  rownames(Clinical) = Clinical$PatientID
+
   ## prepare outtable
   # 
   # 
@@ -471,6 +468,9 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
   
   if (hasClinical){
     
+    Clinical = df.cln[match(names(out$predictions),df.cln$PatientID ),]
+    rownames(Clinical) = Clinical$PatientID
+
     if ( "T" %in% colnames(Clinical)) {
       
       xT= as.numeric(as.vector(Clinical$T))
@@ -687,9 +687,9 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   
   
   if (Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
   } else {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS= out$predictions, IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS= out$predictions, row.names = NULL )
   }
   out$distances.prosigna =  -1 * out$distances.prosigna
   out$distances = -1 * out$distances
@@ -770,9 +770,9 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   out = sspPredict( centroids, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
   
   if (Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, IHC = df.cln$IHC, row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
   } else {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   
   out$distances.prosigna =  -1 * out$distances.prosigna
@@ -892,9 +892,9 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     Call_subtypes.prosigna = mapply(function(res_ihs){res_ihs$predictions.prosigna }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
     consensus_subtypes.prosigna = apply(Call_subtypes.prosigna, 1, get_consensus_subtype)
     
-    Int.sbs = data.frame(PatientID = names(consensus_subtypes), BS = consensus_subtypes, BS.prosigna = consensus_subtypes.prosigna , IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(consensus_subtypes), BS = consensus_subtypes, BS.prosigna = consensus_subtypes.prosigna , row.names = NULL )
   } else {
-    Int.sbs = data.frame(PatientID =names(consensus_subtypes), BS = consensus_subtypes, IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID =names(consensus_subtypes), BS = consensus_subtypes, row.names = NULL )
   }
   
   ## get correlation and ROR score for each patient
@@ -1081,9 +1081,9 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
   
   if(Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna ,IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
   } else {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, IHC = df.cln$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   
   out$distances.prosigna =  -1 * out$distances.prosigna
@@ -1164,9 +1164,9 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
   
   if(Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, IHC = df.pam$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
   } else {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, IHC = df.pam$IHC , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   out$distances.prosigna =  -1 * out$distances.prosigna
   out$distances = -1 * out$distances
@@ -1331,10 +1331,10 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
   
   if(Prosigna){
     out = list(predictions=predictions,predictions.prosigna = predictions.prosigna ,testData=testData,distances=distances, distances.prosigna = distances.prosigna, centroids= BreastSubtypeR$centroid)
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , IHC = df.cln[ which( rownames(df.cln) %in% names(out$predictions) ) ,"IHC"], row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
   } else {
     out= list(predictions=predictions, testData=testData,distances=distances,  distances.prosigna = distances.prosigna, centroids=BreastSubtypeR$centroid)
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, IHC = df.cln[ which( rownames(df.cln) %in% names(out$predictions) ) ,"IHC"], row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   out$distances.prosigna =  -1 * out$distances.prosigna
   out$distances = -1 * out$distances
