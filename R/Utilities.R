@@ -322,10 +322,10 @@ Vis_heatmap = function(x, out){
 
 Vis_PCA = function(x, out, Eigen = FALSE){
   
-  x = data_input$x_NC.log
-  out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-                  Subtype = res$results$parker.median$BS.all$BS )
-  
+  # x = data_input$x_NC.log
+  # out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
+  #                 Subtype = res$results$parker.median$BS.all$BS )
+  # 
   
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
 
@@ -429,7 +429,9 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
-  data = res$res_subtypes
+  # data = res$res_subtypes
+  # data = res$res_subtypes.prosigna[,-9]
+  Labels = unique(as.vector( as.matrix( data)))
   
   ## preset
   categories = data.frame(
@@ -456,7 +458,7 @@ Vis_consensus = function(data){
   p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
                           row_names_gp = gpar(fontsize = 12,fontface = "bold" ),
                           right_annotation = row_anno,show_column_names = FALSE,
-                          heatmap_legend_param = list(title = "Intrinsic Subtype", labels = names(Subtype.color),
+                          heatmap_legend_param = list(title = "Intrinsic Subtype", labels = Labels,
                                                       title_gp = gpar(fontsize = 14, fontface = "bold"),
                                                       gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white")
                           )
