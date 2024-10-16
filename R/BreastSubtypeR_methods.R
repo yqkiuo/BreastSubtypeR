@@ -164,9 +164,11 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasClinical =FALSE,seed=118){
   
   # ## test data
-  # gene_expression_matrix = data_input$x_NC
-  # phenodata = FL.clinic
-  # hasClinical =T
+  gene_expression_matrix = data_input$x_NC.log
+  phenodata =clinic.oslo
+  hasClinical =T
+  Prosigna = T
+  seed = 118
 
   ## first step
   arguments = rlang::dots_list(
@@ -181,10 +183,15 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
   
   
   ## second step
-  df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS,
-                         IHC=res_PC1IHC$BS.all$IHC,ER = phenodata[res_PC1IHC$BS.all$PatientID,]$ER, 
-                         T = phenodata[res_PC1IHC$BS.all$PatientID,]$T, NODE= phenodata[res_PC1IHC$BS.all$PatientID,]$NODE,
-                         stringsAsFactors=F)
+  
+  if (hasClinical) {
+    df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS,
+                           T = phenodata[res_PC1IHC$BS.all$PatientID,]$T, NODE= phenodata[res_PC1IHC$BS.all$PatientID,]$NODE,
+                           stringsAsFactors=F)
+  } else {
+    df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS,
+                           stringsAsFactors=F)
+  }
   
   #View(df.pc1pam)
   
