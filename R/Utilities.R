@@ -27,7 +27,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
  
   ## filter by ENTREZID
   y = y[y$ENTREZID %in% genes.signature$EntrezGene.ID,]
-  x = x[y.keep$probe,]
+  x = x[y$probe,]
   
   
   ## first step 
