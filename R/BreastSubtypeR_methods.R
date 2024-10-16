@@ -337,11 +337,11 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
     stop("Please select two methods at least")
   } 
   
-  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC_JAMA|cIHC|cIHC.itr|AIMS|sspbc")] ) < length(methods)){
+  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC_JAMA|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
     stop("Please provide right method names")
   }
 
-  ## check ER and if NC-based methods are feasible
+  ## check ER and if methods are feasible
   if(  !("ER" %in% colnames(phenodata)) & ( length(methods[str_detect(methods, pattern =  "ssBC|ssBC_JAMA|cIHC|cIHC.itr")] ) > 0 ) ) {
     stop("Please do not select any of ssBC, ssBC_JAMA, cIHC and cIHC.itr")
   } 
