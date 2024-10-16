@@ -163,12 +163,12 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 
 BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasClinical =FALSE,seed=118){
   
-  # ## test data
-  gene_expression_matrix = data_input$x_NC.log
-  phenodata =clinic.oslo
-  hasClinical =T
-  Prosigna = T
-  seed = 118
+  # # ## test data
+  # gene_expression_matrix = data_input$x_NC.log
+  # phenodata =clinic.oslo
+  # hasClinical =T
+  # Prosigna = T
+  # seed = 118
 
   ## first step
   arguments = rlang::dots_list(
@@ -387,7 +387,7 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
     
     if(method == "PCAPAM50"){
       print(paste0(method," is running!"))
-      return(BS_PCAPAM50(data_input$x_NC.log, phenodata,Prosigna = Prosigna , hasClinical = hasClinical))
+      return(BS_PCAPAM50(data_input$x_NC.log, phenodata, Prosigna = Prosigna , hasClinical = hasClinical))
     }
     
     if(method == "ssBC"){
