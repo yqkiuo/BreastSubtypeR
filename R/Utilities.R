@@ -11,6 +11,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
 
   x = gene_expression_matrix
   y = featuredata
+  samplenames = colnames(x)
   
   ## check feature data
   if(length(y) == 0) {
@@ -104,11 +105,17 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   ## get matrix for NC (symbol as rows, sample as col)
   x_NC = x[ match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) ) ,]
   rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[ match( rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID )  ]
+  x_NC = data.frame(x_NC)
+  colnames(x_NC) = samplenames
+  
+  ## prepare log expr
+  x_NC.log = log2(x_NC+1 )
   
   ## get matrix for AIMS (entrezID as colnames)
   x_SSP = x[ match(as.character( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID) , rownames(x)  ),]
+  colnames(x_SSP) = samplenames
   
-  result = list(x_NC = data.frame( x_NC), x_NC.log = log2(data.frame( x_NC) +1) , x_SSP = data.frame( x_SSP) )
+  result = list(x_NC = x_NC, x_NC.log = x_NC.log , x_SSP = x_SSP )
   
   return(result)
 }
