@@ -7,7 +7,6 @@
 BS_Check(
   data_input,
   phenodata,
-  POP = TRUE,
   methods = NA,
   Prosigna = FALSE,
   hasClinical = FALSE,
