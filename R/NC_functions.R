@@ -77,8 +77,8 @@ docalibration = function( y, df.al,calibration = "None", internal=internal, exte
           "External" = { ## external
             medians =  readarray(df.al) 
             #print(paste("calibration to:",external)) ## pre-prepared medians and givenmedians
-            tm<-overlapSets(medians$xd,y)
-            y<-(tm$y-tm$x[,external]) }
+            tm = overlapSets(medians$xd,y)
+            y = (tm$y-tm$x[,external]) }
           
   )
   
@@ -370,8 +370,8 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
   # hasClinical = hasClinical
 
   ## prepare outtable
-  # 
-  # 
+
+  sample = data.frame( patientID = names(out$predictions) )
   
   distance = data.frame(out$distances, row.names = names(out$predictions) )
   colnames(distance) = c("Basal","Her2","LumA","LumB","Normal")
@@ -587,10 +587,10 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
     }
     
     
-    outtable = cbind( distance, Call, call.conf, ROR.genomic,ROR.combined, ROR.combined.prosigna, er_her2)
+    outtable = cbind(sample, distance, Call, call.conf, ROR.genomic,ROR.combined, ROR.combined.prosigna, er_her2)
     
   } else {
-    outtable = cbind( distance, Call, call.conf, ROR.genomic, er_her2)
+    outtable = cbind(sample, distance, Call, call.conf, ROR.genomic, er_her2)
   }
   
   
@@ -599,7 +599,7 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
     ## pass distances (just omitting normal)
     Call.prosigna = data.frame( "Call.prosigna" =out$predictions.prosigna, row.names = names(out$predictions.prosigna))
     outtable = cbind(outtable, Call.prosigna)
-    outtable =outtable %>% dplyr::select(colnames(distance), Call, Call.prosigna, everything() )
+    outtable =outtable %>% dplyr::select(patientID, colnames(distance), Call, Call.prosigna, everything() )
     
   }
   
@@ -646,9 +646,6 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   # medians = NA
   # Prosigna = T
   # hasClinical = T
-  
-  
-  
   
   fl.mdn = BreastSubtypeR$medians
   
