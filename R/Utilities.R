@@ -9,10 +9,14 @@
 #' @export
 Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
 
+  # ## test
+  # gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
+  # featuredata = anno_feature
+
   x = gene_expression_matrix
   y = featuredata
   samplenames = colnames(x)
-  
+
   ## check feature data
   if(length(y) == 0) {
     stop("Please provide feature annotation to do probe ID mapping ")
@@ -20,6 +24,11 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   
   ## loading genes.signature
   genes.signature = BreastSubtypeR$genes.signature
+ 
+  ## filter by ENTREZID
+  y = y[y$ENTREZID %in% genes.signature$EntrezGene.ID,]
+  x = x[y.keep$probe,]
+  
   
   ## first step 
   ## for empty cells. imput or not ?
