@@ -2,7 +2,7 @@ library(shiny)
 
 options(shiny.maxRequestSize=50*1024^2) 
 
-path="/Users/qiaoyang/OneDrive/OneDrive - Karolinska Institutet/Karolinska Ins/ProjectsAtKI/6.PAM50"
+path="/Users/qiaoyang/OneDrive/OneDrive - Karolinska Institutet/Karolinska Ins/ProjectsAtKI/6.PAM50/BreastSubtypeR"
 setwd(path)
 runApp("ShinyBreastSubtypeR")
 
