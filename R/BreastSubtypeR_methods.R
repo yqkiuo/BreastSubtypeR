@@ -337,11 +337,13 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
     stop("Please select two methods at least")
   } 
   
+  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC_JAMA|cIHC|cIHC.itr|AIMS|sspbc")] ) < length(methods)){
+    stop("Please provide right method names")
+  }
+
   ## check ER and if NC-based methods are feasible
-  if(  !("ER" %in% colnames(phenodata)) ) {
-    ## parker can be running 
-    if ( length(methods[str_detect(methods, pattern =  "AIMS|sspbc")] ) != 2 )
-    stop("Please select SSP-based methods")
+  if(  !("ER" %in% colnames(phenodata)) & ( length(methods[str_detect(methods, pattern =  "ssBC|ssBC_JAMA|cIHC|cIHC.itr")] ) > 0 ) ) {
+    stop("Please do not select any of ssBC, ssBC_JAMA, cIHC and cIHC.itr")
   } 
   
   if(  !("HER2" %in% colnames(phenodata)) & ( "ssBC_JAMA" %in% methods  ) ) {
