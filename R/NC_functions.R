@@ -951,9 +951,9 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   # seed=118
   # hasClinical = FALSE
   
-  # # ## test data
-  # mat = data_input$x_parker
-  # df.cln = clinic
+  # ## test data
+  # mat = data_input$x_NC.log
+  # df.cln = clinic.oslo
   # calibration = "Internal"
   # internal="PC1ihc.mdns"
   # seed=118
