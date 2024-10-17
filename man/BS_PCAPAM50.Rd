@@ -19,7 +19,7 @@ BS_PCAPAM50(
 
 \item{Prosigna}{Logic.}
 
-\item{hasClinical}{Logical. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
 \value{
 The intrinsic subtypes estimated by PCA-PAM50 method.

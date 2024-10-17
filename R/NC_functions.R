@@ -870,36 +870,35 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   
   # ## test data
   # mat = data_input$x_NC.log
-  # df.cln = clinic.scanb
+  # df.cln = clinic.oslo
   # calibration = "Internal"
   # internal="PC1ihc.mdns"
   # seed=118
   # hasClinical = T
   
   
+  # Pull the PCA components
   #rv      = rowVars(mat)
   #select  = order(rv, decreasing = TRUE)[seq_len(dim(mat)[1])] # the input is PAM50 matrix --50 genes -- get from dimension
   pca     = prcomp(t(mat))#[select,]
   pc12    = pca$x[,1:2] #get two principal 
   df.pc1  = data.frame(PatientID=rownames(pc12),PC1 = pc12[,1],stringsAsFactors=F)
-  df.pca1 = merge(df.cln,df.pc1,by="PatientID")
+  df.pca1 = left_join(df.cln,df.pc1,by="PatientID")
   
+  ### function to count the number of mis-classified cases on a given PC1 point ---find the cutoff
   getno = function(x){
-    p.rgt = length(which(df.pca1$ER == "ER+" & df.pca1$PC1 >x))/length(which(df.pca1$ER == "ER+"))
-    n.lft = length(which(df.pca1$ER == "ER-" & df.pca1$PC1 <x))/ length(which(df.pca1$ER == "ER-"))
+    p.rgt = length(which(df.pca1$ER %in% c("ER+") & df.pca1$PC1 >x))/length(which(df.pca1$ER %in% c("ER+") ))
+    n.lft = length(which(df.pca1$ER %in% c("ER-") & df.pca1$PC1 <x))/ length(which(df.pca1$ER %in% c("ER-")))
     tot   = (p.rgt + n.lft) * 100
     return(list(PC1=x,Mis=tot))
   }
   
-  ## calculate the 
-  df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
   
-  ## ??? improve
-  if(min(df.mis$Mis) < 50 ) {
-    num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
-  } else {
-    num.min = df.mis$PC1[which(df.mis$Mis == max(df.mis$Mis))]
-  }
+  df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
+  plot(df.mis)
+  
+  num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
+  
   
   # 
   # ## visualizaton
@@ -907,8 +906,8 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   # ## but in TCGA cell2015, it is on another way around. 
   # plot(x = df.mis$PC1, y =  df.mis$Mis)
   # 
-  ERP.pc1ihc = df.pca1[which(df.pca1$ER == "ER+" & df.pca1$PC1 <= mean(num.min)),] # used mean to overcome situation where there are two minimum
-  ERN.pc1ihc = df.pca1[which(df.pca1$ER == "ER-" & df.pca1$PC1 > mean(num.min)),]
+  ERP.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER+") & df.pca1$PC1 <= mean(num.min)),] # used mean to overcome situation where there are two minimum
+  ERN.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER-") & df.pca1$PC1 > mean(num.min)),]
   
   dim(ERP.pc1ihc)
   dim(ERN.pc1ihc)
