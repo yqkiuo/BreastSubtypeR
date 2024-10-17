@@ -899,13 +899,6 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   
   num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
   
-  
-  # 
-  # ## visualizaton
-  # ## Here, in train/example dataset, Her2, TN are on right side of PCA; LA LB1 LB2 are on left side
-  # ## but in TCGA cell2015, it is on another way around. 
-  # plot(x = df.mis$PC1, y =  df.mis$Mis)
-  # 
   ERP.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER+") & df.pca1$PC1 <= mean(num.min)),] # used mean to overcome situation where there are two minimum
   ERN.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER-") & df.pca1$PC1 > mean(num.min)),]
   
