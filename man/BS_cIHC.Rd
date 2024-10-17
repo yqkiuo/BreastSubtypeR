@@ -13,17 +13,23 @@ BS_cIHC(
 )
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{Clinical information table, with IHC column}
+\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{hasClinical}{Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column.}
+\item{Prosigna}{Logic.}
 
-\item{featuredata}{Annotate genes}
+\item{hasClinical}{Logical. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
 \value{
-The intrinsic subtype, confidential level, percentages.
+The intrinsic subtypes estimated using the conventinal IHC (cIHC) method.
 }
 \description{
 This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
+}
+\examples{
+
+data("oslo.obj")
+res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+
 }

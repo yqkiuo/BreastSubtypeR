@@ -6,7 +6,7 @@
 \usage{
 BS_parker(
   gene_expression_matrix,
-  phenodata,
+  phenodata = NA,
   calibration = "None",
   internal = NA,
   external = NA,
@@ -17,27 +17,31 @@ BS_parker(
 )
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column, log of normalized}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{Clinical information table, with ER information or IHC column (what input)}
+\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{calibration}{How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort.}
+\item{calibration}{The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.}
 
-\item{internal}{Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr}
+\item{internal}{Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").}
 
-\item{external}{Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name.}
+\item{external}{Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter.}
 
-\item{medians}{If you specify "external" parameter as "Given.mdns", you should input matrix/table, 50 signatures in the first column and "Given.mdns" values in the second column.}
+\item{medians}{If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.}
 
-\item{hasClinical}{Logical. Please specify if you prepared clinical information, like Tumore size as T column, lymphatic node status as NODE column.}
+\item{Prosigna}{Logic.}
 
-\item{featuredata}{Annotate genes}
-
-\item{do.mapping}{Logical. If it is microarray data or expression matrix at transcript level, please specify TRUE (this will call dochecking() function and run mapping step )}
+\item{hasClinical}{Logical. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
 \value{
-The subtypes estimated by parker-based subtyping
+The intrinsic subtypes estimated using the Parker-based method.
 }
 \description{
-This calls parker-based intrinsic subtyping methods. The methods for gene calibration include "None", "medianCtr", "meanCtr", "qCtr", "Given.mdns", or chosen platform.
+This calls parker-based intrinsic subtyping methods.
+}
+\examples{
+
+data("oslo.obj")
+res = BS_parker(data_input$x_NC.log,phenodata = NA, calibration = "Internal", internal = "medianCtr",  Prosigna = FALSE, hasClinical =FALSE)
+
 }

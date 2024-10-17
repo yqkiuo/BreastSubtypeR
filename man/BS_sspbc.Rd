@@ -7,11 +7,19 @@
 BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix, gene in row sample in column}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+
+\item{ssp.name}{Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was prepared for Prosigna-based subtyping.}
 }
 \value{
-The subtypes estimated by sspbc
+The subtypes estimated by sspbc method
 }
 \description{
 This calls sspbc to do intrinsic subtyping.
+}
+\examples{
+
+data("oslo.obj")
+res = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50" )
+
 }

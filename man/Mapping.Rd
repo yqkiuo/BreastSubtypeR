@@ -31,6 +31,20 @@ Mapping(
 
 \item{verbose}{Logic.}
 }
+\value{
+lists of three gene expression matrix. "x_NC.log" is prepared for NC-based methods and "x_SSP" for SSP-based methods.
+}
 \description{
 function for mapping gene ID
+}
+\details{
+The row can be gene symbol names in gene expression matrix/table, but you need to add one extra SYMBOL column and rename it as probe in feature table.
+
+The method is used to do deduplicated. reference ???
+}
+\examples{
+data("oslo.obj")
+
+data_input = Mapping(gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID], featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+
 }

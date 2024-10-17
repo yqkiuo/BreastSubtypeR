@@ -7,13 +7,21 @@
 BS_AIMS(gene_expression_matrix, EntrezID, ...)
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
 \item{EntrezID}{A list of Entrez gene ids}
 }
 \value{
-The subtypes estimated by PCA_AIMS
+The subtypes estimated by AIMS method
 }
 \description{
 This calls AIMS to do intrinsic subtyping.
+}
+\examples{
+
+data("oslo.obj")
+data("genes.signature")
+genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
+res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
+
 }

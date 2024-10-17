@@ -14,11 +14,26 @@ BS_Check(
 )
 }
 \arguments{
-\item{data_input}{list of two Gene expression matrix, output of Mapping function; "x_NC" object should be log2 transformed manually.}
+\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+
+\item{methods}{Specify methods.}
+
+\item{Prosigna}{Logic.}
+
+\item{hasClinical}{Logical. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 }
 \value{
 The subtypes estimated by selected methods
 }
 \description{
-This calls consensus subtype .
+This calls consensus subtyping and users can specify subtyping methods.
+}
+\examples{
+
+methods = c( "parker.median", "parker.mean", "parker.quantile")
+res = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Prosigna = FALSE, hasClinical = FALSE)
+
+
 }

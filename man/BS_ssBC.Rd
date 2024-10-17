@@ -14,20 +14,25 @@ BS_ssBC(
 )
 }
 \arguments{
-\item{gene_expression_matrix}{Gene expression matrix, gene in row and sample in column}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{Clinical information table, like TN,ER and HER2}
+\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{s}{Specify "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
+\item{s}{Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
 
-\item{hasClinical}{Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column.}
+\item{Prosigna}{Logic.}
 
-\item{featuredata}{Annotate genes}
+\item{hasClinical}{Logical. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
 \value{
-The subtypes estimated by ssBC
+The intrinsic subtypes estimated by ssBC method
 }
 \description{
 This calls ssBC to do intrinsic subtyping.
-It is better to group cohorts by ER+/- or TN/nTN.
+}
+\examples{
+
+data("oslo.obj")
+res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Prosigna = FALSE, hasClinical =FALSE)
+
 }
