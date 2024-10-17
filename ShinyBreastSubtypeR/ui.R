@@ -1,14 +1,24 @@
 library(shiny)
-library(shinyjs) ## js action !!!
 library(bslib)
+library(thematic)
 
 # Define UI for app that draws a histogram ----
 
 ui = page_fluid(
+  
+  theme = bs_theme(preset = "zephyr", font_scale = 1.2),
+  
+  titlePanel("Breast Cancer Intrinsic Subtype (BreastSubtypeR)"),
 
-
-  titlePanel("Breast Cancer Intrinsic Subtype"),
-
+  card(
+    card_header("Welcom to BreastSubtypeR"),
+    "BreastSubtypeR collected breast cancer subtyping methods, near centrioids based (NC-based) and single sample prediction based (SSP-based). It employs standardized input and output and provides a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
+    card_image("logo.svg", height = "300px"),
+    card_footer("Enjoy this subtyping journey.")
+  ),
+  
+  # Main page section with a title
+  h3("Please input your data"),  # Add a title here
 
   ## main page, input gene expression etc.
   layout_column_wrap(
@@ -50,14 +60,17 @@ ui = page_fluid(
                   ".txt")
       ), ## csv/text
     )
-  ), ## layout 3
-
+  ),
   
   ## Map button
   card(
     actionButton("map", "Map" )
-  ),
+  )
+  , ## layout 3
 
+  # Main page section with a title
+  h3("Please choose your method"),  # Add a title here
+  
   ## options
   card(
     card_header( "Subtyping method setting"),
@@ -199,15 +212,12 @@ ui = page_fluid(
   fluidRow(
     column(12, align = "center",
            div(style = "margin-top: 20px; margin-bottom: 20px;",
-               downloadButton("download", "", style = "width: 150px; height: 40px;"),
-               actionButton("reset", "Reset", style = "width: 150px; height: 40px; margin-left: 10px;")
-           )
+               downloadButton("download", "", style = "width: 150px; height: 40px;"))
     )
   ),
 
   # Visualization layout placed separately and conditionally rendered
   uiOutput("plotSection")
-  
-  
+
 )
 

@@ -13,6 +13,14 @@ library(stringr)
 
 server <- function(input, output) {
   
+  output$logo = renderImage( 
+    { 
+      list(src = "logo.svg", height = "100%",inline = FALSE) 
+    }, 
+    deleteFile = FALSE 
+  ) 
+  
+  
   #### upload data ####
 
   # Reactive values to store uploaded data and results
