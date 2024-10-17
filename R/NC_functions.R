@@ -1,12 +1,10 @@
 #' 
-#' Functions adapted from original NC-based subtyping methods
+#' Functions adapted from NC-based subtyping methods
 #' @name NC-based
 #' @import ggplot2
 #' @import ComplexHeatmap
 #' @import RColorBrewer
-#' @import circlize
 #' @import magrittr
-#' @import factoextra
 #' @import impute
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate_at
@@ -14,7 +12,7 @@
 NULL
 
 #' 
-#' function for central median
+#' Function for central median
 #' @param x gene expression matrix
 #' @noRd 
 medianCtr<-function(x){
@@ -25,7 +23,7 @@ medianCtr<-function(x){
   return(x)
 }
 
-#' function for quantile central
+#' Function for quantile central
 #' this is adapted from genefu package
 #' @param x Gene expression matrix or vector
 #' @noRd 
@@ -47,14 +45,14 @@ rescale <- function(x, na.rm=FALSE, q=0) {
 }
 
 
-#' function for calibration methods
+#' Function for calibration methods
 #' @param y Gene expression matrix 
 #' @param df.al Medians for calibration
 #' @param calibration How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort. 
 #' @param internal Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr
 #' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
 #' @noRd 
-docalibration = function( y, df.al,calibration = "None", internal=internal, external=external){
+docalibration = function( y, df.al, calibration = "None", internal=internal, external=external){
   # y = mat
   # df.al = df.al
   # internal = "meanCtr"
@@ -67,17 +65,17 @@ docalibration = function( y, df.al,calibration = "None", internal=internal, exte
             else if(internal == "meanCtr") { y =  t(scale( t(y), center=TRUE, scale=TRUE))} ## "scale" in genefu method
             else if(internal == "qCtr") { y = t(apply(y, 1, function(x) {  return( (rescale(x, q=mq, na.rm=TRUE) - 0.5) * 2 ) }) )  } ## "robust" in genefu method; mp = 0.05
             else if(internal == internal) { ## which column to use
-              medians =  readarray(df.al)
+              medians = df.al
               #print(paste("calibration to:",internal))
-              tm = overlapSets(medians$xd,y)
+              tm = overlapSets(medians,y)
               y = (tm$y-tm$x[,internal])
             }
             else { print( "Please choose internal calibration stategy: medianCtr, meanCtr, qCtr or ER+/- relevant ")}
           },
           "External" = { ## external
-            medians =  readarray(df.al) 
+            medians = df.al 
             #print(paste("calibration to:",external)) ## pre-prepared medians and givenmedians
-            tm = overlapSets(medians$xd,y)
+            tm = overlapSets(medians,y)
             y = (tm$y-tm$x[,external]) }
           
   )
@@ -87,8 +85,8 @@ docalibration = function( y, df.al,calibration = "None", internal=internal, exte
 }
 
 
-#' function for standardize
-#' @param x description
+#' Function for standardize
+#' @param x gene expression matrix
 #' @noRd
 standardize<-function(x){
   annAll<-dimnames(x)
@@ -98,7 +96,7 @@ standardize<-function(x){
 }
 
 
-#' Function for ordering gene in expression matrix as PAM50 gene signature 
+#' Function for ordering gene in expression matrix as PAM50 genes 
 #' @param x PAM50 centroid matrix
 #' @param y Gene expression matrix
 #' @noRd
@@ -115,102 +113,11 @@ overlapSets<-function(x,y){
   return(list(x=x,y=y))
 }
 
-#'
-#' Function for de-duplicated genes in medians of train cohort
-#' @param x Median of train cohort
-#' @param method mean, median, stdev, iqr
-#' @noRd 
-collapseIDs<-function(x,method="mean"){
-  
-  allids<-as.vector(row.names(x))
-  ids<- levels(as.factor(allids))
-  x.col<- NULL
-  
-  if(length(ids)==dim(x)[1]){ 
-    dimnames(x)[[1]]<-allids
-    return(x) 
-  }
-  
-  for(i in 1:length(ids)){
-    if(sum(allids==ids[i])>1){
-      indices <- allids==ids[i] 
-      if(method=="mean"){
-        vals<-apply(x[indices,],2,mean,na.rm=T)
-      }
-      if(method=="median"){
-        vals<-apply(x[indices,],2,median,na.rm=T)
-      }
-      if(method=="stdev"){   
-        temp<- x[indices,]
-        stdevs<- apply(temp,1,sd,na.rm=T)
-        vals<- temp[match(max(stdevs),stdevs),]
-      }
-      if(method=="iqr"){   
-        temp<- x[indices,]
-        iqrs<- apply(temp,1,function(x){quantile(x,.75,na.rm=T)-quantile(x,.25,na.rm=T)})
-        vals<- temp[match(max(iqrs),iqrs),]
-      }
-      x.col <- rbind(x.col,vals)
-    }else{
-      x.col <- rbind(x.col,x[allids==ids[i],])
-    }
-    
-    # can be mean or iqr (probe with max iqr is selected)
-    # typically, mean is preferred for long oligo (microarray) and
-    # iqr is preferred for short oligo platforms (affy)
-    # ID should be unique by RNAseq
-    
-  }
-  
-  dimnames(x.col)<- list(ids,dimnames(x)[[2]])
-  return(x.col)
-  
-}
-
-#' Function for data structure of medians of train cohort
-#' @param data Median of train cohort
-#' @noRd
-readarray<-function(data,designFile=NA,impute=T,method="mean"){
-  
-  # do de-duplicated for gene
-  ## But not working for RNAseq, only for microarray sequencing data
-  
-  xd = collapseIDs(data,method)
-  
-  features<- dim(xd)[1]
-  samples<- dim(xd)[2]
-  geneNames<-rownames(xd)
-  sampleNames = colnames(xd)
-  xd<-apply(xd,2,as.numeric)
-  rownames(xd)<-geneNames
-  colnames(xd)<-sampleNames
-  classes = NULL
-  
-  if(!is.na(designFile)){
-    x<-read.table(designFile,sep="\t",header=T,row.names=1,fill=T,stringsAsFactors=FALSE)
-    xd<-xd[,sort.list(colnames(xd))]
-    xd<-xd[,colnames(xd) %in% rownames(x)]
-    x<-x[rownames(x) %in% colnames(xd),]
-    x<-x[sort.list(rownames(x)),]
-    classes<-as.data.frame(x)
-  }
-  
-  if(sum(apply(xd,2,is.na))>0 & impute){
-    library(impute)
-    allAnn<-dimnames(xd)
-    data.imputed<-impute.knn(as.matrix(xd))$data
-    xd<-data.imputed[1:features,]
-    dimnames(xd)<-allAnn
-  }
-  
-  return(list(xd=xd, classes=classes, nfeatures=features, nsamples=samples, fnames=geneNames, snames=sampleNames))
-}
 
 #' Function for suffix of medians for gene centering
 #' @noRd 
 getsurffix = function( calibration,internal=internal, external=external){
-  
-  
+
   if(calibration == "None" ){surffix =calibration } else{
     switch( calibration,
             "None" = {surffix = calibration},
@@ -226,13 +133,11 @@ getsurffix = function( calibration,internal=internal, external=external){
 #' @param x median train file
 #' @param y gene expression matrix
 #' @param classes description
-#' @param nGenes None
-#' @param distm "euclidean" or "spearman"
+#' @param distm "euclidean" or "spearman" (default)
+#' @param centrids Logic.
 #' @param Prosigna Logic. Please specify if it predicts prosigna-like subtype
-#' @param std Logical value. 
-#' @param centrids Logical value
 #' @noRd
-sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosigna = TRUE){
+sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
   
   # ## test data
   # x = BreastSubtypeR$centroid
@@ -247,7 +152,6 @@ sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosign
   dataMatrix = x
   tdataMatrix = y
   
-  #dimnames(tdataMatrix)[[2]]<-paste("x",seq(1,471))
   temp = overlapSets(dataMatrix,tdataMatrix)
   dataMatrix = temp$x
   tdataMatrix = temp$y
@@ -255,15 +159,17 @@ sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosign
   
   # standardize both sets
   if(std){
-    dataMatrix<-standardize(dataMatrix)
-    tdataMatrix<-standardize(tdataMatrix)
+    dataMatrix = standardize(dataMatrix)
+    tdataMatrix = standardize(tdataMatrix)
   }
+
   
-  nGenes<-dim(dataMatrix)[1]
+  nGenes = dim(dataMatrix)[1]
   #print(paste("Number of genes used:",nGenes))
-  centroids<-dataMatrix
-  nClasses<-dim(centroids)[2] ## five subtypes; for prosigna, keep normal when calculating
-  classLevels<-dimnames(centroids)[[2]]
+  centroids = dataMatrix
+  nClasses = dim(centroids)[2]
+  classLevels = dimnames(centroids)[[2]]
+  
   
   distances = matrix(ncol=nClasses,nrow=dim(tdataMatrix)[2])
   for(j in 1:nClasses){
@@ -277,8 +183,7 @@ sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosign
       distances[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "spearman", use = "pairwise.complete.obs"))
     }
   }
-  
-  
+
   prediction = classLevels[apply(distances, 1, which.min,simplify = TRUE)]
   names(prediction) = colnames(tdataMatrix)
   
@@ -291,7 +196,7 @@ sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosign
     distances.prosigna.subtype = matrix(ncol= nClasses, nrow=dim(tdataMatrix)[2])
     for(j in 1:nClasses){
       if(distm=="euclidean"){
-        distances.prosigna.subtype[,j]<- dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
+        distances.prosigna.subtype[,j] = dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
       }
       if(distm=="correlation" | distm=="pearson"){
         distances.prosigna.subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "pearson", use = "pairwise.complete.obs"))
@@ -355,10 +260,11 @@ sspPredict<-function(x, y, std=FALSE, distm="euclidean",centroids=FALSE, Prosign
 }
 
 
-#' Function for risk 
+#' Function for risk calculation
 #' 
-#' @param hasClinical provide clinical information for grouping 
-#' @param out it is the result of sspPredict() function. 
+#' @param out The result of sspPredict() function. 
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
@@ -618,8 +524,12 @@ RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
 #' Here, we integrated parker-based methods and genefu PAM50 model
 #' @param mat gene expression matrix, log of normalized
 #' @param df.cln clicnical information table with PatientID and IHC column
-#' @param NM.mdns surffix name for medains
-#' @param short surffix name for output
+#' @param calibration How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort. 
+#' @param internal Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr
+#' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
+#' @param medians If you specify "external" parameter as "Given.mdns", you should input matrix/table, 50 signatures in the first column and "Given.mdns" values in the second column.
+#' @param Prosigna Logic. 
+#' @param hasClinical Logic. Please specify if you prepared clinical information, like Tumore size as T column, lymphatic node status as NODE column. 
 #' @noRd
 #' 
 
@@ -680,7 +590,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   # normalization
   mat = docalibration( mat, df.al, calibration, internal=internal, external=external)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
   
   
   if (Prosigna) {
@@ -706,11 +616,15 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 
 #' Function to form a ER-balance subet and derive its median
 #' @param mat gene expression matrix 
-#' @param df.cln clicnical information table with PatientID and IHC column
-#' @param NM.mdns surffix name for medains
-#' @param short surffix name for output
+#' @param df.cln clicnical information table with PatientID 
+#' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
+#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
+#' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
+#' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
-makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Prosigna = FALSE , hasClinical = FALSE){
+makeCalls.ihc = function(mat, df.cln, seed=118, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Prosigna = FALSE , hasClinical = FALSE){
   # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
   # message("##IHC subtype column should be named ---IHC---")
   # 
@@ -764,7 +678,7 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
   ## normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict( centroids, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+  out = sspPredict( centroids, mat, std=F, distm="spearman",  Prosigna = Prosigna)
   
   if (Prosigna) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
@@ -787,9 +701,11 @@ makeCalls.ihc = function(mat, df.cln, seed=118,calibration = "Internal", interna
 #' Function for iterative ER subset gene centering 
 #' @param mat gene expression matrix 
 #' @param df.cln clicnical information table with PatientID and IHC column
-#' @param iteration times to predict subtypes
-#' @param ratio The options are either 1:1 or 54(ER+):64(ER-). The latter is ER ratio used for UNC230 train cohort
-#' @param calibration surffix name for output
+#' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
+#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
+#' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
+#' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
+#' @param Prosigna Logic. 
 #' @param hasClinical provide clinical information, default is NA. 
 #' @noRd
 
@@ -874,7 +790,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     ## normalization
     mat = docalibration( mat, df.al, calibration,internal)
     
-    out = sspPredict(centroids, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+    out = sspPredict(centroids, mat, std=F, distm="spearman",Prosigna = Prosigna)
     
     return( out )
     
@@ -930,9 +846,13 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 
 #' Function for the first step of PCA-PAM50 approach
 #' @param mat gene expression matrix 
-#' @param df.cln clicnical information table with PatientID and IHC column
-#' @param NM.mdns surffix name for medains
-#' @param short surffix name for output
+#' @param df.cln clinical information table
+#' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
+#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
+#' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
+#' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
+#' @param Prosigna Logic. 
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 
 makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE){
@@ -1034,7 +954,7 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   # normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
   
   if(Prosigna) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
@@ -1056,7 +976,14 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
 #' Function for the second step of PCA-PAM50 approach
 #' @param mat gene expression matrix 
 #' @param df.cln clicnical information table with PatientID and IHC column
-#' @param NM.mdns surffix name for medains
+#' @param mat gene expression matrix 
+#' @param df.pam clinical information table created using makeCalls.PC1ihc().  
+#' @param calibration The calibration method to use, "Internal". 
+#' @param internal Specify the strategy for internal calibration, "v1PAM.mdns".
+#' @param external NA
+#' @param medians NA
+#' @param Prosigna Logic. 
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @param short surffix name for output
 #' @noRd
 
@@ -1117,7 +1044,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   ## normalization
   mat= docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
   
   if(Prosigna) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
@@ -1138,10 +1065,10 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 
 #' Function for calling PAM50 subtypes by ssBC methods
 #' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
-#' @param mat gene expression matrix, log of normalized
-#' @param df.cln clicnical information table with PatientID and IHC column, it should include ER column with "ER-" or "ER+". Or it includes TN column with "TN".
-#' @param s Specify "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
-#' @param hasClinical Logic. 
+#' @param mat gene expression matrix
+#' @param df.cln clinical information table. The first column must be named "PatientID".
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
 #' @noRd
 #' 
 
@@ -1225,7 +1152,7 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
     ## it has been calibrated by selected quantile 
     
     
-    out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", centroids=T, Prosigna = Prosigna)
+    out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", Prosigna = Prosigna)
     
     
   }, names(samples_selected), SIMPLIFY = F, USE.NAMES = T )
