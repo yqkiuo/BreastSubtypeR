@@ -194,10 +194,25 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
   
   # # ## test data
   # gene_expression_matrix = data_input$x_NC.log
-  # phenodata =clinic.oslo
+  # phenodata =clinic.scanb
   # hasClinical =T
   # Prosigna = T
   # seed = 118
+
+  samples = phenodata$PatientID
+
+
+  if ( "ER"  %in% colnames(phenodata) ) {
+    phenodata$ER_status = NA
+    
+    phenodata$ER_status[which(phenodata$ER %in% c("ER+"))] = "pos"
+    phenodata$ER_status[which(phenodata$ER %in% c("ER-"))] = "neg"
+    phenodata = phenodata[order(phenodata$ER_status,decreasing=T),]
+  } else {
+    stop("Please prepare ER status in clinical table")
+  }
+  
+  gene_expression_matrix = gene_expression_matrix[,phenodata$PatientID]
 
   ## first step
   arguments = rlang::dots_list(
@@ -234,8 +249,10 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
   
   call = rlang::call2(makeCalls.v1PAM, !!!arguments2)
   res_PCAPAM50 = eval(call)
-
   
+  ## reorder
+  res_PCAPAM50$BS.all = res_PCAPAM50$BS.all[match(samples,res_PCAPAM50$BS.all$PatientID ),]
+
   return(res_PCAPAM50)
   
 }
