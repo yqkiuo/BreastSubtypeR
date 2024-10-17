@@ -1,7 +1,7 @@
 #' Collection of breast cancer intrinsic subtyping methods
 #' 
 #' @title Collection of breast cancer intrinsic subtyping methods
-#' @description BreastSubtypeR is an R package that integrates the access to intrinsic subtyping methods. 
+#' @description BreastSubtypeR is an R package that grant the access to intrinsic subtyping methods. 
 #' 
 #' @name BreastSubtypeR
 #' 
@@ -21,14 +21,25 @@ NULL
 #' @name Mapping
 #' @description
 #' function for mapping gene ID 
-#' @param gene_expression_matrix Gene expression matrix. Probe or gene symbol in row and sample in column.
-#' @param featuredata Feature data provided by user. The table should contain at least three column, which are probe(probeid or transcriptID), EntrezGene.ID and symbol. 
+#' @param gene_expression_matrix Gene expression matrix. Probe in row and sample in column.
+#' @param featuredata Feature data provided by user. The table should contain at least three column, which are probe (probeid or transcriptID), SYMBOL and ENTREZID.  
 #' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and "max" for RNAseq. 
 #' @param impute Logic. Please specify whether to perform impute.knn on NA data
 #' @param verbose Logic. 
+#' @return lists of three gene expression matrix. "x_NC.log" is prepared for NC-based methods and "x_SSP" for SSP-based methods. 
+#' @details
+#' The row can be gene symbol names in gene expression matrix/table, but you need to add one extra SYMBOL column and rename it as probe in feature table. 
+#' 
+#' The method is used to do deduplicated. reference ???
+#' 
+#' @examples
+#' data("oslo.obj")
+#' 
+#' data_input = Mapping(gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID], featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+#' 
 #' @export
 
-Mapping = function(gene_expression_matrix, featuredata, method = "mean", mapping = TRUE,impute = TRUE, verbose = TRUE, ...){
+Mapping = function(gene_expression_matrix, featuredata, method = "max", mapping = TRUE, impute = TRUE, verbose = TRUE, ...){
   
   arguments = rlang::dots_list(
     x = gene_expression_matrix,
@@ -49,22 +60,25 @@ Mapping = function(gene_expression_matrix, featuredata, method = "mean", mapping
 #' BS_parker
 #' @name BS_parker
 #' @description
-#' This calls parker-based intrinsic subtyping methods. The methods for gene calibration include "None", "medianCtr", "meanCtr", "qCtr", "Given.mdns", or chosen platform. 
+#' This calls parker-based intrinsic subtyping methods.  
 #' 
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
+#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
+#' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
+#' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
+#' @param Prosigna Logic. 
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @return The intrinsic subtypes estimated using the Parker-based method. 
+#' @examples
 #' 
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column, log of normalized
-#' @param featuredata Annotate genes
-#' @param phenodata Clinical information table, with ER information or IHC column (what input)
-#' @param calibration How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort. 
-#' @param internal Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr
-#' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
-#' @param medians If you specify "external" parameter as "Given.mdns", you should input matrix/table, 50 signatures in the first column and "Given.mdns" values in the second column.
-#' @param do.mapping Logical. If it is microarray data or expression matrix at transcript level, please specify TRUE (this will call dochecking() function and run mapping step )
-#' @param hasClinical Logical. Please specify if you prepared clinical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The subtypes estimated by parker-based subtyping
+#' data("oslo.obj")
+#' res = BS_parker(data_input$x_NC.log,phenodata = NA, calibration = "Internal", internal = "medianCtr",  Prosigna = FALSE, hasClinical =FALSE)
+#' 
 #' @export
 
-BS_parker = function(gene_expression_matrix, phenodata, calibration = "None", internal = NA, external=NA, medians = NA, Prosigna = FALSE, hasClinical = FALSE, ...){
+BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Prosigna = FALSE, hasClinical = FALSE, ...){
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -89,11 +103,16 @@ BS_parker = function(gene_expression_matrix, phenodata, calibration = "None", in
 #' @name BS_cIHC
 #' @description
 #' This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
-#' @param featuredata Annotate genes
-#' @param phenodata Clinical information table, with IHC column
-#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The intrinsic subtype, confidential level, percentages.
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @return The intrinsic subtypes estimated using the conventinal IHC (cIHC) method.
+#' @examples
+#' 
+#' data("oslo.obj")
+#' res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+#' 
 #' @export
 
 BS_cIHC = function(gene_expression_matrix, phenodata,Prosigna = FALSE ,  hasClinical = FALSE, ...){
@@ -114,17 +133,22 @@ BS_cIHC = function(gene_expression_matrix, phenodata,Prosigna = FALSE ,  hasClin
 }
 
 
-#' BS_IHC.itr
-#' @name BS_IHC.itr
+#' BS_cIHC.itr
+#' @name BS_cIHC.itr
 #' @description
 #' This predicts breast cancer intrinsic subtypes with ER subset for gene centering. It supports the selection of ER subset ratio. 
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
-#' @param featuredata Annotate genes
-#' @param phenodata Clinical information table, with IHC column
-#' @param iterative Times to do iterative ER balanced procedure with certain ratio
-#' @param ratio The options are either 1:1 or 54(ER+):64(ER-) (default). The latter wass ER ratio used for UNC230 train cohort.
-#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as "T" column, lymphatic node status as "NODE" column. 
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param iterative Times to do iterative ER balanced procedure with certain ratio. 
+#' @param ratio The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes, confidential level, percentages.
+#' @examples
+#' 
+#' data("oslo.obj")
+#' res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+#' 
 #' @export
 
 BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Prosigna = FALSE, hasClinical = FALSE,seed=118, ...){
@@ -153,12 +177,17 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' BS_PCAPAM50
 #' @name BS_PCAPAM50
 #' @description
-#' This calls PCA-PAM50 (Raj-Kumar, PK.) to do intrinsic subtyping. 
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
-#' @param featuredata Annotate genes
-#' @param phenodata Clinical information table, with ER information or IHC column
-#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The intrinsic subtypes estimated by PCA-PAM50
+#' This calls PCA-PAM50 to do intrinsic subtyping. 
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @return The intrinsic subtypes estimated by PCA-PAM50 method. 
+#' @examples
+#' 
+#' data("oslo.obj")
+#' res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Prosigna = FALSE, hasClinical =FALSE, seed=118)
+#' 
 #' @export
 
 BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasClinical =FALSE,seed=118){
@@ -217,13 +246,17 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
 #' @name BS_ssBC
 #' @description
 #' This calls ssBC to do intrinsic subtyping. 
-#' It is better to group cohorts by ER+/- or TN/nTN. 
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
-#' @param featuredata Annotate genes
-#' @param phenodata Clinical information table, like TN,ER and HER2
-#' @param s Specify "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
-#' @param hasClinical Logical. Please specify if you prepared clincical information, like Tumore size as T column, lymphatic node status as NODE column. 
-#' @return The subtypes estimated by ssBC
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @return The intrinsic subtypes estimated by ssBC method
+#' @examples
+#' 
+#' data("oslo.obj")
+#' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Prosigna = FALSE, hasClinical =FALSE)
+#' 
 #' @export
 
 ## only ER and TN
@@ -251,16 +284,23 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Prosigna = FALSE, hasC
 #' @description
 #' This calls AIMS to do intrinsic subtyping. 
 #' 
-#' @param gene_expression_matrix Gene expression matrix, gene in row and sample in column
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param EntrezID A list of Entrez gene ids
-#' @return The subtypes estimated by PCA_AIMS
+#' @return The subtypes estimated by AIMS method
+#' @examples
+#' 
+#' data("oslo.obj")
+#' data("genes.signature")
+#' genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
+#' res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
+#' 
 #' @export
 
 ## need to match EntrezID here
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
-  require(AIMS)
+  # require(AIMS)
   # 
   # data("genes.signature")
   # ## loading library first or model
@@ -284,8 +324,14 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' @description
 #' This calls sspbc to do intrinsic subtyping. 
 #' 
-#' @param gene_expression_matrix Gene expression matrix, gene in row sample in column
-#' @return The subtypes estimated by sspbc
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param ssp.name Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was prepared for Prosigna-based subtyping. 
+#' @return The subtypes estimated by sspbc method
+#' @examples
+#' 
+#' data("oslo.obj")
+#' res = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50" )
+#' 
 #' @export
 
 BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
@@ -321,10 +367,21 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' BS_Check
 #' @name BS_Check
 #' @description
-#' This calls consensus subtype . 
+#' This calls consensus subtyping and users can specify subtyping methods. 
 #' 
-#' @param data_input  list of two Gene expression matrix, output of Mapping function; "x_NC" object should be log2 transformed manually. 
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param phenodata A clinical information table. The first column must be named "PatientID".
+#' @param methods Specify methods. 
+#' @param Prosigna Logic.
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The subtypes estimated by selected methods
+#' 
+#' @examples
+#' 
+#' methods = c( "parker.median", "parker.mean", "parker.quantile")
+#' res = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Prosigna = FALSE, hasClinical = FALSE)
+#' 
+#' 
 #' @export
 
 ## return Subtype table; and every object
@@ -405,7 +462,7 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
       data("genes.signature")
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
-      res_AIMS = BS_AIMS(data_input$x_SSP[genes,], genes )
+      res_AIMS = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
       res_AIMS$BS.all = data.frame( PatientID = rownames(res_AIMS$cl) ,
                                     BS = res_AIMS$cl[,1])
       
