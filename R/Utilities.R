@@ -1,3 +1,15 @@
+#' 
+#' Functions for BreastSubtypeR package 
+#' @name NC-based
+#' @import ggplot2
+#' @import ComplexHeatmap
+#' @import RColorBrewer
+#' @import magrittr
+#' @import impute
+#' @importFrom dplyr select
+#' @importFrom dplyr mutate_at
+#' @noRd 
+NULL
 
 
 #' function for mapping ID and supplementing missing data if necessary
