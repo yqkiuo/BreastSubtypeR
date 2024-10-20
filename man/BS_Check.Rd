@@ -14,15 +14,15 @@ BS_Check(
 )
 }
 \arguments{
+\item{data_input}{The output of Mapping() function.}
+
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
 \item{methods}{Specify methods.}
 
-\item{Prosigna}{Logic.}
+\item{Prosigna}{Logic. Specify whether to predict Prosigna like subtypes.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
-
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 }
 \value{
 The subtypes estimated by selected methods

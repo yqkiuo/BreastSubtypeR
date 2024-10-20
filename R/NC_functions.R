@@ -97,7 +97,7 @@ standardize<-function(x){
 
 
 #' Function for ordering gene in expression matrix as PAM50 genes 
-#' @param x PAM50 centroid matrix
+#' @param x centroid matrix
 #' @param y Gene expression matrix
 #' @noRd
 overlapSets<-function(x,y){
@@ -132,10 +132,10 @@ getsurffix = function( calibration,internal=internal, external=external){
 #' Function for predict PAM50 subtyping
 #' @param x median train file
 #' @param y gene expression matrix
-#' @param classes description
+#' @param std Logic
 #' @param distm "euclidean" or "spearman" (default)
-#' @param centrids Logic.
-#' @param Prosigna Logic. Please specify if it predicts prosigna-like subtype
+#' @param centrids Logic
+#' @param Prosigna Logic. Please specify if it predicts Prosigna-like subtype
 #' @noRd
 sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
   
@@ -263,12 +263,13 @@ sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
 #' Function for risk calculation
 #' 
 #' @param out The result of sspPredict() function. 
+#' @param out clinical table
 #' @param Prosigna Logic.
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup = function(out, df.cln , hasClinical = FALSE, Prosigna = FALSE ){
+RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
   
   # # ## test data
   # out
@@ -624,7 +625,8 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 #' @param Prosigna Logic.
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
-makeCalls.ihc = function(mat, df.cln, seed=118, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Prosigna = FALSE , hasClinical = FALSE){
+
+makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Prosigna = FALSE , hasClinical = FALSE, seed=118){
   # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
   # message("##IHC subtype column should be named ---IHC---")
   # 
@@ -701,6 +703,8 @@ makeCalls.ihc = function(mat, df.cln, seed=118, calibration = "Internal", intern
 #' Function for iterative ER subset gene centering 
 #' @param mat gene expression matrix 
 #' @param df.cln clicnical information table with PatientID and IHC column
+#' @param iterative Times to do iterative ER balanced procedure with certain ratio. 
+#' @param ratio The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.
 #' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
@@ -847,15 +851,15 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 #' Function for the first step of PCA-PAM50 approach
 #' @param mat gene expression matrix 
 #' @param df.cln clinical information table
-#' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
-#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
-#' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
-#' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Prosigna Logic. 
+#' @param calibration The calibration method to use, "Internal". 
+#' @param internal Specify the strategy for internal calibration, "PC1ihc.mdns".
+#' @param external NA
+#' @param medians NA
+#' @param Prosigna Logic
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 
-makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE){
+makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE, seed=118){
   # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
   # message("##IHC subtype column should be named ---IHC---")
   # 
@@ -895,7 +899,6 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
   
   
   df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
-  plot(df.mis)
   
   num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
   
@@ -967,8 +970,6 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
 
 #' Function for the second step of PCA-PAM50 approach
 #' @param mat gene expression matrix 
-#' @param df.cln clicnical information table with PatientID and IHC column
-#' @param mat gene expression matrix 
 #' @param df.pam clinical information table created using makeCalls.PC1ihc().  
 #' @param calibration The calibration method to use, "Internal". 
 #' @param internal Specify the strategy for internal calibration, "v1PAM.mdns".
@@ -976,7 +977,6 @@ makeCalls.PC1ihc = function(mat, df.cln, seed=118, calibration = "Internal", int
 #' @param medians NA
 #' @param Prosigna Logic. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
-#' @param short surffix name for output
 #' @noRd
 
 makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE,seed=118 ){
@@ -1059,8 +1059,9 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 #' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table. The first column must be named "PatientID".
-#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 #' 
 

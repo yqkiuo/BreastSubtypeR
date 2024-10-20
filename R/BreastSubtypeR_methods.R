@@ -30,7 +30,6 @@ NULL
 #' @details
 #' The row can be gene symbol names in gene expression matrix/table, but you need to add one extra SYMBOL column and rename it as probe in feature table. 
 #' 
-#' The method is used to do deduplicated. reference ???
 #' 
 #' @examples
 #' data("oslo.obj")
@@ -39,7 +38,7 @@ NULL
 #' 
 #' @export
 
-Mapping = function(gene_expression_matrix, featuredata, method = "max", mapping = TRUE, impute = TRUE, verbose = TRUE, ...){
+Mapping = function(gene_expression_matrix, featuredata, method = "max", impute = TRUE, verbose = TRUE, ...){
   
   arguments = rlang::dots_list(
     x = gene_expression_matrix,
@@ -68,7 +67,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", mapping 
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Prosigna Logic. 
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated using the Parker-based method. 
 #' @examples
@@ -91,7 +90,6 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
     hasClinical = hasClinical, ...,.homonyms = "last"
   )
   
-
   call = rlang::call2(makeCalls.parker, !!!arguments)
   res_parker = eval(call)
 
@@ -105,7 +103,7 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param Prosigna Logic.
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated using the conventinal IHC (cIHC) method.
 #' @examples
@@ -141,7 +139,7 @@ BS_cIHC = function(gene_expression_matrix, phenodata,Prosigna = FALSE ,  hasClin
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param iterative Times to do iterative ER balanced procedure with certain ratio. 
 #' @param ratio The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.
-#' @param Prosigna Logic.
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes, confidential level, percentages.
 #' @examples
@@ -180,7 +178,7 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' This calls PCA-PAM50 to do intrinsic subtyping. 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param Prosigna Logic.
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated by PCA-PAM50 method. 
 #' @examples
@@ -265,9 +263,9 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
 #' This calls ssBC to do intrinsic subtyping. 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param Prosigna Logic.
-#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated by ssBC method
 #' @examples
 #' 
@@ -342,7 +340,7 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' This calls sspbc to do intrinsic subtyping. 
 #' 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
-#' @param ssp.name Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was prepared for Prosigna-based subtyping. 
+#' @param ssp.name Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was prepared for Prosigna-like subtyping. 
 #' @return The subtypes estimated by sspbc method
 #' @examples
 #' 
@@ -386,10 +384,10 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' @description
 #' This calls consensus subtyping and users can specify subtyping methods. 
 #' 
-#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
+#' @param data_input The output of Mapping() function. 
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param methods Specify methods. 
-#' @param Prosigna Logic.
+#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The subtypes estimated by selected methods
 #' 
@@ -400,10 +398,6 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' 
 #' 
 #' @export
-
-## return Subtype table; and every object
-## return entropy level
-
 
 BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasClinical = FALSE,... ){
   # 
