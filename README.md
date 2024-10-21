@@ -64,7 +64,6 @@ The Shiny app allows you to:
 ## Contributing
 We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue or submit a pull request.
 
-
 ## License
 This project is licensed under the ???
 
