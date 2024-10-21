@@ -903,7 +903,6 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 }
 
 
-
 #' Function for calling PAM50 subtypes by ssBC methods
 #' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
 #' @param mat gene expression matrix
