@@ -61,8 +61,10 @@ The Shiny app allows you to:
 - Select subtyping methods.
 - Visualize the results in real-time.
 
+
 ## Contributing
 We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue or submit a pull request.
+
 
 ## License
 This project is licensed under the ???
