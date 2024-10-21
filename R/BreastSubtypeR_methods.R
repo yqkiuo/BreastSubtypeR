@@ -32,9 +32,10 @@ NULL
 #' 
 #' 
 #' @examples
-#' data("oslo.obj")
 #' 
-#' data_input = Mapping(gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID], featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+#' data("OSLO2MEITOobj")
+#' data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
+#' data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
 #' 
 #' @export
 
@@ -67,17 +68,17 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated using the Parker-based method. 
 #' @examples
 #' 
-#' data("oslo.obj")
-#' res = BS_parker(data_input$x_NC.log,phenodata = NA, calibration = "Internal", internal = "medianCtr",  Prosigna = FALSE, hasClinical =FALSE)
+#' data("OSLO2MEITOobj")
+#' res = BS_parker(data_input$x_NC.log, phenodata = NA, calibration = "Internal", internal = "medianCtr",  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
 
-BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Prosigna = FALSE, hasClinical = FALSE, ...){
+BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Subtype = FALSE, hasClinical = FALSE, ...){
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -86,7 +87,7 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
     internal = internal,
     external = external,
     medians = medians,
-    Prosigna = Prosigna,
+    Subtype = Subtype,
     hasClinical = hasClinical, ...,.homonyms = "last"
   )
   
@@ -103,22 +104,22 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated using the conventinal IHC (cIHC) method.
 #' @examples
 #' 
-#' data("oslo.obj")
-#' res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+#' data("OSLO2MEITOobj")
+#' res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
 
-BS_cIHC = function(gene_expression_matrix, phenodata,Prosigna = FALSE ,  hasClinical = FALSE, ...){
+BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClinical = FALSE, ...){
 
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
-    Prosigna = Prosigna, 
+    Subtype = Subtype, 
     hasClinical = hasClinical,..., .homonyms = "last"
   )
   
@@ -139,24 +140,24 @@ BS_cIHC = function(gene_expression_matrix, phenodata,Prosigna = FALSE ,  hasClin
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param iterative Times to do iterative ER balanced procedure with certain ratio. 
 #' @param ratio The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes, confidential level, percentages.
 #' @examples
 #' 
-#' data("oslo.obj")
-#' res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+#' data("OSLO2MEITOobj")
+#' res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
 
-BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Prosigna = FALSE, hasClinical = FALSE,seed=118, ...){
+BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Subtype = FALSE, hasClinical = FALSE,seed=118, ...){
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
     iteration = iteration,
     ratio = ratio, 
-    Prosigna = Prosigna, 
+    Subtype = Subtype, 
     hasClinical = hasClinical,
     seed = seed, .homonyms = "last"
     )
@@ -178,27 +179,19 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' This calls PCA-PAM50 to do intrinsic subtyping. 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated by PCA-PAM50 method. 
 #' @examples
 #' 
-#' data("oslo.obj")
-#' res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Prosigna = FALSE, hasClinical =FALSE, seed=118)
+#' data("OSLO2MEITOobj")
+#' res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Subtype = FALSE, hasClinical =FALSE, seed=118)
 #' 
 #' @export
 
-BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasClinical =FALSE,seed=118){
-  
-  # # ## test data
-  # gene_expression_matrix = data_input$x_NC.log
-  # phenodata =clinic.scanb
-  # hasClinical =T
-  # Prosigna = T
-  # seed = 118
+BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE,seed=118){
 
   samples = phenodata$PatientID
-
 
   if ( "ER"  %in% colnames(phenodata) ) {
     phenodata$ER_status = NA
@@ -216,7 +209,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
-    Prosigna = Prosigna,
+    Subtype = Subtype,
     hasClinical = hasClinical, .homonyms = "last"
     )
   
@@ -235,12 +228,11 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
                            stringsAsFactors=F)
   }
   
-  #View(df.pc1pam)
-  
+
   arguments2 = rlang::dots_list(
     mat = gene_expression_matrix,
     df.pam = df.pc1pam,
-    Prosigna = Prosigna,
+    Subtype = Subtype,
     hasClinical = hasClinical,
     seed=118, .homonyms = "last"
   )
@@ -264,25 +256,24 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Prosigna = FALSE, hasC
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The intrinsic subtypes estimated by ssBC method
 #' @examples
 #' 
-#' data("oslo.obj")
-#' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Prosigna = FALSE, hasClinical =FALSE)
+#' data("OSLO2MEITOobj")
+#' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
 
-## only ER and TN
 
-BS_ssBC = function(gene_expression_matrix, phenodata, s , Prosigna = FALSE, hasClinical =FALSE, ...) {
+BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasClinical =FALSE, ...) {
 
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
     s = s,
-    Prosigna = Prosigna,
+    Subtype = Subtype,
     hasClinical = hasClinical, ..., .homonyms = "last"
   )
   
@@ -304,9 +295,9 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Prosigna = FALSE, hasC
 #' @return The subtypes estimated by AIMS method
 #' @examples
 #' 
-#' data("oslo.obj")
-#' data("genes.signature")
-#' genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
+#' data("OSLO2MEITOobj")
+#' data("BreastSubtypeR")
+#' genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
 #' res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
 #' 
 #' @export
@@ -315,16 +306,14 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Prosigna = FALSE, hasC
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
-  # require(AIMS)
-  # 
-  # data("genes.signature")
-  # ## loading library first or model
-  # genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
-  # return(BS_AIMS(data_input$x_SSP[genes,], genes ))
-  # 
+  ## check dependencies
+  suppressMessages(suppressWarnings({
+    require(AIMS,quietly = TRUE)
+  }))
+  
   arguments = rlang::dots_list(
     eset =as.matrix(gene_expression_matrix),
-    EntrezID = EntrezID ## need to check this part
+    EntrezID = EntrezID 
   )
   
   call = rlang::call2(AIMS::applyAIMS, !!!arguments)
@@ -340,11 +329,12 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' This calls sspbc to do intrinsic subtyping. 
 #' 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
-#' @param ssp.name Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was prepared for Prosigna-like subtyping. 
+#' @param ssp.name Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was used to predict four subtypes by removing the Normal-like subtype. 
+#' 
 #' @return The subtypes estimated by sspbc method
 #' @examples
 #' 
-#' data("oslo.obj")
+#' data("OSLO2MEITOobj")
 #' res = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50" )
 #' 
 #' @export
@@ -352,7 +342,6 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
   
   ## check dependencies
-  ## must do
   if (!requireNamespace("sspbc", quietly = TRUE)) {
     sspbc_1.0.tar.gz = system.file("extdata", "sspbc","sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
     install.packages(sspbc_1.0.tar.gz, repos = NULL, type="source")
@@ -363,8 +352,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
   
   #data(sspbc.models)
   require(sspbc)
-  
-  ## adding subtype - prosigna ???
+
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
     id = rownames(gene_expression_matrix),
@@ -387,27 +375,21 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' @param data_input The output of Mapping() function. 
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param methods Specify methods. 
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The subtypes estimated by selected methods
 #' 
 #' @examples
 #' 
+#' data("OSLO2MEITOobj")
 #' methods = c( "parker.median", "parker.mean", "parker.quantile")
-#' res = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Prosigna = FALSE, hasClinical = FALSE)
+#' res.test = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
 #' 
 #' 
 #' @export
 
-BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasClinical = FALSE,... ){
-  # 
-  # data_input = data_input
-  # phenodata = clinic.oslo
-  # methods = methods
-  # POP = TRUE
-  # Prosigna = TRUE
-  # hasClinical = TRUE
-  
+BS_Check = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasClinical = FALSE,... ){
+
   if(length(methods) < 2 ){
     stop("Please select two methods at least")
   } 
@@ -431,54 +413,56 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
     ## try NC-based
     if( method == "parker.median") {
       print(paste0(method," is running!"))
-      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "medianCtr", Prosigna = Prosigna ,  hasClinical = hasClinical))
+      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "medianCtr", Subtype = Subtype ,  hasClinical = hasClinical))
     }
     if( method == "parker.mean"){
       print(paste0(method," is running!"))
-      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "meanCtr", Prosigna = Prosigna , hasClinical = hasClinical))
+      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "meanCtr", Subtype = Subtype , hasClinical = hasClinical))
     }
     if( method == "parker.quantile"){
       print(paste0(method," is running!"))
-      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "qCtr", Prosigna = Prosigna , hasClinical = hasClinical))
+      return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "qCtr", Subtype = Subtype , hasClinical = hasClinical))
     }
     if(method == "cIHC"){
       ## try conventional IHC
       print(paste0(method," is running!"))
-      return(BS_cIHC(data_input$x_NC.log, phenodata,Prosigna = Prosigna ,  hasClinical = hasClinical))
+      return(BS_cIHC(data_input$x_NC.log, phenodata,Subtype = Subtype ,  hasClinical = hasClinical))
     }
     
     if(method == "cIHC.itr"){
       ## try iterative IHC
       print(paste0(method," is running!"))
-      return( BS_cIHC.itr(data_input$x_NC.log, phenodata,Prosigna = Prosigna , hasClinical = hasClinical))
+      return( BS_cIHC.itr(data_input$x_NC.log, phenodata,Subtype = Subtype , hasClinical = hasClinical))
     }
     
     if(method == "PCAPAM50"){
       print(paste0(method," is running!"))
-      return(BS_PCAPAM50(data_input$x_NC.log, phenodata, Prosigna = Prosigna , hasClinical = hasClinical))
+      return(BS_PCAPAM50(data_input$x_NC.log, phenodata, Subtype = Subtype , hasClinical = hasClinical))
     }
     
     if(method == "ssBC"){
       print(paste0(method," is running!"))
-      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Prosigna = Prosigna , hasClinical = hasClinical ))
+      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Subtype = Subtype, hasClinical = hasClinical ))
     }
     
     if(method == "ssBC_JAMA"){
       print(paste0(method," is running!"))
-      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER_JAMA", Prosigna = Prosigna ,hasClinical = hasClinical ))
+      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER_JAMA", Subtype = Subtype, hasClinical = hasClinical ))
     }
     
     if(method == "AIMS"){
       print(paste0(method," is running!"))
-      data("genes.signature")
+      data("BreastSubtypeR")
+      genes.signature = BreastSubtypeR$genes.signature
+      
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
       res_AIMS = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
       res_AIMS$BS.all = data.frame( PatientID = rownames(res_AIMS$cl) ,
                                     BS = res_AIMS$cl[,1])
       
-      if( Prosigna){
-        res_AIMS$BS.all$BS.prosigna = res_AIMS$BS.all$BS
+      if( Subtype){
+        res_AIMS$BS.all$BS.Subtype = res_AIMS$BS.all$BS
       }
       return(res_AIMS)
     }
@@ -490,12 +474,12 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
       res_sspbc = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50"  )
       
       BS.all = data.frame( PatinetID = rownames(res_sspbc),
-                           BS = res_sspbc,
+                           BS = res_sspbc[,1],
                            row.names = rownames(res_sspbc) )
 
-      if(Prosigna) {
-        res_sspbc.prosigna = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.subtype"  )
-        BS.all$BS.prosigna = res_sspbc.prosigna[,1]
+      if(Subtype) {
+        res_sspbc.Subtype = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.subtype"  )
+        BS.all$BS.Subtype = res_sspbc.Subtype[,1]
       } 
       
       return(list(BS.all = BS.all ) )
@@ -508,15 +492,15 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
   
 
   res_subtypes = data.table( row_id = colnames(data_input$x_NC))
-  if (Prosigna) {
-    res_subtypes.prosigna = data.table(row_id = colnames(data_input$x_NC))
+  if (Subtype) {
+    res_subtypes.Subtype = data.table(row_id = colnames(data_input$x_NC))
   }
 
   for (method in methods) {
     if (!is.null(results[[method]])) {
       set(res_subtypes, j = method, value = results[[method]]$BS.all$BS)
-      if (Prosigna) {
-        set(res_subtypes.prosigna, j = method, value = results[[method]]$BS.all$BS.prosigna)
+      if (Subtype) {
+        set(res_subtypes.Subtype, j = method, value = results[[method]]$BS.all$BS.Subtype)
       }
     }
   }
@@ -529,16 +513,16 @@ BS_Check = function(data_input, phenodata, methods = NA, Prosigna = FALSE, hasCl
   res_subtypes$consensus.subtype = consensus.subtype
 
 
-  if (Prosigna) {
-    res_subtypes.prosigna = as.data.frame(res_subtypes.prosigna)
-    rownames(res_subtypes.prosigna) = colnames(data_input$x_NC); res_subtypes.prosigna[,1]= NULL
+  if (Subtype) {
+    res_subtypes.Subtype = as.data.frame(res_subtypes.Subtype)
+    rownames(res_subtypes.Subtype) = colnames(data_input$x_NC); res_subtypes.Subtype[,1]= NULL
 
-    consensus.subtype_prosigna = apply(res_subtypes.prosigna, 1, get_consensus_subtype)
-    res_subtypes.prosigna$consensus.subtype = consensus.subtype_prosigna
+    consensus.subtype_Subtype = apply(res_subtypes.Subtype, 1, get_consensus_subtype)
+    res_subtypes.Subtype$consensus.subtype = consensus.subtype_Subtype
   }
   
-  if (Prosigna) {
-    res = list(res_subtypes = res_subtypes, res_subtypes.prosigna = res_subtypes.prosigna, results = results)
+  if (Subtype) {
+    res = list(res_subtypes = res_subtypes, res_subtypes.Subtype = res_subtypes.Subtype, results = results)
   } else {
     res = list(res_subtypes = res_subtypes, results = results)
   }

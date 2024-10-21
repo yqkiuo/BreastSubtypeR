@@ -4,7 +4,7 @@
 \alias{Vis_PCA}
 \title{Function for PCAplot}
 \usage{
-Vis_PCA(x, out, Eigen = FALSE)
+Vis_PCA(x, out, screeplot = FALSE)
 }
 \arguments{
 \item{x}{gene expression matrix, log2 transformed}
@@ -15,4 +15,13 @@ Vis_PCA(x, out, Eigen = FALSE)
 }
 \description{
 Function for PCAplot
+}
+\examples{
+
+data("OSLO2MEITOobj")
+
+matrix = data_input$x_NC.log
+out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+plot = Vis_PCA(x = matrix, out= out)
+
 }

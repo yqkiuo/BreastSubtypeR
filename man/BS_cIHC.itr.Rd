@@ -9,7 +9,7 @@ BS_cIHC.itr(
   phenodata,
   iteration = 100,
   ratio = 54/64,
-  Prosigna = FALSE,
+  Subtype = FALSE,
   hasClinical = FALSE,
   seed = 118,
   ...
@@ -22,7 +22,7 @@ BS_cIHC.itr(
 
 \item{ratio}{The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.}
 
-\item{Prosigna}{Logic.}
+\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 
@@ -36,7 +36,7 @@ This predicts breast cancer intrinsic subtypes with ER subset for gene centering
 }
 \examples{
 
-data("oslo.obj")
-res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Prosigna = FALSE, hasClinical =FALSE)
+data("OSLO2MEITOobj")
+res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 
 }

@@ -1,13 +1,9 @@
 #' 
 #' Functions adapted from NC-based subtyping methods
 #' @name NC-based
-#' @import ggplot2
-#' @import ComplexHeatmap
-#' @import RColorBrewer
 #' @import magrittr
 #' @import impute
 #' @importFrom dplyr select
-#' @importFrom dplyr mutate_at
 #' @noRd 
 NULL
 
@@ -15,11 +11,11 @@ NULL
 #' Function for central median
 #' @param x gene expression matrix
 #' @noRd 
-medianCtr<-function(x){
-  annAll <- dimnames(x)
-  medians <- apply(x,1,median,na.rm=T)
-  x <- t(scale(t(x),center=medians,scale=F))
-  dimnames(x) <- annAll
+medianCtr=function(x){
+  annAll = dimnames(x)
+  medians = apply(x,1,median,na.rm=T)
+  x = t(scale(t(x),center=medians,scale=F))
+  dimnames(x) = annAll
   return(x)
 }
 
@@ -27,20 +23,17 @@ medianCtr<-function(x){
 #' this is adapted from genefu package
 #' @param x Gene expression matrix or vector
 #' @noRd 
-rescale <- function(x, na.rm=FALSE, q=0) {
-  # x = mat[1,]
-  # q = 0.05
-  # na.rm =TRUE
-  
+rescale = function(x, na.rm=FALSE, q=0) {
+
   if(q == 0) {
-    ma <- max(x, na.rm=na.rm)
-    mi <- min(x, na.rm=na.rm)
+    ma = max(x, na.rm=na.rm)
+    mi = min(x, na.rm=na.rm)
   } else {
-    ma <- quantile(x, probs=1-(q/2), na.rm=na.rm)
-    mi <- quantile(x, probs=q/2, na.rm=na.rm)
+    ma = quantile(x, probs=1-(q/2), na.rm=na.rm)
+    mi = quantile(x, probs=q/2, na.rm=na.rm)
   }
-  xx <- (x - mi) / (ma - mi)
-  #attributes(xx) <- list("names"=names(x), "q1"=mi,"q2"=ma)
+  xx = (x - mi) / (ma - mi)
+  
   return(xx)
 }
 
@@ -53,13 +46,10 @@ rescale <- function(x, na.rm=FALSE, q=0) {
 #' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
 #' @noRd 
 docalibration = function( y, df.al, calibration = "None", internal=internal, external=external){
-  # y = mat
-  # df.al = df.al
-  # internal = "meanCtr"
-  
+
   mq = 0.05 ## presetting in genefu robust model
   switch( calibration,
-          "None" = {print("No calibration") }, # genefu none
+          "None" = {print("No calibration") }, 
           "Internal" = { ## internal
             if(internal == "medianCtr"){ y = medianCtr(y) } ## parker default method
             else if(internal == "meanCtr") { y =  t(scale( t(y), center=TRUE, scale=TRUE))} ## "scale" in genefu method
@@ -88,10 +78,10 @@ docalibration = function( y, df.al, calibration = "None", internal=internal, ext
 #' Function for standardize
 #' @param x gene expression matrix
 #' @noRd
-standardize<-function(x){
-  annAll<-dimnames(x)
-  x<-scale(x)
-  dimnames(x)<-annAll
+standardize=function(x){
+  annAll=dimnames(x)
+  x=scale(x)
+  dimnames(x)=annAll
   return(x)
 }
 
@@ -100,15 +90,15 @@ standardize<-function(x){
 #' @param x centroid matrix
 #' @param y Gene expression matrix
 #' @noRd
-overlapSets<-function(x,y){
+overlapSets=function(x,y){
   
   # subset the two lists to have a commonly ordered gene list
-  x<-x[dimnames(x)[[1]] %in% dimnames(y)[[1]],]
-  y<-y[dimnames(y)[[1]] %in% dimnames(x)[[1]],]
+  x=x[dimnames(x)[[1]] %in% dimnames(y)[[1]],]
+  y=y[dimnames(y)[[1]] %in% dimnames(x)[[1]],]
   
   #and sort such that thing are in the correct order
-  x<-x[sort.list(row.names(x)),]
-  y<-y[sort.list(row.names(y)),]
+  x=x[sort.list(row.names(x)),]
+  y=y[sort.list(row.names(y)),]
   
   return(list(x=x,y=y))
 }
@@ -135,19 +125,9 @@ getsurffix = function( calibration,internal=internal, external=external){
 #' @param std Logic
 #' @param distm "euclidean" or "spearman" (default)
 #' @param centrids Logic
-#' @param Prosigna Logic. Please specify if it predicts Prosigna-like subtype
+#' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
-sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
-  
-  # ## test data
-  # x = BreastSubtypeR$centroid
-  # y = data_input$x_parker
-  # classes=""
-  # nGenes=""
-  # std=F
-  # distm="spearman"
-  # centroids=T
-  # Prosigna=T
+sspPredict=function(x, y, std=FALSE, distm="spearman", Subtype = TRUE){
   
   dataMatrix = x
   tdataMatrix = y
@@ -174,7 +154,7 @@ sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
   distances = matrix(ncol=nClasses,nrow=dim(tdataMatrix)[2])
   for(j in 1:nClasses){
     if(distm=="euclidean"){
-      distances[,j]<- dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
+      distances[,j]= dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
     }
     if(distm=="correlation" | distm=="pearson"){
       distances[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "pearson", use = "pairwise.complete.obs"))
@@ -187,40 +167,39 @@ sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
   prediction = classLevels[apply(distances, 1, which.min,simplify = TRUE)]
   names(prediction) = colnames(tdataMatrix)
   
-  ## run Prosigna like subtype
-  if( Prosigna){
+  ## run four Subtypes
+  if( Subtype){
     
     nClasses = nClasses-1 ## omitting normal
     classLevels = classLevels[1:4]
     
-    distances.prosigna.subtype = matrix(ncol= nClasses, nrow=dim(tdataMatrix)[2])
+    distances.Subtype.subtype = matrix(ncol= nClasses, nrow=dim(tdataMatrix)[2])
     for(j in 1:nClasses){
       if(distm=="euclidean"){
-        distances.prosigna.subtype[,j] = dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
+        distances.Subtype.subtype[,j] = dist(t(cbind(centroids[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
       }
       if(distm=="correlation" | distm=="pearson"){
-        distances.prosigna.subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "pearson", use = "pairwise.complete.obs"))
+        distances.Subtype.subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "pearson", use = "pairwise.complete.obs"))
       }
       if(distm=="spearman"){
-        distances.prosigna.subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "spearman", use = "pairwise.complete.obs"))
+        distances.Subtype.subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids[,j], x, method = "spearman", use = "pairwise.complete.obs"))
       }
     }
     
-    prediction.prosigna = classLevels[apply(distances.prosigna.subtype, 1, which.min,simplify = TRUE)]
-    names(prediction.prosigna) =  colnames(tdataMatrix)
+    prediction.Subtype = classLevels[apply(distances.Subtype.subtype, 1, which.min,simplify = TRUE)]
+    names(prediction.Subtype) =  colnames(tdataMatrix)
     
   }
   
-  ## run Prosigna like ROR
-  ## prepare prosigna.distances
   
+  ## prepare Subtype.distances
   ## genes to be excluded
   genes.ex = c("BIRC5", "CCNB1", "GRB7","MYBL2")
   
   #parse the test file - same as train file but no rows of classes
   tdataMatrix = y[ which( !(rownames(y) %in%  genes.ex ) ),]
   
-  #dimnames(tdataMatrix)[[2]]<-paste("x",seq(1,471))
+  #dimnames(tdataMatrix)[[2]]=paste("x",seq(1,471))
   temp = overlapSets(dataMatrix,tdataMatrix)
   dataMatrix = temp$x
   tdataMatrix = temp$y
@@ -229,31 +208,29 @@ sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
   ## omitting normal
   dataMatrix = dataMatrix[,1:4] ## omitting normal or not for ROR???
   nGenes = dim(dataMatrix)[1]
-  centroids.prosigna = dataMatrix
-  nClasses =dim(centroids.prosigna)[2] ## four subtypes
-  classLevels = dimnames(centroids.prosigna)[[2]]
+  centroids.Subtype = dataMatrix
+  nClasses =dim(centroids.Subtype)[2] ## four subtypes
+  classLevels = dimnames(centroids.Subtype)[[2]]
   
-  distances.prosigna  =  matrix(ncol= nClasses,nrow=dim(tdataMatrix)[2])
+  distances.Subtype  =  matrix(ncol= nClasses,nrow=dim(tdataMatrix)[2])
   for(j in 1:nClasses){
     if(distm=="euclidean"){
-      distances.prosigna[,j] = dist(t(cbind(centroids.prosigna[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
+      distances.Subtype[,j] = dist(t(cbind(centroids.Subtype[,j],tdataMatrix)))[1:(dim(tdataMatrix)[2])]
     }
     if(distm=="correlation" | distm=="pearson"){
-      distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.prosigna[,j], x, method = "pearson", use = "pairwise.complete.obs"))
+      distances.Subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.Subtype[,j], x, method = "pearson", use = "pairwise.complete.obs"))
     }
     if(distm=="spearman"){
-      distances.prosigna[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.prosigna[,j], x, method = "spearman", use = "pairwise.complete.obs"))
+      distances.Subtype[,j] = apply(tdataMatrix, 2, function(x) -cor(centroids.Subtype[,j], x, method = "spearman", use = "pairwise.complete.obs"))
     }
   }
-  
-  
-  
+
   ## return 
-  if ( Prosigna) {
-    res = list(predictions=prediction, predictions.prosigna = prediction.prosigna,testData= as.matrix(y),distances=distances,distances.prosigna = distances.prosigna, distances.prosigna.subtype = distances.prosigna.subtype, centroids=centroids)
+  if ( Subtype) {
+    res = list(predictions=prediction, predictions.Subtype = prediction.Subtype,testData= as.matrix(y),distances=distances,distances.Subtype = distances.Subtype, distances.Subtype.subtype = distances.Subtype.subtype, centroids=centroids)
     
   }else {
-    res = list(predictions=prediction,testData= as.matrix(y), distances=distances, distances.prosigna = distances.prosigna,centroids=centroids)
+    res = list(predictions=prediction,testData= as.matrix(y), distances=distances, distances.Subtype = distances.Subtype,centroids=centroids)
   }
   
   return(res)
@@ -264,19 +241,12 @@ sspPredict<-function(x, y, std=FALSE, distm="spearman", Prosigna = TRUE){
 #' 
 #' @param out The result of sspPredict() function. 
 #' @param out clinical table
-#' @param Prosigna Logic.
+#' @param Subtype Logic.
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
-  
-  # # ## test data
-  # out
-  # df.cln = df.cln
-  # hasClinical = hasClinical
-
-  ## prepare outtable
+RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
 
   sample = data.frame( patientID = names(out$predictions) )
   
@@ -287,7 +257,7 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
   
   #providing proliferation signatures
   proliferationGenes = c("CCNB1","UBE2C","BIRC5","KNTC2","CDC20","PTTG1","RRM2","MKI67","TYMS","CEP55","CDCA1")
-  proliferationGenes.prosigna = c("ANLN", "CEP55", "ORC6L", "CCNE1", "EXO1", "PTTG1", "CDC20", "KIF2C", "RRM2", "CDC6", "KNTC2", "TYMS", "CDCA1", 
+  proliferationGenes.Subtype = c("ANLN", "CEP55", "ORC6L", "CCNE1", "EXO1", "PTTG1", "CDC20", "KIF2C", "RRM2", "CDC6", "KNTC2", "TYMS", "CDCA1", 
                                   "MELK", "UBE2C", "CENPF", "MKI67", "UBE2T")
   
   ###
@@ -295,30 +265,30 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
   ###
   
   # for subtype only model
-  glthreshold<- -0.15
-  ghthreshold<-  0.1
+  glthreshold= -0.15
+  ghthreshold=  0.1
   
   # for subtype + proliferation model
-  gplthreshold<- -0.25
-  gphthreshold<-  0.1
+  gplthreshold= -0.25
+  gphthreshold=  0.1
   
   # for combined model
-  clthreshold<- -0.1
-  chthreshold<-  0.2
+  clthreshold= -0.1
+  chthreshold=  0.2
   
   # for combined + proliferation model
-  cplthreshold<- -0.2
-  cphthreshold<-  0.2
+  cplthreshold= -0.2
+  cphthreshold=  0.2
   
   ## ??? 
-  # for combined + proliferation model + prosigna with negative node status 
-  cplthreshold.prosigna.NODE.0 = 40
-  cphthreshold.prosigna.NODE.0 = 60
+  # for combined + proliferation model + Subtype with negative node status 
+  cplthreshold.Subtype.NODE.0 = 40
+  cphthreshold.Subtype.NODE.0 = 60
   
-  # for combined + proliferation model + prosigna with node status
+  # for combined + proliferation model + Subtype with node status
   ## first 4 or more nodes would be assigned as high-risk
-  cplthreshold.prosigna.NODE = 15
-  cphthreshold.prosigna.NODE = 40
+  cplthreshold.Subtype.NODE = 15
+  cphthreshold.Subtype.NODE = 40
   
   
   ## ER and HER2 score
@@ -331,7 +301,7 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
   # calculate the proliferation score
   prolifScore = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes), ], 2, mean, na.rm =T )
   
-  prolifScore.prosigna = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes.prosigna) , ], 2, mean, na.rm =T )
+  prolifScore.Subtype = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes.Subtype) , ], 2, mean, na.rm =T )
   
   ## confidence
   call.conf = c()
@@ -347,31 +317,27 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
   ## genomic
   ## basal, her2, lumA, lumB in order
   genomic = 0.04210193*out$distances[,1] + 0.12466938*out$distances[,2] + -0.35235561*out$distances[,3] + 0.14213283*out$distances[,4]
-  
-  ## ?? where weights ?
-  genomicWprolif <- -0.0009299747*out$distances[,1] + 0.0692289192*out$distances[,2] + -0.0951505484*out$distances[,3] +  0.0493487685*out$distances[,4] + 0.3385116381*prolifScore
+
+  genomicWprolif = -0.0009299747*out$distances[,1] + 0.0692289192*out$distances[,2] + -0.0951505484*out$distances[,3] +  0.0493487685*out$distances[,4] + 0.3385116381*prolifScore
   
   
   # threshold the risk score
-  griskgroups<-genomic
-  griskgroups[genomic>ghthreshold]<-"high"
-  griskgroups[genomic>glthreshold & genomic<ghthreshold]<-"med"
-  griskgroups[genomic<glthreshold]<-"low"
-  gpriskgroups<-genomicWprolif
-  gpriskgroups[genomicWprolif>gphthreshold]<-"high"
-  gpriskgroups[genomicWprolif>gplthreshold & genomicWprolif<gphthreshold]<-"med"
-  gpriskgroups[genomicWprolif<gplthreshold]<-"low"
+  griskgroups=genomic
+  griskgroups[genomic>ghthreshold]="high"
+  griskgroups[genomic>glthreshold & genomic<ghthreshold]="med"
+  griskgroups[genomic<glthreshold]="low"
+  gpriskgroups=genomicWprolif
+  gpriskgroups[genomicWprolif>gphthreshold]="high"
+  gpriskgroups[genomicWprolif>gplthreshold & genomicWprolif<gphthreshold]="med"
+  gpriskgroups[genomicWprolif<gplthreshold]="low"
   
-  genomic<- 100* (genomic + 0.35 ) / 0.85
-  genomicWprolif<- 100* (genomicWprolif + 0.35 ) / 0.85
+  genomic= 100* (genomic + 0.35 ) / 0.85
+  genomicWprolif= 100* (genomicWprolif + 0.35 ) / 0.85
   
   
   ROR.genomic = data.frame("ROR-S (Subtype Only)" = genomic, "ROR-S Group (Subtype Only)" = griskgroups,
                            "ROR-P (Subtype + Proliferation)" = genomicWprolif, "ROR-P Group (Subtype + Proliferation)" = gpriskgroups,
                            check.names = FALSE)
-  
-  
-  ## how to transfer this variable ?
   
   if (hasClinical){
     
@@ -402,28 +368,19 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
       ROR.combined = data.frame("ROR-C (Subtype + Clinical)" = combined, "ROR-C Group (Subtype + Clinical)" = cpriskgroups,
                                 "ROR-PC (Subtype + Clinical + Proliferation)" = combinedWprolif, "ROR-PC Group (Subtype + Clinical + Proliferation)" = cpriskgroups,
                                 check.names = FALSE)
+
+      combinedWprolif.Subtype = 54.7690 * (-0.0067 * out$distances.Subtype[,1] + 0.4317*out$distances.Subtype[,2] - 0.3172*out$distances.Subtype[,3] + 
+                                              0.4894*out$distances.Subtype[,4] + 0.1981*prolifScore.Subtype + 0.1133*xT + 0.8826)
       
       
-      #View(ROR.combined)
-      
-      # ROR prosigna
-      ## log2 of nCounter expression, FFPE
-      ## log2 of FPKM, FF , illumina
-      ## 46 genes, 
-      ## 46 genes to calculate correlation or no
-      
-      combinedWprolif.prosigna = 54.7690 * (-0.0067 * out$distances.prosigna[,1] + 0.4317*out$distances.prosigna[,2] - 0.3172*out$distances.prosigna[,3] + 
-                                              0.4894*out$distances.prosigna[,4] + 0.1981*prolifScore.prosigna + 0.1133*xT + 0.8826)
-      
-      
+      ## check NODE 
+      ## grouping by NODE
       if ("NODE" %in% colnames(Clinical)  ) {
         
         Clinical$NODE = as.numeric(Clinical$NODE)
         
-        cpriskgroups.prosigna = combinedWprolif.prosigna
+        cpriskgroups.Subtype = combinedWprolif.Subtype
         
-        ## check if NODE 
-        ## grouping by NODE
         patients.NODE = rownames(Clinical)[ !is.na(Clinical$NODE )]
         
         if( length( patients.NODE ) > 0  )  {
@@ -433,7 +390,7 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
           
           if (length( patients.NODE.4 ) > 0  ) { 
             
-            cpriskgroups.prosigna[patients.NODE.4] = "high"
+            cpriskgroups.Subtype[patients.NODE.4] = "high"
           }
           
           ## NODE < 4 & >0
@@ -441,10 +398,10 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
           
           if (length( patients.NODE.3 ) > 0  ) { 
             
-            temp = combinedWprolif.prosigna[patients.NODE.3]
-            cpriskgroups.prosigna[patients.NODE.3][ temp> cphthreshold.prosigna.NODE ]  = "high"
-            cpriskgroups.prosigna[patients.NODE.3][temp>cplthreshold.prosigna.NODE & temp<cphthreshold.prosigna.NODE ] = "med"
-            cpriskgroups.prosigna[patients.NODE.3][temp<cplthreshold.prosigna.NODE] = "low"
+            temp = combinedWprolif.Subtype[patients.NODE.3]
+            cpriskgroups.Subtype[patients.NODE.3][ temp> cphthreshold.Subtype.NODE ]  = "high"
+            cpriskgroups.Subtype[patients.NODE.3][temp>cplthreshold.Subtype.NODE & temp<cphthreshold.Subtype.NODE ] = "med"
+            cpriskgroups.Subtype[patients.NODE.3][temp<cplthreshold.Subtype.NODE] = "low"
             
           }
           
@@ -453,10 +410,10 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
           
           if (length( patients.NODE.0 ) > 0  ) { 
             
-            temp = combinedWprolif.prosigna[patients.NODE.0]
-            cpriskgroups.prosigna[patients.NODE.0][ temp> cphthreshold.prosigna.NODE.0 ]  = "high"
-            cpriskgroups.prosigna[patients.NODE.0][temp>cplthreshold.prosigna.NODE.0 & temp<cphthreshold.prosigna.NODE.0 ] = "med"
-            cpriskgroups.prosigna[patients.NODE.0][temp<cplthreshold.prosigna.NODE.0] = "low"
+            temp = combinedWprolif.Subtype[patients.NODE.0]
+            cpriskgroups.Subtype[patients.NODE.0][ temp> cphthreshold.Subtype.NODE.0 ]  = "high"
+            cpriskgroups.Subtype[patients.NODE.0][temp>cplthreshold.Subtype.NODE.0 & temp<cphthreshold.Subtype.NODE.0 ] = "med"
+            cpriskgroups.Subtype[patients.NODE.0][temp<cplthreshold.Subtype.NODE.0] = "low"
             
           }
           
@@ -467,24 +424,24 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
           
           if ( length( patients.NA ) > 0  ){
             
-            cpriskgroups.prosigna[patients.NA] = NA
+            cpriskgroups.Subtype[patients.NA] = NA
             
           }
           
-          ROR.combined.prosigna = data.frame("ROR-PC (Subtype + Clinical + Proliferation.prosigna)" = combinedWprolif.prosigna, 
-                                             "ROR-PC Group (Subtype + Clinical + Proliferation.prosigna)" = cpriskgroups.prosigna,
+          ROR.combined.Subtype = data.frame("ROR-PC (Subtype + Clinical + Proliferation.Subtype)" = combinedWprolif.Subtype, 
+                                             "ROR-PC Group (Subtype + Clinical + Proliferation.Subtype)" = cpriskgroups.Subtype,
                                              check.names = FALSE)
           
           
         } else {
           
-          cpriskgroups.prosigna[combinedWprolif.prosigna > cphthreshold.prosigna] = "high"
-          cpriskgroups.prosigna[combinedWprolif.prosigna > cplthreshold.prosigna & combinedWprolif.prosigna < cphthreshold.prosigna] = "med"
-          cpriskgroups.prosigna[combinedWprolif.prosigna < cplthreshold.prosigna] = "low"
+          cpriskgroups.Subtype[combinedWprolif.Subtype > cphthreshold.Subtype] = "high"
+          cpriskgroups.Subtype[combinedWprolif.Subtype > cplthreshold.Subtype & combinedWprolif.Subtype < cphthreshold.Subtype] = "med"
+          cpriskgroups.Subtype[combinedWprolif.Subtype < cplthreshold.Subtype] = "low"
           
           
-          ROR.combined.prosigna = data.frame("ROR-PC (Subtype + Clinical + Proliferation.prosigna)" = combinedWprolif.prosigna, 
-                                             "ROR-PC Group (Subtype + Clinical + Proliferation.prosigna)" = cpriskgroups.prosigna,
+          ROR.combined.Subtype = data.frame("ROR-PC (Subtype + Clinical + Proliferation.Subtype)" = combinedWprolif.Subtype, 
+                                             "ROR-PC Group (Subtype + Clinical + Proliferation.Subtype)" = cpriskgroups.Subtype,
                                              check.names = FALSE)
           
         }
@@ -494,19 +451,19 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
     }
     
     
-    outtable = cbind(sample, distance, Call, call.conf, ROR.genomic,ROR.combined, ROR.combined.prosigna, er_her2)
+    outtable = cbind(sample, distance, Call, call.conf, ROR.genomic,ROR.combined, ROR.combined.Subtype, er_her2)
     
   } else {
     outtable = cbind(sample, distance, Call, call.conf, ROR.genomic, er_her2)
   }
   
   
-  if(Prosigna){
+  if(Subtype){
     
     ## pass distances (just omitting normal)
-    Call.prosigna = data.frame( "Call.prosigna" =out$predictions.prosigna, row.names = names(out$predictions.prosigna))
-    outtable = cbind(outtable, Call.prosigna)
-    outtable =outtable %>% dplyr::select(patientID, colnames(distance), Call, Call.prosigna, everything() )
+    Call.Subtype = data.frame( "Call.Subtype" =out$predictions.Subtype, row.names = names(out$predictions.Subtype))
+    outtable = cbind(outtable, Call.Subtype)
+    outtable =outtable %>% dplyr::select(patientID, colnames(distance), Call, Call.Subtype, everything() )
     
   }
   
@@ -529,42 +486,20 @@ RORgroup = function(out, df.cln, Prosigna = FALSE, hasClinical = FALSE ){
 #' @param internal Specify the strategy for internal calibration, medianCtr(default), meanCtr and qCtr
 #' @param external Specify the platform name(which column) of external medians calculated by train cohorts. When users want to use Medians prepared by user selves, this parameter should be "Given.mdns", not platform name. 
 #' @param medians If you specify "external" parameter as "Given.mdns", you should input matrix/table, 50 signatures in the first column and "Given.mdns" values in the second column.
-#' @param Prosigna Logic. 
+#' @param Subtype Logic. 
 #' @param hasClinical Logic. Please specify if you prepared clinical information, like Tumore size as T column, lymphatic node status as NODE column. 
 #' @noRd
 #' 
 
-makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,external=NA, medians = NA,Prosigna = FALSE, hasClinical =FALSE  ){
-  
-  ####
-  # run the assignment algorithm
-  # be careful to choose calibration strategy
-  ####
-  
-  # mat = log2(Test.matrix + 0.001 )
-  # df.cln = df.cln
-  # calibration = "None"
-  # internal = NA
-  # external= NA
-  # medians = NA
-  # hasClinical = FALSE
-  
-  # mat = data_input$x_NC.log
-  # df.cln = clinic.oslo
-  # calibration = "Internal"
-  # internal = "qCtr"
-  # external= NA
-  # medians = NA
-  # Prosigna = T
-  # hasClinical = T
-  
+makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,external=NA, medians = NA,Subtype = FALSE, hasClinical =FALSE  ){
+
   fl.mdn = BreastSubtypeR$medians
   
   
   if(calibration == "External" & external == "Given.mdns" ) {
     
     if( length(medians) == 1 || is.na( medians) ){
-      stop("Please input prepared medians, genes in the first column and median values in the second column")
+      stop("Please input prepared medians, genes in the first column and median values in the second column. ")
     } else {
       
       colnames(medians) = c("X","Given.mdns")
@@ -591,15 +526,15 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   # normalization
   mat = docalibration( mat, df.al, calibration, internal=internal, external=external)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
   
   
-  if (Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
+  if (Subtype) {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS= out$predictions, row.names = NULL )
   }
-  out$distances.prosigna =  -1 * out$distances.prosigna
+  out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
   
@@ -612,7 +547,6 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 }
 
 
-
 #### function to form a ER-balance subet and derive its median---write it to PAM50 dir
 
 #' Function to form a ER-balance subet and derive its median
@@ -622,23 +556,12 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Prosigna Logic.
+#' @param Subtype Logic.
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 
-makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Prosigna = FALSE , hasClinical = FALSE, seed=118){
-  # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
-  # message("##IHC subtype column should be named ---IHC---")
-  # 
-  #test data for TCGA Cell2015
-  # mat = data_input$x_NC.log
-  # df.cln = clinic
-  # seed=118
-  # calibration = "Internal"
-  # internal = "IHC.mdns"
-  # hasClinical = TRUE
-  # Prosigna = TRUE
-  
+makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Subtype = FALSE , hasClinical = FALSE, seed=118){
+
   ERN.ihc = df.cln[which(df.cln$ER == "ER-"),] ### get ER- samples data.frame
   dim(ERN.ihc)	#[1] 153   9
   
@@ -651,11 +574,10 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   length(ERP.ihc$PatientID[i]) # ER positive samples
   length(ERN.ihc$PatientID)    # ER negative samples
   
-  ######=== subset pam50 matrix with the IDs corresponding to balanced ER+ and ER-
-  #mat = Test.matrix
+
   mbal.ihc = mat[,c(ERP.ihc$PatientID[i],ERN.ihc$PatientID)]
   
-  dim(mbal.ihc) #[1]  50 306
+  dim(mbal.ihc) 
   
   # Find median
   surffix = getsurffix(calibration = calibration, internal,external)
@@ -680,19 +602,19 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   ## normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict( centroids, mat, std=F, distm="spearman",  Prosigna = Prosigna)
+  out = sspPredict( centroids, mat, std=F, distm="spearman",  Subtype = Subtype)
   
-  if (Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
+  if (Subtype) {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype, row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   
-  out$distances.prosigna =  -1 * out$distances.prosigna
+  out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
   ##calculate and grouping
-  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical, Prosigna = Prosigna)
+  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical, Subtype = Subtype)
   
   return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns= df.al, outList=out))
   
@@ -709,40 +631,23 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Prosigna Logic. 
+#' @param Subtype Logic. 
 #' @param hasClinical provide clinical information, default is NA. 
 #' @noRd
 
-makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , Prosigna = FALSE, hasClinical = FALSE, seed=118){
-  
-  # # ## test data
-  # mat = data_input$x_NC.log
-  # df.cln = clinic.oslo
-  # ratio=1
-  # ratio= 54/64
-  # ##  46% ER-positive (54/118) and 54% ER-negative (64/118) from Zhao paper ,
-  # calibration = "Internal"
-  # internal = "ER.mdns"
-  # iterative = 5
-  # hasClinical = T
-  # Prosigna=F
-  # seed = 118
-  # iteration = 100
-  # 
-  # set.seed(seed)
-  
+makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , Subtype = FALSE, hasClinical = FALSE, seed=118){
   
   # load the published centroids for classifcation
   centroids = BreastSubtypeR$centroid #pam50_centroids.txt
   
   ## preprocess the input matrix
   ### get ER- samples
-  ERN.ihc = df.cln[which(df.cln$ER =="ER-"),] ### get ER- samples data.frame
-  dim(ERN.ihc)	#[1] 30 2
+  ERN.ihc = df.cln[which(df.cln$ER =="ER-"),] 
+  dim(ERN.ihc)
   
   ### get ER+ samples
   ERP.ihc = df.cln[which(df.cln$ER =="ER+"),]
-  dim(ERP.ihc) #[1] 111 2
+  dim(ERP.ihc) 
   
   ## check the ER composition
   if(dim(ERP.ihc)[1] < dim(ERN.ihc)[1]  ){
@@ -767,9 +672,8 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     i = sample( dim(ERP.ihc)[1], ceiling( ratio * dim(ERN.ihc)[1]) )
     length(ERP.ihc$PatientID[i]) # ER positive samples
     length(ERN.ihc$PatientID)    # ER negative samples
+
     
-    ######=== subset pam50 matrix with the IDs corresponding to balanced ER+ and ER-
-    #mat = Test.matrix
     mbal.ihc = mat[,c(ERP.ihc$PatientID[i],ERN.ihc$PatientID)]
     
     dim(mbal.ihc) #[1]  50 60
@@ -794,7 +698,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     ## normalization
     mat = docalibration( mat, df.al, calibration,internal)
     
-    out = sspPredict(centroids, mat, std=F, distm="spearman",Prosigna = Prosigna)
+    out = sspPredict(centroids, mat, std=F, distm="spearman",Subtype = Subtype)
     
     return( out )
     
@@ -805,39 +709,28 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
   Call_subtypes = mapply(function(res_ihs){res_ihs$predictions }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
   consensus_subtypes = apply(Call_subtypes, 1, get_consensus_subtype)
   
-  if (Prosigna) {
-    Call_subtypes.prosigna = mapply(function(res_ihs){res_ihs$predictions.prosigna }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
-    consensus_subtypes.prosigna = apply(Call_subtypes.prosigna, 1, get_consensus_subtype)
+  if (Subtype) {
+    Call_subtypes.Subtype = mapply(function(res_ihs){res_ihs$predictions.Subtype }, res_ihc_iterative, SIMPLIFY = TRUE,USE.NAMES = TRUE )
+    consensus_subtypes.Subtype = apply(Call_subtypes.Subtype, 1, get_consensus_subtype)
     
-    Int.sbs = data.frame(PatientID = names(consensus_subtypes), BS = consensus_subtypes, BS.prosigna = consensus_subtypes.prosigna , row.names = NULL )
+    Int.sbs = data.frame(PatientID = names(consensus_subtypes), BS = consensus_subtypes, BS.Subtype = consensus_subtypes.Subtype , row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID =names(consensus_subtypes), BS = consensus_subtypes, row.names = NULL )
   }
-  
-  ## get correlation and ROR score for each patient
-  ## do average for each cell, matched with subtype
-  ## how about correlation? average
-  ## how about testdata? average
+
   mean_eve = get_average_subtype(res_ihc_iterative, consensus_subtypes)
-  
-  ## calculate ROR 
-  ## group by ROR
-  ## save all scores
-  
-  if (Prosigna) {
-    out = list(predictions = consensus_subtypes, predictions.prosigna = consensus_subtypes.prosigna, testData = mean_eve$testdata, distances = -1 * mean_eve$mean_distance, distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = centroids )
+
+  if (Subtype) {
+    out = list(predictions = consensus_subtypes, predictions.Subtype = consensus_subtypes.Subtype, testData = mean_eve$testdata, distances = -1 * mean_eve$mean_distance, distances.Subtype = -1 * mean_eve$mean_distance.Subtype, centroids = centroids )
   } else {
-    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance,  distances.prosigna = -1 * mean_eve$mean_distance.prosigna, centroids = centroids )
+    out = list(predictions = consensus_subtypes, testData = mean_eve$testdata,  distances = -1 * mean_eve$mean_distance,  distances.Subtype = -1 * mean_eve$mean_distance.Subtype, centroids = centroids )
   }
   
   ##calculate and grouping
-  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical,Prosigna = Prosigna )
-  
-  ## each time, changing medians, hence,
-  ## no saving medians in result (if want to save, do average then)
-  ## in out, distances are average, subtypes are consensus subtype
-  if(Prosigna ) {
-    res =  list(BS.all = Int.sbs, score.ROR= out.ROR, outList = out, BS.itr.keep = Call_subtypes, BS.itr.keep = Call_subtypes.prosigna )
+  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical,Subtype = Subtype )
+
+  if(Subtype ) {
+    res =  list(BS.all = Int.sbs, score.ROR= out.ROR, outList = out, BS.itr.keep = Call_subtypes, BS.itr.keep = Call_subtypes.Subtype )
   } else {
     res = list(BS.all = Int.sbs, score.ROR= out.ROR, outList = out, BS.itr.keep = Call_subtypes )
   }
@@ -855,31 +748,11 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 #' @param internal Specify the strategy for internal calibration, "PC1ihc.mdns".
 #' @param external NA
 #' @param medians NA
-#' @param Prosigna Logic
+#' @param Subtype Logic
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 
-makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE, seed=118){
-  # message("###clinical subtype data.frame should have a column --PatientID-- with which mat cols are also named")
-  # message("##IHC subtype column should be named ---IHC---")
-  # 
-  
-  # ## test data
-  # mat = Test.matrix
-  # df.cln = df.cln
-  # calibration = "Internal"
-  # internal="PC1ihc.mdns"
-  # seed=118
-  # hasClinical = FALSE
-  
-  # ## test data
-  # mat = data_input$x_NC.log
-  # df.cln = clinic.oslo
-  # calibration = "Internal"
-  # internal="PC1ihc.mdns"
-  # seed=118
-  # hasClinical = T
-  
+makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE, seed=118){
   
   # Pull the PCA components
   #rv      = rowVars(mat)
@@ -896,7 +769,6 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
     tot   = (p.rgt + n.lft) * 100
     return(list(PC1=x,Mis=tot))
   }
-  
   
   df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
   
@@ -933,12 +805,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   df.mdns   = data.frame(X=rownames(mdns.df),mdns.pc1ihc=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
   colnames(df.mdns) = c("X",surffix)
   
-  
-  
-  # # merge this median to PAM50-medians file "mediansPerDataset_v2.txt"
-  # fl.nm     = paste(PAM50dir,"mediansPerDataset_v2.txt",sep="/")
-  # fl.mdn    = read.table(fl.nm,sep="\t",header=T,stringsAsFactors=F)
-  # 
+  ## medians
   fl.mdn = BreastSubtypeR$medians 
   
   df.al = merge(fl.mdn, df.mdns, by = "X")
@@ -949,19 +816,19 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   # normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
   
-  if(Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
+  if(Subtype) {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   
-  out$distances.prosigna =  -1 * out$distances.prosigna
+  out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
   ##calculate and grouping
-  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical,Prosigna = Prosigna )
+  out.ROR = RORgroup(out, df.cln, hasClinical = hasClinical,Subtype = Subtype )
   
   return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns= df.al,outList=out))
   
@@ -975,24 +842,13 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
 #' @param internal Specify the strategy for internal calibration, "v1PAM.mdns".
 #' @param external NA
 #' @param medians NA
-#' @param Prosigna Logic. 
+#' @param Subtype Logic. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 
-makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Prosigna =FALSE, hasClinical = FALSE,seed=118 ){
+makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE,seed=118 ){
   
-  # message("###df.pam data.frame should have a column --PatientID-- with which mat cols are also named")
-  # message("##v1PAM subtype column should be named ---PAM50---")
-  # 
-  # print( paste0( "in VIPAM : ",internal ) )
-  
-  # mat = data_input$x_parker
-  # df.pam = df.pc1pam
-  # hasClinical = hasClinical
-  # seed = 118
-  # calibration = "Internal"
-  # internal ="v1PAM.mdns"
-  # 
+
   
   ERN.pam = df.pam[which(df.pam$PAM50 %in% c("Basal")),] ### get ER- samples data.frame
   dim(ERN.pam)
@@ -1005,10 +861,10 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   length(ERP.pam$PatientID[i]) # ER positive samples
   length(ERN.pam$PatientID)    # ER negative samples
   
-  ######=== subset pam50 matrix with the IDs corresponding to balanced ER+ and ER-
+ 
   mbal.pam = mat[,c(ERP.pam$PatientID[i],ERN.pam$PatientID)]
   
-  dim(mbal.pam) #[1]  50 306
+  dim(mbal.pam) 
   
   # Find median
   surffix = getsurffix(calibration = calibration, internal)
@@ -1017,15 +873,8 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   mdns.df   = as.data.frame(mdns)
   df.mdns   = data.frame(X=rownames(mdns.df),mdns.pam=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
   colnames(df.mdns) = c("X",surffix)
-  
-  
-  # # merge this median to PAM50-medians file "mediansPerDataset_v2.txt"
-  # fl.nm     = paste(PAM50dir,"mediansPerDataset_v2.txt",sep="/")
-  # fl.mdn    = read.table(fl.nm,sep="\t",header=T,stringsAsFactors=F)
-  # 
-  # df.al     = merge(fl.mdn,df.mdns,by="X")
-  # 
-  
+
+  ## median
   fl.mdn = BreastSubtypeR$medians
   
   df.al = merge(fl.mdn, df.mdns, by = "X")
@@ -1036,18 +885,18 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   ## normalization
   mat= docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Prosigna = Prosigna)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
   
-  if(Prosigna) {
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna, row.names = NULL )
+  if(Subtype) {
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype, row.names = NULL )
   } else {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
-  out$distances.prosigna =  -1 * out$distances.prosigna
+  out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
   ##calculate and grouping
-  out.ROR = RORgroup(out, df.cln = df.pam, hasClinical = hasClinical,Prosigna = Prosigna )
+  out.ROR = RORgroup(out, df.cln = df.pam, hasClinical = hasClinical,Subtype = Subtype )
   
   return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns.fl= df.al,outList=out))
   
@@ -1060,7 +909,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table. The first column must be named "PatientID".
 #' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
-#' @param Prosigna Logic. Specify whether to predict Prosigna-like subtyping. 
+#' @param Subtype Logic. Specify whether to predict Subtype-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 #' 
@@ -1069,23 +918,13 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 ## https://github.com/afernan4/PAM50_ER_HER2_normalization/blob/main/SIGMA.txt
 ## https://ascopubs.org/doi/suppl/10.1200/JCO.20.01276/suppl_file/ds_jco.20.01276-2.pdf
 
-makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE  ){
+makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  ){
   
-  # ## test data
-  # data("BreastSubtypeR")
-  # gene.sigma = BreastSubtypeR$ssBC.subgroupQuantile
-  # mat = exprs(UNC232)
-  # df.cln= pData(UNC232)
-  # df.cln$IHC = ""
-  # 
-  # s = "ER"
-  
-  # ## test data
-  # mat = data_input$x_parker
-  # df.cln = clinic.oslo
-  # s = "ER_JAMA"
-  # hasClinical =T
-  
+  if( !(dim(mat)[2] == dim(df.cln)[1]) ){
+    stop("Please input equal number of patient clinical information to the number of patient in gene expression matrix.")
+  }
+    
+    
   gene.sigma = BreastSubtypeR$ssBC.subgroupQuantile
   
   
@@ -1120,7 +959,6 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
     
     ## if there is no sample in either of both, wont influence the code
     TN_samples = rownames(df.cln)[which(df.cln$TN == "TN" )]
-    #nTN_samples = rownames(df.cln)[which(df.cln$TN == "nTN" )] 
     samples_selected = list( TNBC = TN_samples)
     
   } else {
@@ -1129,23 +967,16 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
   
   res = mapply(function(element){
     
-    #print(element)
-    
+
     x.m = mat[, samples_selected[[element]] ]
-    
-    ## ensure gene signatures are used in centroid table
-    ## to be improve later
-    
-    ## do calibration
-    ## the same as the python 
-    ## https://github.com/afernan4/PAM50_ER_HER2_normalization/"PAM50 gene normalization by clinically defined breast cancer subgroups.ipynb"
+
     gene.sigma.o = gene.sigma[rownames(x.m), element]
     x.sigma = unlist(lapply(1:nrow(x.m), function(i) quantile(x.m[i,], probs = gene.sigma.o[i], na.rm = T)))
-    x.m = sweep(x.m, 1, x.sigma) ## subtract
+    x.m = sweep(x.m, 1, x.sigma) 
     ## it has been calibrated by selected quantile 
     
     
-    out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", Prosigna = Prosigna)
+    out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", Subtype = Subtype)
     
     
   }, names(samples_selected), SIMPLIFY = F, USE.NAMES = T )
@@ -1157,10 +988,10 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
     predictions = c(res$ER_neg$predictions, res$ER_pos$predictions)
     distances = rbind(res$ER_neg$distances, res$ER_pos$distances )
     testData = cbind(res$ER_neg$testData, res$ER_pos$testData )
-    distances.prosigna = rbind(res$ER_neg$distances.prosigna, res$ER_pos$distances.prosigna )
+    distances.Subtype = rbind(res$ER_neg$distances.Subtype, res$ER_pos$distances.Subtype )
     
-    if(Prosigna ){
-      predictions.prosigna = c(res$ER_neg$predictions.prosigna, res$ER_pos$predictions.prosigna)
+    if(Subtype ){
+      predictions.Subtype = c(res$ER_neg$predictions.Subtype, res$ER_pos$predictions.Subtype)
     }
     
   } else if(s == "ER_JAMA" ){
@@ -1171,12 +1002,12 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
                       res$HER2pos_ERneg$distances, res$HER2pos_ERpos$distances)
     testData = cbind(res$ERneg_HER2neg$testData, res$ERpos_HER2neg$testData,
                      res$HER2pos_ERneg$testData, res$HER2pos_ERpos$testData)
-    distances.prosigna = rbind(res$ERneg_HER2neg$distances.prosigna, res$ERpos_HER2neg$distances.prosigna,
-                               res$HER2pos_ERneg$distances.prosigna, res$HER2pos_ERpos$distances.prosigna)
+    distances.Subtype = rbind(res$ERneg_HER2neg$distances.Subtype, res$ERpos_HER2neg$distances.Subtype,
+                               res$HER2pos_ERneg$distances.Subtype, res$HER2pos_ERpos$distances.Subtype)
     
-    if(Prosigna ){
-      predictions.prosigna = c(res$ERneg_HER2neg$predictions.prosigna, res$ERpos_HER2neg$predictions.prosigna, 
-                               res$HER2pos_ERneg$predictions.prosigna, res$HER2pos_ERpos$predictions.prosigna)
+    if(Subtype ){
+      predictions.Subtype = c(res$ERneg_HER2neg$predictions.Subtype, res$ERpos_HER2neg$predictions.Subtype, 
+                               res$HER2pos_ERneg$predictions.Subtype, res$HER2pos_ERpos$predictions.Subtype)
     }
     
     
@@ -1185,10 +1016,10 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
     predictions = res$TN$predictions
     distances = res$TN$distances
     testData = res$TN$testData
-    distances.prosigna = res$TN$distances.prosigna
+    distances.Subtype = res$TN$distances.Subtype
     
-    if(Prosigna ){
-      predictions.prosigna = res$TN$predictions.prosigna
+    if(Subtype ){
+      predictions.Subtype = res$TN$predictions.Subtype
     }
     
   } else if (s == "TNBC")  {
@@ -1196,35 +1027,36 @@ makeCalls.ssBC = function(mat, df.cln, s , Prosigna = FALSE , hasClinical =FALSE
     predictions = res$TNBC$predictions
     distances = res$TNBC$distances
     testData = res$TNBC$testData
-    distances.prosigna = res$TNBC$distances.prosigna
+    distances.Subtype = res$TNBC$distances.Subtype
     
-    if(Prosigna ){
-      predictions.prosigna = res$TNBC$predictions.prosigna
+    if(Subtype ){
+      predictions.Subtype = res$TNBC$predictions.Subtype
     }
   } 
   
   
   
-  if(Prosigna){
-    out = list(predictions=predictions,predictions.prosigna = predictions.prosigna ,testData=testData,distances=distances, distances.prosigna = distances.prosigna, centroids= BreastSubtypeR$centroid)
-    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.prosigna = out$predictions.prosigna , row.names = NULL )
+  if(Subtype){
+    out = list(predictions=predictions,predictions.Subtype = predictions.Subtype ,testData=testData,distances=distances, distances.Subtype = distances.Subtype, centroids= BreastSubtypeR$centroid)
+    Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
   } else {
-    out= list(predictions=predictions, testData=testData,distances=distances,  distances.prosigna = distances.prosigna, centroids=BreastSubtypeR$centroid)
+    out= list(predictions=predictions, testData=testData,distances=distances,  distances.Subtype = distances.Subtype, centroids=BreastSubtypeR$centroid)
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
-  out$distances.prosigna =  -1 * out$distances.prosigna
+  out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
   
   ##calculate and grouping
-  out.ROR = RORgroup(out,df.cln, hasClinical = hasClinical, Prosigna = Prosigna )
-  
+  out.ROR = RORgroup(out,df.cln, hasClinical = hasClinical, Subtype = Subtype )
+
   ## reorder
   orde.No = match(colnames(mat), Int.sbs$PatientID )
   Int.sbs = Int.sbs[orde.No,]
   out.ROR = out.ROR[colnames(mat),]
-  out$distances.prosigna = out$distances.prosigna[orde.No,]
+  out$distances.Subtype = out$distances.Subtype[orde.No,]
   out$distances = out$distances[orde.No,]
+
   out$testData =  out$testData[,colnames(mat) ]
   out$predictions =  out$predictions[colnames(mat)]
   

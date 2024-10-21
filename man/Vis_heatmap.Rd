@@ -14,3 +14,12 @@ Vis_heatmap(x, out)
 \description{
 Function for heatmap visualizayion
 }
+\examples{
+
+data("OSLO2MEITOobj")
+
+matrix = data_input$x_NC.log,
+out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+plot = Vis_heatmap( x = matrix, out = out)
+
+}

@@ -12,24 +12,28 @@ A table with subtyping and ROR score
 \description{
 Starts an interactive BreastSubtypeR shiny web app.
 
-BreastSubtypeR collected breast cancer subtyping methods,
-near centrioids based (NC-based) and single sample prediction based (SSP-based).
-It employs standardized input and output and provides a unified framework that
-is highly compatible with other R packages in the gene expression profiling field.
+BreastSubtypeR integrates intrinsic molecular subtyping methods for breast cancer,
+including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches.
+It employs standardized input and output formats,
+offering a unified framework that is highly compatible with other R packages in the gene expression profiling field.
 
 The \code{iBreastSubtypeR()} function starts an interactive shiny web app that allows
 the user to configure the arguments of subtyping functions and
-runs it on the computer. Please see the manual page of the functions for a description of the arguments and their
+runs it on the local computer. Please see the manual page of the functions for a description of the arguments and their
 default and alternative values.
 
 The input data may be loaded from the users workspace or by selecting a CSV/text
 file for the expression data, a CSV/text file for clinical information and
 a CSV/text file for feature annotations.
+
+After loading necessary files, users only need to run/click "Mapping" button once and waiting for the notification.
+If Mapping() function runs well, it will say "Genes used in NC-based methods are covered. Genes used in SSP-based methods are covered.".
+Then, users canselect any subtyping method and change relevant parameters to perform analysis.
+If subtyping function runs well, two plots would be visualized. Users can download the result as text file.
 }
 \examples{
-\dontrun{
-res <- iBreastSubtypeR() ## this will open your browser with the GSVA shiny web app
-}
+
+iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny web app
 
 }
 \keyword{BreastSubtypeR}

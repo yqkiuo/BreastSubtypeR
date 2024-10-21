@@ -5,7 +5,8 @@
 #' @import ComplexHeatmap
 #' @import RColorBrewer
 #' @import magrittr
-#' @import impute
+#' @import ggrepel
+
 #' @importFrom dplyr select
 #' @importFrom dplyr mutate_at
 #' @noRd 
@@ -19,14 +20,11 @@ NULL
 #' @param impute Logic. Please specify if there are NA data adn want keep them
 #' @param verbose Logic. 
 #' @export
-Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
-
-  # ## test
-  # gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-  # featuredata = anno_feature
+Mapping = function(gene_expression_matrix, featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
 
   x = gene_expression_matrix
   y = featuredata
+  
   samplenames = colnames(x)
 
   ## check feature data
@@ -35,15 +33,15 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   }
   
   ## loading genes.signature
+  data("BreastSubtypeR")
   genes.signature = BreastSubtypeR$genes.signature
  
   ## filter by ENTREZID
   y = y[y$ENTREZID %in% genes.signature$EntrezGene.ID,]
   x = x[y$probe,]
   
-  
-  ## first step 
-  ## for empty cells. imput or not ?
+
+  ## if imput
   if(sum(apply(x,2,is.na))>0 & impute){
     
     library(impute)
@@ -56,12 +54,8 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
     x = impute.knn(x)
     x = x$data
   }
-  
 
-  # 
-  ## second step 
-  ## if mapping (microarray or transcript )
- 
+  ## do mapping
   probeid = rownames(x)
   entrezid = y$ENTREZID
   names(entrezid) = y$probe
@@ -74,13 +68,11 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   entrezid = factor( entrezid, levels =  unique(entrezid) ) 
   ## names are unique probeid and content are redundant entrezid 
   
-  
-  ## This is for probeID or transcriptID 
-  ## split expression matrix
-  split_mat <- split( as.data.frame(x), entrezid, drop = F)
+
+  split_mat = split( as.data.frame(x), entrezid, drop = F)
   
   # function to calculate the desired statistic
-  calculate_stat <- function(mat, method) {
+  calculate_stat = function(mat, method) {
     switch(method,
            "mean" = apply(mat, 2, mean, na.rm = TRUE),
            "median" = apply(mat, 2, median, na.rm = TRUE),
@@ -105,22 +97,21 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   x = apply(x, 1, unlist)
   
   ##print necessary information
-  ##Parker
-  missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
-  if( length(missing_ID_parker) == 0 & verbose ){ 
-    print("Genes used in NC-based methods are covered")
+  missing_ID_NC = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_NC) == 0 & verbose ){ 
+    cat("Genes used in NC-based methods are covered. \n")
   } else if(verbose) {
-    print("These genes are missing for NC-based methods:")
-    print(missing_ID_parker)
+    cat("These genes are missing for NC-based methods: \n")
+    cat(missing_ID_NC, sep = "\n")
   }
   
-  ##AIMS
-  missing_ID_AIMS = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
-  if( length(missing_ID_AIMS) == 0 & verbose ){ 
-    print("Genes used in SSP-based methods are covered")
+  ##SSP-based
+  missing_ID_SSP = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
+  if( length(missing_ID_SSP) == 0 & verbose ){ 
+    cat("Genes used in SSP-based methods are covered. \n")
   } else if(verbose) {
-    print("These genes are missing for SSP-based methods:")
-    print(missing_ID_AIMS)
+    cat("These genes are missing for SSP-based methods: \n")
+    cat(missing_ID_SSP, sep = "\n")
   }
   
   ## get matrix for NC (symbol as rows, sample as col)
@@ -144,10 +135,10 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
 
 #' Function for consensus subtype
 #' @noRd 
-get_consensus_subtype <- function(patient_row) {
+get_consensus_subtype = function(patient_row) {
   patient_row = unlist(patient_row, use.names = FALSE)
-  counts <- table(patient_row)
-  max_subtype <- names(counts)[which.max(counts)]
+  counts = table(patient_row)
+  max_subtype = names(counts)[which.max(counts)]
   return(max_subtype)
 }
 
@@ -157,7 +148,6 @@ get_consensus_subtype <- function(patient_row) {
 get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 
   ## correlation and ROR to be averaged
-  ## if hasclini ?? need to be added later
   sum_colnames = c("Basal","Her2","LumA", "LumB", "Normal")
   
   all_patients = names(res_ihc_iterative[[1]]$predictions )
@@ -180,9 +170,9 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   
   
   ## count_na
-  count_weight_save <- Reduce(`+`, lapply(sum_cols_list, function(x) {
-    x[!is.na(x)] <- 1
-    x[is.na(x)] <- 0
+  count_weight_save = Reduce(`+`, lapply(sum_cols_list, function(x) {
+    x[!is.na(x)] = 1
+    x[is.na(x)] = 0
     return(x)
   }))
   
@@ -200,7 +190,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   mean_cols_save = sum_cols_save / count_weight_save
   
   ## get the mean testdata
-  sum_cols_list.testdata <- mapply(function(res_ihc){
+  sum_cols_list.testdata = mapply(function(res_ihc){
     res_ihc$testData
   }, res_ihc_iterative, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   
@@ -208,33 +198,31 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   mean_cols_save.testdata = Reduce(`+`, sum_cols_list.testdata) / length(sum_cols_list.testdata)
 
  
-  ## distances.prosigna for ROR 
-  sum_cols_list.prosigna = mapply(function(res_ihc){
-    
-    #res_ihc = res_ihc_iterative[[1]]
-    
-    res_ihc$distances.prosigna = as.data.frame(res_ihc$distances.prosigna )
+  ## distances.Subtype for ROR 
+  sum_cols_list.Subtype = mapply(function(res_ihc){
+
+    res_ihc$distances.Subtype = as.data.frame(res_ihc$distances.Subtype )
     
     ## if FALSE, make the cell as NULL
     keep = res_ihc$predictions == consensus_subtypes
-    res_ihc$distances.prosigna[ !keep, ] = as.list(rep(NA, 4 ))
+    res_ihc$distances.Subtype[ !keep, ] = as.list(rep(NA, 4 ))
     
-    res = mutate_at(res_ihc$distances.prosigna, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
+    res = mutate_at(res_ihc$distances.Subtype, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
     
     return(res )
     
   }, res_ihc_iterative , SIMPLIFY = FALSE, USE.NAMES = FALSE )
   
   ## count_na
-  count_weight_save.prosigna <- Reduce(`+`, lapply(sum_cols_list.prosigna, function(x) {
-    x[!is.na(x)] <- 1
-    x[is.na(x)] <- 0
+  count_weight_save.Subtype = Reduce(`+`, lapply(sum_cols_list.Subtype, function(x) {
+    x[!is.na(x)] = 1
+    x[is.na(x)] = 0
     return(x)
   }))
   
   
   ## sum all for each cell
-  sum_cols_save.prosigna = Reduce(`+`, lapply(sum_cols_list.prosigna, function(x) {
+  sum_cols_save.Subtype = Reduce(`+`, lapply(sum_cols_list.Subtype, function(x) {
     
     ## change NA cell to 0 cell
     x[is.na(x)] = 0
@@ -244,10 +232,10 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   
   ## get the mean for each cell
   ## only when subtype is supported by consensus_subtypes for each iteration and each patient
-  sum_cols_save.prosigna = sum_cols_save.prosigna / count_weight_save.prosigna
+  sum_cols_save.Subtype = sum_cols_save.Subtype / count_weight_save.Subtype
   
   
-  res = list( mean_distance = mean_cols_save, mean_distance.prosigna = sum_cols_save.prosigna, testdata =  mean_cols_save.testdata) 
+  res = list( mean_distance = mean_cols_save, mean_distance.Subtype = sum_cols_save.Subtype, testdata =  mean_cols_save.testdata) 
   
 
   return(res)
@@ -259,15 +247,21 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 #' Function for boxplot of correlation per subtype
 #' @param out a data frame includes "patientID" and "Subtype"
 #' @param correlations  correlations table from NC-based methods
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' correlations = res$results$parker.median$outList$distances 
+#' 
+#' plot = Vis_boxpot(out = out, correlations = correlations )
+#' 
+#' 
 #' @export
 #' 
 
 Vis_boxpot = function(out, correlations ){
-  
-  # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # correlations =res$results$parker.median$outList$distances
-  
+
   df = data.frame( predictions = out$Subtype, cor = apply(correlations, 1, max))
   
   plot =  ggplot( df, aes( x = predictions, y = cor) ) +
@@ -277,8 +271,7 @@ Vis_boxpot = function(out, correlations ){
     theme( 
       axis.text = element_text( size = 12)
       )
-  #plot(plot)
- 
+
   return(plot)
   
 }
@@ -287,16 +280,20 @@ Vis_boxpot = function(out, correlations ){
 #' Function for heatmap visualizayion
 #' @param x gene expression matrix, log2 transformed
 #' @param out a data frame includes "patientID" and "Subtype"
+#' 
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' matrix = data_input$x_NC.log,
+#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' plot = Vis_heatmap( x = matrix, out = out)
+#' 
 #' @export
 #' 
 
 Vis_heatmap = function(x, out){
-
-  # ## test data
-  # x = data_input$x_NC
-  # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # linkage="average",distance="spearman" original myheatmap() function
 
   scaled_mat = t(scale(t(x[,out$PatientID])))
 
@@ -305,7 +302,7 @@ Vis_heatmap = function(x, out){
   
   ## column annotation
   col_anno = data.frame( row.names = out$PatientID, Subtype = out$Subtype )
-  anno_col = HeatmapAnnotation(df= col_anno, show_legend = FALSE,col = list(Subtype = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" ) ))
+  anno_col = HeatmapAnnotation(df= col_anno, show_legend = TRUE,col = list(Subtype = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" ) ))
   
   heatmap = Heatmap(scaled_mat, name = "Expr",
           col = col_fun,
@@ -325,8 +322,10 @@ Vis_heatmap = function(x, out){
 
           ## general
           show_column_names = FALSE,
-          show_heatmap_legend = TRUE,
-          row_names_gp = gpar(fontsize = 8))
+          show_row_names = FALSE,
+          column_title = NULL,
+          show_heatmap_legend = TRUE)
+  
   
   return(heatmap)
 }
@@ -338,64 +337,72 @@ Vis_heatmap = function(x, out){
 #' @param x gene expression matrix, log2 transformed
 #' @param out a data table includes "patientID" and "Subtype"
 #' @param screeplot Logic. Please specify if show screeplot
+#' 
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' matrix = data_input$x_NC.log
+#' out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' plot = Vis_PCA(x = matrix, out= out)
+#' 
 #' @export
 #' 
 
-Vis_PCA = function(x, out, Eigen = FALSE){
-  
-  # x = data_input$x_NC.log
-  # out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # 
-  
+Vis_PCA = function(x, out, screeplot = FALSE){
+
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
 
   
   pca = prcomp(t(x), center = T, scale. = T)
+
   
-  # Scree plot
-  variance = pca$sdev^2/ sum(pca$sdev^2) *100
-  scree_data = data.frame(PC =  seq_along(variance) ,Variance = variance)
-  
-  screeplot = ggplot(scree_data[1:10,], aes(x = PC, y = Variance)) +
-    geom_bar(stat = "identity", width = 0.5, fill = "steelblue")+
-    geom_line() +
-    geom_point(size=2)+
-    scale_x_continuous(breaks = seq(1,10, 1) )+
-    geom_text( aes(x = PC, label= paste0( round( Variance,2), "%") ),  nudge_y = 1) +
-    labs(x ="Principal Component", y = "Percentage of variance Explained") +
-    theme_classic()+
-    theme(axis.text = element_text(size =12),
-          axis.title = element_text(size = 14)
-          )
-  
-  
-  ## PCA plot
-  scores = as.data.frame(pca$x)
-  scores$PatientID = rownames(scores)
-  scores = left_join(scores, out, by ="PatientID" )
-  rownames(scores) = scores$PatientID
-  
-  pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
-    geom_point( size = 2) +
-    geom_vline( xintercept = 0, linetype="dashed") +
-    geom_hline( yintercept = 0, linetype="dashed")+
-    scale_color_manual( name = "Subtype", values = Subtype.color )+
-    labs(x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 2), "% variance)"),
-         y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 2), "% variance)")) +
-    theme_minimal() +
-    theme(axis.text = element_text(size =12),
-          axis.title = element_text(size = 14),
-          legend.title = element_text(size = 14),
-          legend.text =  element_text(size = 12)
-    )
-  
-  
-  
-  if(Eigen){
-    return(screeplot)
-  } else {
+  if(!screeplot){
+    
+    ## PCA plot
+    scores = as.data.frame(pca$x)
+    scores$PatientID = rownames(scores)
+    scores = left_join(scores, out, by ="PatientID" )
+    rownames(scores) = scores$PatientID
+    
+    pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
+      geom_point( size = 2) +
+      geom_vline( xintercept = 0, linetype="dashed") +
+      geom_hline( yintercept = 0, linetype="dashed")+
+      scale_color_manual( name = "Subtype", values = Subtype.color )+
+      labs(x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 2), "% variance)"),
+           y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 2), "% variance)")) +
+      theme_minimal() +
+      theme(axis.text = element_text(size =12),
+            axis.title = element_text(size = 14),
+            legend.title = element_text(size = 14),
+            legend.text =  element_text(size = 12)
+      )
+    
     return(pcaplot)
+    
+    
+  } else {
+    
+    # Scree plot
+    variance = pca$sdev^2/ sum(pca$sdev^2) *100
+    scree_data = data.frame(PC =  seq_along(variance) ,Variance = variance)
+    
+    screeplot = ggplot(scree_data[1:10,], aes(x = PC, y = Variance)) +
+      geom_bar(stat = "identity", width = 0.5, fill = "steelblue")+
+      geom_line() +
+      geom_point(size=2)+
+      scale_x_continuous(breaks = seq(1,10, 1) )+
+      geom_text( aes(x = PC, label= paste0( round( Variance,2), "%") ),  nudge_y = 1) +
+      labs(x ="Principal Component", y = "Percentage of variance Explained") +
+      theme_classic()+
+      theme(axis.text = element_text(size =12),
+            axis.title = element_text(size = 14)
+      )
+    
+    return(screeplot)
+    
   }
 
   
@@ -403,13 +410,19 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 
 #' Function for pieplot 
 #' @param out a data table includes "patientID" and "Subtype"
+#' 
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#'
+#' out= data.frame(PatientID = rownames(res$results$sspbc$BS.all), Subtype = res$results$sspbc$BS.all$BS )
+#' plot = Vis_pie( out = out)
+#' 
 #' @export
 #' 
 
 Vis_pie = function(out){
-  
-  # out= data.frame(PatientID = rownames(res$results$sspbc$BS.all),
-  #                 Subtype = res$results$sspbc$BS.all$BS )
   
   data = data.frame( table(out$Subtype))
   data = data %>% 
@@ -418,13 +431,9 @@ Vis_pie = function(out){
            pos = perc/2 + lead(csum, 1),
            pos = if_else(is.na(pos), perc/2, pos)) 
     
-    
-  
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
   
-  library(ggrepel)
-  
- plot =  ggplot(data, aes(x = "", y = perc, fill = Var1)) +
+  plot =  ggplot(data, aes(x = "", y = perc, fill = Var1)) +
     geom_bar(stat = "identity") +
     scale_fill_manual(name = "Subtype", values = Subtype.color ) +
     geom_text_repel(data = data,
@@ -437,21 +446,29 @@ Vis_pie = function(out){
           legend.text =  element_text(size = 12)
     )
   
-  
   return(plot)
   
 }
 
 
 #' Function for pieplot 
-#' @param out a data table includes "patientID" and "Subtype"
+#' 
+#' @description
+#' This function is used to visualize the intrinsic subtypes estimated by BS_Check() function.
+#' 
+#' @param out the output of BS_Check() function.
+#' 
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' plot = Vis_consensus(data = res$res_subtypes)
+#' 
 #' @export
 #' 
 
 Vis_consensus = function(data){
 
-  # data = res$res_subtypes
-  # data = res$res_subtypes.prosigna[,-9]
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset

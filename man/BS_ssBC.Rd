@@ -8,7 +8,7 @@ BS_ssBC(
   gene_expression_matrix,
   phenodata,
   s,
-  Prosigna = FALSE,
+  Subtype = FALSE,
   hasClinical = FALSE,
   ...
 )
@@ -20,7 +20,7 @@ BS_ssBC(
 
 \item{s}{Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
 
-\item{Prosigna}{Logic.}
+\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
@@ -32,7 +32,7 @@ This calls ssBC to do intrinsic subtyping.
 }
 \examples{
 
-data("oslo.obj")
-res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Prosigna = FALSE, hasClinical =FALSE)
+data("OSLO2MEITOobj")
+res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Subtype = FALSE, hasClinical =FALSE)
 
 }

@@ -8,7 +8,7 @@ BS_Check(
   data_input,
   phenodata,
   methods = NA,
-  Prosigna = FALSE,
+  Subtype = FALSE,
   hasClinical = FALSE,
   ...
 )
@@ -20,7 +20,7 @@ BS_Check(
 
 \item{methods}{Specify methods.}
 
-\item{Prosigna}{Logic. Specify whether to predict Prosigna like subtypes.}
+\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
@@ -32,8 +32,9 @@ This calls consensus subtyping and users can specify subtyping methods.
 }
 \examples{
 
+data("OSLO2MEITOobj")
 methods = c( "parker.median", "parker.mean", "parker.quantile")
-res = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Prosigna = FALSE, hasClinical = FALSE)
+res.test = BS_Check(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
 
 
 }

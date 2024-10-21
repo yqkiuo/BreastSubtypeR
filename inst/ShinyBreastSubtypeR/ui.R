@@ -1,22 +1,26 @@
-library(shiny)
-library(bslib)
-library(thematic)
+# Define UI for iBreastSubtypeR
+require(bslib, quietly = T)
+require(shiny, quietly = T)
 
-# Define UI for app that draws a histogram ----
+## increase file limit
+options(shiny.maxRequestSize=50*1024^2) 
+
 
 ui = page_fluid(
-  
-  theme = bs_theme(preset = "zephyr", font_scale = 1.2),
-  
-  titlePanel("Breast Cancer Intrinsic Subtype (BreastSubtypeR)"),
+
+  titlePanel("interactive Breast Cancer Intrinsic Subtype (iBreastSubtypeR)"),
 
   card(
-    card_header("Welcom to BreastSubtypeR"),
-    "BreastSubtypeR collected breast cancer subtyping methods, near centrioids based (NC-based) and single sample prediction based (SSP-based). It employs standardized input and output and provides a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
+    card_header("Welcom to iBreastSubtypeR"),
+    "BreastSubtypeR integrates intrinsic molecular subtyping methods for breast cancer, 
+    including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
+    It employs standardized input and output formats, 
+    offering a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
     card_image("logo.svg", height = "300px"),
     card_footer("Enjoy this subtyping journey.")
   ),
   
+  #### input your data ####
   # Main page section with a title
   h3("Please input your data"),  # Add a title here
 
@@ -62,12 +66,13 @@ ui = page_fluid(
     )
   ),
   
-  ## Map button
+  #### Map button ####
   card(
     actionButton("map", "Map" )
   )
   , ## layout 3
 
+  #### Please choose your method ####
   # Main page section with a title
   h3("Please choose your method"),  # Add a title here
   
@@ -96,7 +101,7 @@ ui = page_fluid(
         ##calibration
         selectInput(
           "hasClinical",
-          "hasClinical", choices =  list( "FALSE" = "FALSE", "TRUE" = "TRUE" ),
+          "Has Clinical", choices =  list( "FALSE" = "FALSE", "TRUE" = "TRUE" ),
           selected = "FALSE"),
         selectInput(
           "calibration",
@@ -113,8 +118,13 @@ ui = page_fluid(
             selectInput(
               "external",
               "External",
-              choices = list("Given.mdns" = "Given.mdns"),
-              selected = "Given.mdns")
+              choices = list("Given.mdns" = "Given.mdns",
+                             "RNAseq.V2" = "RNAseq.V2","RNAseq.V1"  = "RNAseq.V1" ,
+                             "GC.4x44Kcustom" = "GC.4x44Kcustom", "Agilent_244K" = "Agilent_244K",
+                             "commercial_1x44k_postMeanCollapse_WashU"  = "commercial_1x44k_postMeanCollapse_WashU" , "commercial_4x44k_postMeanCollapse_WashU_v2" = "commercial_4x44k_postMeanCollapse_WashU_v2",
+                             "htp1.5_WU_update"  =  "htp1.5_WU_update", "arrayTrain_postMeanCollapse" = "arrayTrain_postMeanCollapse"
+                             ),
+              selected = "RNAseq.V2")
           )
           ),
         
@@ -200,6 +210,14 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'sspbc'",
+      layout_column_wrap(
+        selectInput(
+          "Subtype",
+          "Subtype",
+          choices = list("FALSE" = "FALSE", "TRUE" = "TRUE"),
+          selected = "FALSE"
+        )
+      )
     ),
 
     card(
@@ -207,6 +225,8 @@ ui = page_fluid(
     )
   ), ## card option
   
+  # Visualization layout placed separately and conditionally rendered
+  uiOutput("plotSection"),
   
   # Footer with download and reset buttons
   fluidRow(
@@ -214,10 +234,7 @@ ui = page_fluid(
            div(style = "margin-top: 20px; margin-bottom: 20px;",
                downloadButton("download", "", style = "width: 150px; height: 40px;"))
     )
-  ),
-
-  # Visualization layout placed separately and conditionally rendered
-  uiOutput("plotSection")
-
+  )
+  
 )
 

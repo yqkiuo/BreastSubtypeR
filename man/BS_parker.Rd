@@ -11,7 +11,7 @@ BS_parker(
   internal = NA,
   external = NA,
   medians = NA,
-  Prosigna = FALSE,
+  Subtype = FALSE,
   hasClinical = FALSE,
   ...
 )
@@ -29,7 +29,7 @@ BS_parker(
 
 \item{medians}{If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.}
 
-\item{Prosigna}{Logic.}
+\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
@@ -41,7 +41,7 @@ This calls parker-based intrinsic subtyping methods.
 }
 \examples{
 
-data("oslo.obj")
-res = BS_parker(data_input$x_NC.log,phenodata = NA, calibration = "Internal", internal = "medianCtr",  Prosigna = FALSE, hasClinical =FALSE)
+data("OSLO2MEITOobj")
+res = BS_parker(data_input$x_NC.log, phenodata = NA, calibration = "Internal", internal = "medianCtr",  Subtype = FALSE, hasClinical =FALSE)
 
 }

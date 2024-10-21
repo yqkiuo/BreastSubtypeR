@@ -7,7 +7,7 @@
 BS_PCAPAM50(
   gene_expression_matrix,
   phenodata,
-  Prosigna = FALSE,
+  Subtype = FALSE,
   hasClinical = FALSE,
   seed = 118
 )
@@ -17,7 +17,7 @@ BS_PCAPAM50(
 
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{Prosigna}{Logic.}
+\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
 \item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
 }
@@ -29,7 +29,7 @@ This calls PCA-PAM50 to do intrinsic subtyping.
 }
 \examples{
 
-data("oslo.obj")
-res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Prosigna = FALSE, hasClinical =FALSE, seed=118)
+data("OSLO2MEITOobj")
+res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Subtype = FALSE, hasClinical =FALSE, seed=118)
 
 }

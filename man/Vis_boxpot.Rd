@@ -16,3 +16,13 @@ Vis_boxpot(out, correlations)
 Functions for visualization
 Function for boxplot of correlation per subtype
 }
+\examples{
+
+data("OSLO2MEITOobj")
+out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+correlations = res$results$parker.median$outList$distances 
+
+plot = Vis_boxpot(out = out, correlations = correlations )
+
+
+}

@@ -1,17 +1,6 @@
-# Define server logic required to draw a histogram ----
+# Define server logic 
 
-library(BreastSubtypeR)
-library(ComplexHeatmap)
-library(circlize)
-library(RColorBrewer)
-library(ggplot2)
-
-library(dplyr)
-library(magrittr)
-library(stringr)
-
-
-server <- function(input, output) {
+server = function(input, output) {
   
   output$logo = renderImage( 
     { 
@@ -53,7 +42,7 @@ server <- function(input, output) {
     } else {
       stop("Unsupported file type")
     }
-    rownames(reactive_files$clinic) = reactive_files$clinic$patientID
+    rownames(reactive_files$clinic) = reactive_files$clinic$PatientID
     
     # Read the file based on its extension
     req(input$anno)
@@ -69,17 +58,47 @@ server <- function(input, output) {
     }
     
     ## Run Mapping function
-    data_input = Mapping(gene_expression_matrix = reactive_files$GEX, featuredata = reactive_files$anno, impute = TRUE, verbose = TRUE )
-    reactive_files$data_input = data_input
+    samples = intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID )
+    
+    
+    tryCatch({
+      # Redirect console output to a variable
+      output_text = capture.output({
+        
+        data_input = Mapping(gene_expression_matrix = reactive_files$GEX[, samples], 
+                             featuredata = reactive_files$anno, impute = TRUE, verbose = TRUE)
+      })
+      
+      # If successful, store the results
+      reactive_files$data_input = data_input
+      
+      # Display captured output to the user as a notification
+      showNotification(paste(output_text, collapse = "\n"), type = "message", duration = NULL)
+      
+    }, error = function(e) {
+      # In case of error, show a notification with the error message
+      showNotification(paste("Error:", e$message), type = "error", duration = NULL)
+    })
+
   })
   
   #### perform analysis ####
-   observeEvent( input$run, {
 
- 
+   observeEvent( input$run, {
+     
      if ( input$BSmethod == "PAM50.parker" ){
        
-       if(input$calibration == "External" ){
+       args = list(
+         gene_expression_matrix = reactive_files$data_input$x_NC.log,
+         phenodata = reactive_files$clinic,
+         calibration = input$calibration,
+         hasClinical = input$hasClinical
+       )
+       
+       # Modify the list of arguments based on conditions
+       if (input$calibration == "Internal") {
+         args$internal = input$internal
+       } else if (input$calibration == "External" & input$external == "Given.mdns") {
          
          req(input$medians)
          inFile = input$medians
@@ -94,20 +113,13 @@ server <- function(input, output) {
            stop("Unsupported file type")
          }
          
+         args$external = input$external
+         args$medians = medians
+       } else if (input$calibration == "External" & input$external != "Given.mdns") {
+         args$external = input$external
        }
        
-       if ( input$calibration == "Internal" ) {
-         res = BreastSubtypeR::BS_parker(gene_expression_matrix = reactive_files$data_input$x_NC.log, phenodata= reactive_files$clinic, calibration = input$calibration, 
-                                         internal = input$internal,  
-                                         hasClinical = input$hasClinical
-         )
-       }
-       if ( input$calibration == "External" ) {
-         res = BreastSubtypeR::BS_parker(gene_expression_matrix = reactive_files$data_input$x_NC.log, phenodata= reactive_files$clinic, calibration = input$calibration, 
-                                         external = input$external,  
-                                         hasClinical = input$hasClinical, medians = medians
-         )
-       }
+       res = do.call(BreastSubtypeR::BS_parker, args)
        
        output_res = res$score.ROR
      }
@@ -137,43 +149,43 @@ server <- function(input, output) {
      if (input$BSmethod == "ssBC"){
 
        res = BreastSubtypeR::BS_ssBC(gene_expression_matrix = reactive_files$data_input$x_NC.log, phenodata= reactive_files$clinic, s = input$s, hasClinical = input$hasClinical)
-       
+
+      # res = BreastSubtypeR::BS_ssBC(gene_expression_matrix = data_input$x_NC.log, phenodata= clinic.oslo, s = "ER", hasClinical = "FALSE")
+
        output_res = res$score.ROR
+       
      }
        
      if ( input$BSmethod == "AIMS") {
        
        data("genes.signature")
        genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
-
-       res = BreastSubtypeR::BS_AIMS( reactive_files$data_input$x_SSP[ colnames(reactive_files$data_input$x_SSP) %in% genes,], genes)
+       
+       data.aims = reactive_files$data_input$x_SSP[ rownames(reactive_files$data_input$x_SSP) %in% genes,]
+       res = BreastSubtypeR::BS_AIMS(gene_expression_matrix = data.aims, EntrezID = rownames(data.aims))
        
        res$BS.all = data.frame( PatientID = rownames(res$cl) ,
                                      BS = res$cl[,1])
-       
-       if( Prosigna){
-         res$BS.all$BS.prosigna = res$BS.all$BS
-       }
        
        output_res = res$BS.all
      }
      
      if (input$BSmethod == "sspbc"){
 
-       res = BreastSubtypeR::BS_sspbc( as.matrix(reactive_files$data_input$x_SSP), ssp.name = "ssp.pam50")
-       BS.all = data.frame( PatinetID = rownames(res),
-                            BS = res,
-                            row.names = rownames(res)
-                            )
+       res_sspbc = BreastSubtypeR::BS_sspbc( as.matrix(reactive_files$data_input$x_SSP), ssp.name = "ssp.pam50")
 
-       
-       if(Prosigna) {
-         res_sspbc.prosigna = BS_sspbc( gene_expression_matrix = as.matrix(reactive_files$data_input$x_SSP), ssp.name= "ssp.subtype"  )
-         BS.all$BS.prosigna = res_sspbc.prosigna[,1]
+       BS.all = data.frame( PatientID = rownames(res_sspbc),BS = res_sspbc[,1],row.names = rownames(res_sspbc))
+
+       if(input$Subtype == "TRUE") {
+         res_sspbc.Subtype = BreastSubtypeR::BS_sspbc( gene_expression_matrix = as.matrix(reactive_files$data_input$x_SSP), ssp.name= "ssp.subtype"  )
+
+         BS.all$BS.Subtype = res_sspbc.Subtype[,1]
+
        } 
-       
+       res = list()
+       res$BS.all = BS.all
        output_res = BS.all
-     }
+       }
 
 
        ## Allow downloading the result
@@ -190,7 +202,16 @@ server <- function(input, output) {
        out= data.frame(PatientID = res$BS.all$PatientID,
                          Subtype = res$BS.all$BS )
        output$pie1 = renderPlot( BreastSubtypeR::Vis_pie(out) )
-       output$pie2 = renderPlot( BreastSubtypeR::Vis_pie(out) )
+       
+       if (input$BSmethod == "AIMS" | input$BSmethod == "sspbc" ){
+         matrix = log2( reactive_files$data_input$x_SSP + 1)
+         rownames(matrix) = NULL
+         output$heat2 = renderPlot( BreastSubtypeR::Vis_heatmap(matrix, out= out) )
+       } else {
+         matrix = reactive_files$data_input$x_NC.log
+         output$heat2 = renderPlot( BreastSubtypeR::Vis_heatmap(matrix, out= out) )
+       }
+         
       
       # Example function to generate plots conditionally based on the run button
       output$plotSection = renderUI({
@@ -200,33 +221,11 @@ server <- function(input, output) {
         layout_columns(
           col_width = 2,
           card(plotOutput("pie1")),
-          card(plotOutput("pie2"))
+          card(plotOutput("heat2"))
         )
       })
    
 
 })
-
-  # 
-  # #### Reset functionality ####
-  # observeEvent(input$reset, {
-  #   # Clear the reactive values
-  #   data_input$GEX = NULL
-  #   data_input$clinic = NULL
-  #   data_input$anno = NULL
-  #   data_input$output_res = NULL
-  #   
-  #   # Reset all input fields
-  #   updateFileInput(session, "GEX", label = "choose file", value = NULL)
-  #   updateFileInput(session, "clinic", label = "choose file", value = NULL)
-  #   updateFileInput(session, "anno", label = "choose file", value = NULL)
-  #   updateSelectInput(session, "BSmethod", selected = "PAM50.parker")
-  #   
-  #   # Reset plot outputs
-  #   output$pie1 = renderPlot(NULL)
-  #   output$pie2 = renderPlot(NULL)
-  #   
-  #   # Clear any additional fields or reset other inputs as necessary
-  # })
   
 }
