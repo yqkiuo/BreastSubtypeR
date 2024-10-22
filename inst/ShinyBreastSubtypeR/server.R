@@ -158,8 +158,8 @@ server = function(input, output) {
        
      if ( input$BSmethod == "AIMS") {
        
-       data("genes.signature")
-       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])
+       data("BreastSubtypeR")
+       genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
        
        data.aims = reactive_files$data_input$x_SSP[ rownames(reactive_files$data_input$x_SSP) %in% genes,]
        res = BreastSubtypeR::BS_AIMS(gene_expression_matrix = data.aims, EntrezID = rownames(data.aims))

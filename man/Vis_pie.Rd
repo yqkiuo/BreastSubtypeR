@@ -12,11 +12,3 @@ Vis_pie(out)
 \description{
 Function for pieplot
 }
-\examples{
-
-data("OSLO2MEITOobj")
-
-out= data.frame(PatientID = rownames(res$results$sspbc$BS.all), Subtype = res$results$sspbc$BS.all$BS )
-plot = Vis_pie( out = out)
-
-}

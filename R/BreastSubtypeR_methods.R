@@ -8,6 +8,7 @@
 #' @docType package
 #' 
 #' @import AIMS
+#' @import stringr
 #' @importFrom data.table data.table
 #' @importFrom data.table set
 #' @importFrom rlang call2

@@ -33,6 +33,7 @@ data("BreastSubtypeR")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping
+data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
 data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")

@@ -7,14 +7,8 @@
 Vis_consensus(data)
 }
 \arguments{
-\item{out}{the output of BS_Check() function.}
+\item{out}{a data table includes "patientID" and "Subtype"}
 }
 \description{
-This function is used to visualize the intrinsic subtypes estimated by BS_Check() function.
-}
-\examples{
-
-data("OSLO2MEITOobj")
-plot = Vis_consensus(data = res$res_subtypes)
-
+Function for pieplot
 }

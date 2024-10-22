@@ -7,9 +7,8 @@
 #' @import ggrepel
 #' @import magrittr
 #' @import impute
-#' @importFrom dplyr select
-#' @importFrom dplyr mutate_at
-#' @noRd 
+#' @import dplyr 
+#' @import circlize
 NULL
 
 

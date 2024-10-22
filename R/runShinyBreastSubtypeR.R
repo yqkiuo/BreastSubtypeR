@@ -55,5 +55,13 @@ iBreastSubtypeR = function() {
     stop("The BreastSubtypeR Shiny app cannot be found within the package.")
   
   
+  require(bslib, quietly = T)
+  require(shiny, quietly = T)
+  require(BreastSubtypeR, quietly = T)
+  
+  ## increase file limit
+  options(shiny.maxRequestSize=1000*1024^2) 
+  
+  
   shiny::runApp(appDir)
 }
