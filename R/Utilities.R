@@ -341,7 +341,7 @@ Vis_heatmap = function(x, out){
           ## general
           show_column_names = FALSE,
           show_heatmap_legend = TRUE,
-          row_names_gp = grid::gpar(fontsize = 8))
+          row_names_gp = grid::gpar(fontsize = 6))
   
   return(heatmap)
 }
