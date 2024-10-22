@@ -69,7 +69,7 @@ server = function(input, output) {
           data_input = Mapping(gene_expression_matrix = reactive_files$GEX[, samples], 
                                featuredata = reactive_files$anno, impute = TRUE, verbose = TRUE)
           
-          cat("Step 1 is done." , sep = "\n")
+          cat( "Step 1 has been finished.", sep = "\n")
           cat("You can go for Step 2." , sep = "\n")
           
         })
@@ -79,7 +79,8 @@ server = function(input, output) {
         
 
         # Display output text as notification
-        showNotification(paste(output_text, collapse = "\n"), type = "message", duration = NULL)
+        showNotification(HTML(paste(output_text, collapse = "<br>")), type = "message", duration = NULL)
+        
       }, error = function(e) {
         showNotification(paste("Error:", e$message), type = "error", duration = NULL)
       })
@@ -257,7 +258,9 @@ server = function(input, output) {
      })
      
      # Show a notification when the analysis is complete
-     showNotification("Analysis complete.", type = "message", duration = 5)
+     #showNotification(  paste( "Analysis complete" ,"You can exit or continue to run another subtyping method.", sep = "\n") , type = "message", duration = 5)
+     showNotification(  HTML(paste(c("Analysis complete.", 
+                                     "Please check your result."), collapse = "<br>")) , type = "message", duration = 5)
 
 })
   
