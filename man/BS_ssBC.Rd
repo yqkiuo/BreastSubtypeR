@@ -36,3 +36,7 @@ data("OSLO2MEITOobj")
 res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Subtype = FALSE, hasClinical =FALSE)
 
 }
+\references{
+Zhao X, Rodland EA, Tibshirani R, Plevritis S. Molecular subtyping for clinically defined breast cancer subgroups. Breast Cancer Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
+Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer. In: Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+}

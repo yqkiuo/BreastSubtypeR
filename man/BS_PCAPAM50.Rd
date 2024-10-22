@@ -33,3 +33,6 @@ data("OSLO2MEITOobj")
 res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Subtype = FALSE, hasClinical =FALSE, seed=118)
 
 }
+\references{
+Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al. PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping reclassifying a subset of luminal A tumors as luminal B. Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
+}

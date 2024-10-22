@@ -4,14 +4,14 @@
 \alias{Vis_PCA}
 \title{Function for PCAplot}
 \usage{
-Vis_PCA(x, out, eigen = FALSE)
+Vis_PCA(x, out, Eigen = FALSE)
 }
 \arguments{
 \item{x}{gene expression matrix, log2 transformed}
 
 \item{out}{a data table includes "patientID" and "Subtype"}
 
-\item{eigen}{Logic. Please specify if show screeplot}
+\item{Eigen}{Logic. Please specify if show screeplot}
 }
 \description{
 Function for PCAplot

@@ -26,3 +26,6 @@ genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( Breast
 res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
 
 }
+\references{
+Paquet ER, Hallett MT. Absolute assignment of breast cancer intrinsic molecular subtype. J Natl Cancer Inst. 2015;107(1). https://doi.org/10.1093/jnci/dju357
+}

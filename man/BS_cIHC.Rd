@@ -33,3 +33,6 @@ data("OSLO2MEITOobj")
 res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 
 }
+\references{
+Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al. Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer. Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
+}

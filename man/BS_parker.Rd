@@ -45,3 +45,7 @@ data("OSLO2MEITOobj")
 res = BS_parker(data_input$x_NC.log, phenodata = NA, calibration = "Internal", internal = "medianCtr",  Subtype = FALSE, hasClinical =FALSE)
 
 }
+\references{
+Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al. Supervised risk predictor of breast cancer based on intrinsic subtypes. Journal of Clinical Oncology. 2009;27(8). https://doi.org/10.1200/JCO.2008.18.1370
+Gendoo DMA, Ratanasirigulchai N, Schr"der MS, Par' L, Parker JS, Prat A, et al. Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
+}

@@ -219,24 +219,30 @@ server = function(input, output) {
          content = function(file) {
            write.table(reactive_files$output_res, file, row.names = F, sep = "\t", quote = F)
            } )
-    
-         ## Allow visualization
-         out= data.frame(PatientID = res$BS.all$PatientID,
-                           Subtype = res$BS.all$BS )
-         output$pie1 = renderPlot( BreastSubtypeR::Vis_pie(out) )
-         
-         if (input$BSmethod == "AIMS" | input$BSmethod == "sspbc" ){
-           matrix = log2( reactive_files$data_input$x_SSP + 1)
-           rownames(matrix) = NULL
-           output$heat2 = renderPlot( BreastSubtypeR::Vis_heatmap(matrix, out= out) )
-         } else {
-           matrix = reactive_files$data_input$x_NC.log
-           output$heat2 = renderPlot( BreastSubtypeR::Vis_heatmap(matrix, out= out) )
-         }
-         
-      
-      # Example function to generate plots conditionally based on the run button
-      output$plotSection = renderUI({
+       
+       ## Allow visualization
+       out = data.frame(PatientID = res$BS.all$PatientID,
+                         Subtype = if (input$BSmethod == "sspbc" && input$Subtype == "TRUE") {
+                           res$BS.all$BS.Subtype
+                         } else {
+                           res$BS.all$BS
+                         })
+       output$pie1 <- renderPlot(BreastSubtypeR::Vis_pie(out))
+       
+       matrix = if (input$BSmethod == "sspbc" || input$BSmethod == "AIMS") {
+         log2(reactive_files$data_input$x_SSP + 1)
+       } else {
+         reactive_files$data_input$x_NC.log
+       }
+
+       if (input$BSmethod == "sspbc" || input$BSmethod == "AIMS") {
+         rownames(matrix) = NULL
+       }
+       
+       output$heat2 <- renderPlot(BreastSubtypeR::Vis_heatmap(matrix, out = out))
+       
+       output$plotSection = renderUI({
+        
         req(input$run)  # Wait until the run button is clicked
         
         # Once 'Run' is clicked, show the plot layout

@@ -40,3 +40,6 @@ data("OSLO2MEITOobj")
 res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 
 }
+\references{
+Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
+}
