@@ -208,25 +208,25 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   mean_cols_save.testdata = Reduce(`+`, sum_cols_list.testdata) / length(sum_cols_list.testdata)
 
  
-  ## distances.prosigna for ROR 
-  sum_cols_list.prosigna = mapply(function(res_ihc){
+  ## distances.Subtype for ROR 
+  sum_cols_list.Subtype = mapply(function(res_ihc){
     
     #res_ihc = res_ihc_iterative[[1]]
     
-    res_ihc$distances.prosigna = as.data.frame(res_ihc$distances.prosigna )
+    res_ihc$distances.Subtype = as.data.frame(res_ihc$distances.Subtype )
     
     ## if FALSE, make the cell as NULL
     keep = res_ihc$predictions == consensus_subtypes
-    res_ihc$distances.prosigna[ !keep, ] = as.list(rep(NA, 4 ))
+    res_ihc$distances.Subtype[ !keep, ] = as.list(rep(NA, 4 ))
     
-    res = mutate_at(res_ihc$distances.prosigna, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
+    res = mutate_at(res_ihc$distances.Subtype, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
     
     return(res )
     
   }, res_ihc_iterative , SIMPLIFY = FALSE, USE.NAMES = FALSE )
   
   ## count_na
-  count_weight_save.prosigna <- Reduce(`+`, lapply(sum_cols_list.prosigna, function(x) {
+  count_weight_save.Subtype <- Reduce(`+`, lapply(sum_cols_list.Subtype, function(x) {
     x[!is.na(x)] <- 1
     x[is.na(x)] <- 0
     return(x)
@@ -234,7 +234,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   
   
   ## sum all for each cell
-  sum_cols_save.prosigna = Reduce(`+`, lapply(sum_cols_list.prosigna, function(x) {
+  sum_cols_save.Subtype = Reduce(`+`, lapply(sum_cols_list.Subtype, function(x) {
     
     ## change NA cell to 0 cell
     x[is.na(x)] = 0
@@ -244,10 +244,10 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
   
   ## get the mean for each cell
   ## only when subtype is supported by consensus_subtypes for each iteration and each patient
-  sum_cols_save.prosigna = sum_cols_save.prosigna / count_weight_save.prosigna
+  sum_cols_save.Subtype = sum_cols_save.Subtype / count_weight_save.Subtype
   
   
-  res = list( mean_distance = mean_cols_save, mean_distance.prosigna = sum_cols_save.prosigna, testdata =  mean_cols_save.testdata) 
+  res = list( mean_distance = mean_cols_save, mean_distance.Subtype = sum_cols_save.Subtype, testdata =  mean_cols_save.testdata) 
   
 
   return(res)
@@ -483,8 +483,6 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
-  # data = res$res_subtypes
-  # data = res$res_subtypes.prosigna[,-9]
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset
