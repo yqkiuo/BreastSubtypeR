@@ -19,7 +19,7 @@ You can install **BreastSubtypeR** from GitHub:
 install.packages("devtools")
 
 # Install BreastSubtypeR from GitHub
-devtools::install_github("yourusername/BreastSubtypeR")
+devtools::install_github("yqkiuo/BreastSubtypeR")
 ```
 
 ## Getting Started
