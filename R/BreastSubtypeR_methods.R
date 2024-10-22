@@ -296,8 +296,9 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' @return The subtypes estimated by AIMS method
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
 #' data("BreastSubtypeR")
+#' data("OSLO2MEITOobj")
+#' 
 #' genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
 #' res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
 #' 
