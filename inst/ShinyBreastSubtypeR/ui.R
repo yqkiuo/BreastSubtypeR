@@ -1,10 +1,4 @@
 # Define UI for iBreastSubtypeR
-require(bslib, quietly = T)
-require(shiny, quietly = T)
-
-## increase file limit
-options(shiny.maxRequestSize=50*1024^2) 
-
 
 ui = page_fluid(
 
@@ -68,7 +62,7 @@ ui = page_fluid(
   
   #### Map button ####
   card(
-    actionButton("map", "Map" )
+    actionButton("map", "Step 1: Map" )
   )
   , ## layout 3
 
@@ -221,7 +215,7 @@ ui = page_fluid(
     ),
 
     card(
-    actionButton("run", "Run" )
+    actionButton("run", "Step 2: Run" )
     )
   ), ## card option
   
