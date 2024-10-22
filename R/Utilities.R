@@ -259,6 +259,18 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 #' Function for boxplot of correlation per subtype
 #' @param out a data frame includes "patientID" and "Subtype"
 #' @param correlations  correlations table from NC-based methods
+#' 
+#' @examples
+#' 
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' correlations =res$results$parker.median$outList$distances
+#' 
+#' p = Vis_boxpot(out, correlations )
+#' plot(p)
+#' 
 #' @export
 #' 
 
@@ -277,7 +289,6 @@ Vis_boxpot = function(out, correlations ){
     theme( 
       axis.text = element_text( size = 12)
       )
-  #plot(plot)
  
   return(plot)
   
@@ -287,16 +298,20 @@ Vis_boxpot = function(out, correlations ){
 #' Function for heatmap visualizayion
 #' @param x gene expression matrix, log2 transformed
 #' @param out a data frame includes "patientID" and "Subtype"
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' x = data_input$x_NC
+#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' 
+#' p = Vis_heatmap(x, out)
+#' plot(p)
+#' 
 #' @export
 #' 
 
 Vis_heatmap = function(x, out){
-
-  # ## test data
-  # x = data_input$x_NC
-  # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # linkage="average",distance="spearman" original myheatmap() function
 
   scaled_mat = t(scale(t(x[,out$PatientID])))
 
@@ -337,64 +352,70 @@ Vis_heatmap = function(x, out){
 #' Function for PCAplot 
 #' @param x gene expression matrix, log2 transformed
 #' @param out a data table includes "patientID" and "Subtype"
-#' @param screeplot Logic. Please specify if show screeplot
+#' @param eigen Logic. Please specify if show screeplot
+#' 
+#' @examples
+#' 
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' x = data_input$x_NC.log
+#' out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' p = Vis_PCA(x = x, out = out)
+#' plot(p)
+#' 
 #' @export
 #' 
 
-Vis_PCA = function(x, out, Eigen = FALSE){
-  
-  # x = data_input$x_NC.log
-  # out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # 
+Vis_PCA = function(x, out, eigen = FALSE){
+
   
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
 
   
   pca = prcomp(t(x), center = T, scale. = T)
-  
-  # Scree plot
-  variance = pca$sdev^2/ sum(pca$sdev^2) *100
-  scree_data = data.frame(PC =  seq_along(variance) ,Variance = variance)
-  
-  screeplot = ggplot(scree_data[1:10,], aes(x = PC, y = Variance)) +
-    geom_bar(stat = "identity", width = 0.5, fill = "steelblue")+
-    geom_line() +
-    geom_point(size=2)+
-    scale_x_continuous(breaks = seq(1,10, 1) )+
-    geom_text( aes(x = PC, label= paste0( round( Variance,2), "%") ),  nudge_y = 1) +
-    labs(x ="Principal Component", y = "Percentage of variance Explained") +
-    theme_classic()+
-    theme(axis.text = element_text(size =12),
-          axis.title = element_text(size = 14)
-          )
-  
-  
-  ## PCA plot
-  scores = as.data.frame(pca$x)
-  scores$PatientID = rownames(scores)
-  scores = left_join(scores, out, by ="PatientID" )
-  rownames(scores) = scores$PatientID
-  
-  pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
-    geom_point( size = 2) +
-    geom_vline( xintercept = 0, linetype="dashed") +
-    geom_hline( yintercept = 0, linetype="dashed")+
-    scale_color_manual( name = "Subtype", values = Subtype.color )+
-    labs(x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 2), "% variance)"),
-         y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 2), "% variance)")) +
-    theme_minimal() +
-    theme(axis.text = element_text(size =12),
-          axis.title = element_text(size = 14),
-          legend.title = element_text(size = 14),
-          legend.text =  element_text(size = 12)
-    )
-  
-  
-  
-  if(Eigen){
+
+  if(eigen){
+    
+    # Scree plot
+    variance = pca$sdev^2/ sum(pca$sdev^2) *100
+    scree_data = data.frame(PC =  seq_along(variance) ,Variance = variance)
+    
+    screeplot = ggplot(scree_data[1:10,], aes(x = PC, y = Variance)) +
+      geom_bar(stat = "identity", width = 0.5, fill = "steelblue")+
+      geom_line() +
+      geom_point(size=2)+
+      scale_x_continuous(breaks = seq(1,10, 1) )+
+      geom_text( aes(x = PC, label= paste0( round( Variance,2), "%") ),  nudge_y = 1) +
+      labs(x ="Principal Component", y = "Percentage of variance Explained") +
+      theme_classic()+
+      theme(axis.text = element_text(size =12),
+            axis.title = element_text(size = 14)
+      )
+
     return(screeplot)
   } else {
+    
+    ## PCA plot
+    scores = as.data.frame(pca$x)
+    scores$PatientID = rownames(scores)
+    scores = left_join(scores, out, by ="PatientID" )
+    rownames(scores) = scores$PatientID
+    
+    pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
+      geom_point( size = 2) +
+      geom_vline( xintercept = 0, linetype="dashed") +
+      geom_hline( yintercept = 0, linetype="dashed")+
+      scale_color_manual( name = "Subtype", values = Subtype.color )+
+      labs(x = paste0("PC1 (", round(100 * summary(pca)$importance[2, 1], 2), "% variance)"),
+           y = paste0("PC2 (", round(100 * summary(pca)$importance[2, 2], 2), "% variance)")) +
+      theme_minimal() +
+      theme(axis.text = element_text(size =12),
+            axis.title = element_text(size = 14),
+            legend.title = element_text(size = 14),
+            legend.text =  element_text(size = 12)
+      )
+    
     return(pcaplot)
   }
 
@@ -403,6 +424,14 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 
 #' Function for pieplot 
 #' @param out a data table includes "patientID" and "Subtype"
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' 
+#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' p = Vis_pie(out = out)
+#' plot(p)
+#' 
 #' @export
 #' 
 
@@ -443,6 +472,12 @@ Vis_pie = function(out){
 
 #' Function for pieplot 
 #' @param out a data table includes "patientID" and "Subtype"
+#' 
+#' @examples
+#' 
+#' data("OSLO2MEITOobj")
+#' p = Vis_consensus(res$res_subtypes)
+#' plot(p)
 #' @export
 #' 
 
