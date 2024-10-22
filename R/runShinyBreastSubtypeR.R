@@ -54,6 +54,7 @@ iBreastSubtypeR = function() {
   if (appDir == "")
     stop("The BreastSubtypeR Shiny app cannot be found within the package.")
   
+  
   suppressMessages(suppressWarnings({
     require(bslib, quietly = T)
     require(shiny, quietly = T)
