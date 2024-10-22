@@ -10,7 +10,7 @@ ui = page_fluid(
     including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
     It employs standardized input and output formats, 
     offering a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
-    card_image("logo.svg", height = "300px"),
+    card_image("logo.svg", height = "150px"),
     card_footer("Enjoy this subtyping journey.")
   ),
   

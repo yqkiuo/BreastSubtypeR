@@ -108,19 +108,19 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   ##Parker
   missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
   if( length(missing_ID_parker) == 0 & verbose ){ 
-    print("Genes used in NC-based methods are covered")
+    cat("Genes used in NC-based methods are covered. \n")
   } else if(verbose) {
-    print("These genes are missing for NC-based methods:")
-    print(missing_ID_parker)
+    cat("These genes are missing for NC-based methods: \n")
+    cat(missing_ID_parker, sep = "\n")
   }
   
   ##AIMS
   missing_ID_AIMS = setdiff( genes.signature[ genes.signature$SSP_based == "Yes",]$EntrezGene.ID, rownames(x) )
   if( length(missing_ID_AIMS) == 0 & verbose ){ 
-    print("Genes used in SSP-based methods are covered")
+    cat("Genes used in SSP-based methods are covered. \n")
   } else if(verbose) {
-    print("These genes are missing for SSP-based methods:")
-    print(missing_ID_AIMS)
+    cat("These genes are missing for SSP-based methods: \n")
+    cat(missing_ID_AIMS, sep="\n")
   }
   
   ## get matrix for NC (symbol as rows, sample as col)
@@ -326,7 +326,7 @@ Vis_heatmap = function(x, out){
           ## general
           show_column_names = FALSE,
           show_heatmap_legend = TRUE,
-          row_names_gp = gpar(fontsize = 8))
+          row_names_gp = grid::gpar(fontsize = 8))
   
   return(heatmap)
 }
@@ -469,17 +469,17 @@ Vis_consensus = function(data){
   ## make row annotation
   row_anno = data.frame(Category = categories[colnames(data),], row.names = colnames(data) )
   row_anno = HeatmapAnnotation(df =row_anno, which = c("row"), col =list(Category = Category.color ),
-                               annotation_legend_param = list(title_gp = gpar(fontsize = 14, fontface = "bold"),
-                                                              gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white"))
+                               annotation_legend_param = list(title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
+                                                              gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white"))
 
   data = data[order(data$consensus.subtype ),]
   
   p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
-                          row_names_gp = gpar(fontsize = 12,fontface = "bold" ),
+                          row_names_gp = grid::gpar(fontsize = 12,fontface = "bold" ),
                           right_annotation = row_anno,show_column_names = FALSE,
                           heatmap_legend_param = list(title = "Intrinsic Subtype", labels = Labels,
-                                                      title_gp = gpar(fontsize = 14, fontface = "bold"),
-                                                      gap = unit(2, "points"),labels_gp = gpar(fontsize= 12) , border = "white")
+                                                      title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
+                                                      gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white")
                           )
   
  return(p)

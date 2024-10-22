@@ -352,7 +352,11 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
   }
   
   #data(sspbc.models)
-  require(sspbc)
+  suppressMessages(suppressWarnings({
+    require(sspbc,quietly = TRUE)
+  }))
+  
+  
 
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
