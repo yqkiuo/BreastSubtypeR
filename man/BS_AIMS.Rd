@@ -19,8 +19,9 @@ This calls AIMS to do intrinsic subtyping.
 }
 \examples{
 
-data("OSLO2MEITOobj")
 data("BreastSubtypeR")
+data("OSLO2MEITOobj")
+
 genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
 res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
 

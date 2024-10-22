@@ -12,3 +12,9 @@ Vis_consensus(data)
 \description{
 Function for pieplot
 }
+\examples{
+
+data("OSLO2MEITOobj")
+p = Vis_consensus(res$res_subtypes)
+plot(p)
+}
