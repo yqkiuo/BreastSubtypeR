@@ -352,7 +352,7 @@ Vis_heatmap = function(x, out){
 #' Function for PCAplot 
 #' @param x gene expression matrix, log2 transformed
 #' @param out a data table includes "patientID" and "Subtype"
-#' @param eigen Logic. Please specify if show screeplot
+#' @param Eigen Logic. Please specify if show screeplot
 #' 
 #' @examples
 #' 
@@ -367,7 +367,7 @@ Vis_heatmap = function(x, out){
 #' @export
 #' 
 
-Vis_PCA = function(x, out, eigen = FALSE){
+Vis_PCA = function(x, out, Eigen = FALSE){
 
   
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
@@ -375,7 +375,7 @@ Vis_PCA = function(x, out, eigen = FALSE){
   
   pca = prcomp(t(x), center = T, scale. = T)
 
-  if(eigen){
+  if(Eigen){
     
     # Scree plot
     variance = pca$sdev^2/ sum(pca$sdev^2) *100
@@ -483,6 +483,7 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
+  data = res$res_subtypes
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset
