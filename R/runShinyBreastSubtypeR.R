@@ -18,9 +18,9 @@
 #' a CSV/text file for feature annotations.    
 #' 
 #' After loading necessary files, users only need to run/click "Mapping" button once and waiting for the notification.
-#' If Mapping() function runs well, it will say "Genes used in NC-based methods are covered. Genes used in SSP-based methods are covered.". 
-#' Then, users canselect any subtyping method and change relevant parameters to perform analysis. 
-#' If subtyping function runs well, two plots would be visualized. Users can download the result as text file.
+#' If Mapping() function runs well, it will say "You can go for Step 2.". 
+#' Then, users can select any subtyping method and change relevant parameters to perform analysis. You can see "Analysis complete." when the analysis is finished. 
+#' Two plots would be visualized as well. Users can download the result as text file.
 #' 
 #'    
 #' 
