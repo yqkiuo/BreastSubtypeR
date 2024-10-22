@@ -70,7 +70,7 @@ server = function(input, output) {
                                featuredata = reactive_files$anno, impute = TRUE, verbose = TRUE)
           
           cat( "Step 1 has been finished.", sep = "\n")
-          cat("You can go for Step 2." , sep = "\n")
+          cat("You can proceed to Step 2." , sep = "\n")
           
         })
         
