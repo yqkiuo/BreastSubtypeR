@@ -277,7 +277,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' This calls ssBC to do intrinsic subtyping. 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param s Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param s Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantiles of ssBC is "ER" and "TN", published on Breast Cancer Research in 2015.  If you choose "ER.v2" or "TNBC", it means you choose quantiles published on Journal of Clinical Oncology in 2024.
 #' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' 
