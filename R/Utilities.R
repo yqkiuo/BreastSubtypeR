@@ -265,8 +265,8 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 #' 
 #' data("OSLO2MEITOobj")
 #' 
-#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
-#' correlations =res$results$parker.median$outList$distances
+#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+#' correlations =res$results$parker.original$outList$distances
 #' 
 #' p = Vis_boxpot(out, correlations )
 #' plot(p)
@@ -276,9 +276,9 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 
 Vis_boxpot = function(out, correlations ){
   
-  # out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID,
-  #                 Subtype = res$results$parker.median$BS.all$BS )
-  # correlations =res$results$parker.median$outList$distances
+  # out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID,
+  #                 Subtype = res$results$parker.original$BS.all$BS )
+  # correlations =res$results$parker.original$outList$distances
   
   df = data.frame( predictions = out$Subtype, cor = apply(correlations, 1, max))
   
@@ -303,7 +303,7 @@ Vis_boxpot = function(out, correlations ){
 #' data("OSLO2MEITOobj")
 #' 
 #' x = data_input$x_NC
-#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 #' 
 #' p = Vis_heatmap(x, out)
 #' plot(p)
@@ -360,7 +360,7 @@ Vis_heatmap = function(x, out){
 #' data("OSLO2MEITOobj")
 #' 
 #' x = data_input$x_NC.log
-#' out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' out = data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 #' p = Vis_PCA(x = x, out = out)
 #' plot(p)
 #' 
@@ -428,7 +428,7 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 #' 
 #' data("OSLO2MEITOobj")
 #' 
-#' out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 #' p = Vis_pie(out = out)
 #' plot(p)
 #' 
@@ -489,10 +489,10 @@ Vis_consensus = function(data){
   ## preset
   categories = data.frame(
     Category = rep( c("NC-based", "SSP-based", "consensus") , c(8,2,1)),
-    row.names = c("parker.median","parker.mean", "parker.quantile", 
+    row.names = c("parker.original","genefu.scale", "genefu.robust", 
                   "cIHC","cIHC.itr", "PCAPAM50", 
                   "ssBC", "ssBC.v2", 
-                  "AIMS", "sspbc", "consensus.subtype")
+                  "AIMS", "sspbc", "consensus")
   )
   categories$Category = factor(categories$Category, levels =  c("NC-based", "SSP-based", "consensus") )
   
@@ -506,7 +506,7 @@ Vis_consensus = function(data){
                                annotation_legend_param = list(title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
                                                               gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white"))
 
-  data = data[order(data$consensus.subtype ),]
+  data = data[order(data[,ncol(data)]),]
   
   p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
                           row_names_gp = grid::gpar(fontsize = 12,fontface = "bold" ),

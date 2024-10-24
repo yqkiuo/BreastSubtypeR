@@ -426,7 +426,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' @examples
 #' 
 #' data("OSLO2MEITOobj")
-#' methods = c( "parker.median", "parker.mean", "parker.quantile")
+#' methods = c( "parker.original", "genefu.scale", "genefu.robust")
 #' res.test = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
 #' 
 #' 
@@ -438,7 +438,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     stop("Please select two methods at least")
   } 
   
-  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
+  if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
     stop("Please provide right method names")
   }
 
@@ -455,15 +455,15 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   results = sapply(methods, function(method) {
     
     ## try NC-based
-    if( method == "parker.median") {
+    if( method == "parker.original") {
       print(paste0(method," is running!"))
       return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "medianCtr", Subtype = Subtype ,  hasClinical = hasClinical))
     }
-    if( method == "parker.mean"){
+    if( method == "genefu.scale"){
       print(paste0(method," is running!"))
       return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "meanCtr", Subtype = Subtype , hasClinical = hasClinical))
     }
-    if( method == "parker.quantile"){
+    if( method == "genefu.robust"){
       print(paste0(method," is running!"))
       return(BS_parker(data_input$x_NC.log, phenodata, calibration = "Internal", internal = "qCtr", Subtype = Subtype , hasClinical = hasClinical))
     }
@@ -553,16 +553,16 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   res_subtypes = as.data.frame(res_subtypes)
   rownames(res_subtypes) = colnames(data_input$x_NC); res_subtypes[,1]= NULL
 
-  consensus.subtype = apply(res_subtypes, 1, get_consensus_subtype)
-  res_subtypes$consensus.subtype = consensus.subtype
+  consensus = apply(res_subtypes, 1, get_consensus_subtype)
+  res_subtypes$consensus = consensus
 
 
   if (Subtype) {
     res_subtypes.Subtype = as.data.frame(res_subtypes.Subtype)
     rownames(res_subtypes.Subtype) = colnames(data_input$x_NC); res_subtypes.Subtype[,1]= NULL
 
-    consensus.subtype_Subtype = apply(res_subtypes.Subtype, 1, get_consensus_subtype)
-    res_subtypes.Subtype$consensus.subtype = consensus.subtype_Subtype
+    consensus_Subtype = apply(res_subtypes.Subtype, 1, get_consensus_subtype)
+    res_subtypes.Subtype$consensus = consensus_Subtype
   }
   
   if (Subtype) {
