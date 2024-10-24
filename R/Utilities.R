@@ -483,7 +483,6 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
-  data = res$res_subtypes
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset

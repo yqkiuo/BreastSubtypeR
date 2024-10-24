@@ -23,7 +23,7 @@ BS_parker(
 
 \item{calibration}{The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.}
 
-\item{internal}{Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").}
+\item{internal}{Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr", genefu.scale), or quantile-centered ("qCtr", genefu.robust).}
 
 \item{external}{Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter.}
 
