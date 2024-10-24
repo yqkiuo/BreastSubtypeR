@@ -510,7 +510,7 @@ Vis_consensus = function(data){
   p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
                           row_names_gp = grid::gpar(fontsize = 12,fontface = "bold" ),
                           right_annotation = row_anno,show_column_names = FALSE,
-                          heatmap_legend_param = list(title = "Intrinsic Subtype", labels = Labels,
+                          heatmap_legend_param = list(title = "Intrinsic Subtype", labels = Labels[match( names(Subtype.color), Labels)],
                                                       title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
                                                       gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white")
                           )
