@@ -1,14 +1,29 @@
 # BreastSubtypeR
 
-**BreastSubtypeR** is an R package designed to integrate intrinsic molecular subtyping methods for breast cancer, including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. It employs standardized input and output formats, offering a unified framework that is highly compatible with other R packages in the gene expression profiling field. 
-
-The package aims to facilitate intrinsic molecular subtyping of breast cancer tumors by providing a comprehensive and user-friendly interface for researchers and clinicians, even for those unfamiliar with R code. The package is accompanied by an **interactive Shiny app** for ease of use.
+**BreastSubtypeR** is an R package designed to integrate multiple intrinsic molecular subtyping methods for breast cancer (BC), including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with a new consensus approach. It employs standardized input and output formats, providing a unified framework that is highly compatible with other R packages in the gene expression profiling field. The core functions of the package can also be used through an **interactive Shiny app**, making it user-friendly for those unfamiliar with R. 
 
 ## Features
-- **Nearest-Centroid (NC-based) Methods**: Implements standard NC-based approaches such as PAM50.
-- **Single-Sample Predictor (SSP-based) Methods**: Provides SSP-based methods, making it adaptable for various breast cancer subtyping tasks.
-- **Flexible Input and Output**: Standardized input/output formats allow for seamless integration with other gene expression profiling packages.
-- **Shiny App Interface**: A web-based interface designed for users who prefer not to use R directly.
+- **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods.
+- **Consensus Intrinsic Subtyping Approach**: Introduces a new consensus approach, running multiple intrinsic subtyping methods and using a majority voting scheme to determine the final subtype.
+- **Optimized Gene Mapping**: Provides gene mapping through Entrez IDs to maximize the number of genes included in each method.
+- **Flexible Input and Output**: Features standardized input/output formats, facilitating seamless integration with other gene expression profiling tools.
+- **Shiny App Interface**: Provides a user-friendly, web-based interface designed for users who prefer not to use R directly.
+
+## Methods included
+
+| Methods | Group | Citation |
+|-----------------|-----------------|-----------------|
+| parker.orginal   | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)   |
+| genefu           | NC-based   |  [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)  |
+| cIHC-based iterative ER subset (cIHC.itr)    | NC-based    | [Curtis  et al., 2012](https://doi.org/10.1038/nature10983)  |
+| conventional IHC (cIHC)    | NC-based    | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)   |
+| PCA-PAM50   | NC-based    | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)    |
+| ssBC    | NC-based    | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4) |
+| ssBC.v2   | NC-based    | [Fernandez-Martinez  et al., 2020](https://doi.org/10.1200/JCO.20.01276)    |
+| AIMS   | SSP-based    | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)    |
+| sspbc        | SSP-based    | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)   |
+
+
 
 ## Installation
 
@@ -59,8 +74,9 @@ iBreastSubtypeR()
 
 The Shiny app allows you to:
 - Upload gene expression, clinical, and annotation data.
-- Select subtyping methods.
+- Perform subtyping using a preferred method.
 - Visualize the results in real-time.
+- Download the results locally
 
 
 ## Contributing
