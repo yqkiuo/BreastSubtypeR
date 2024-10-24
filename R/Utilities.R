@@ -483,6 +483,7 @@ Vis_pie = function(out){
 
 Vis_consensus = function(data){
 
+  
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset
@@ -506,7 +507,7 @@ Vis_consensus = function(data){
                                                               gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white"))
 
   data = data[order(data[,ncol(data)]),]
-  
+  Subtype.color = Subtype.color[ names(Subtype.color) %in% Labels]
   p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
                           row_names_gp = grid::gpar(fontsize = 12,fontface = "bold" ),
                           right_annotation = row_anno,show_column_names = FALSE,
