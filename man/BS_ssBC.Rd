@@ -18,7 +18,7 @@ BS_ssBC(
 
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{s}{Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
+\item{s}{Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantiles of ssBC is "ER" and "TN", published on Breast Cancer Research in 2015.  If you choose "ER.v2" or "TNBC", it means you choose quantiles published on Journal of Clinical Oncology in 2024.}
 
 \item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
