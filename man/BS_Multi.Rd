@@ -33,7 +33,7 @@ This calls consensus subtyping and users can specify subtyping methods.
 \examples{
 
 data("OSLO2MEITOobj")
-methods = c( "parker.median", "parker.mean", "parker.quantile")
+methods = c( "parker.original", "genefu.scale", "genefu.robust")
 res.test = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
 
 

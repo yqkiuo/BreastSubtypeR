@@ -19,7 +19,7 @@ Function for heatmap visualizayion
 data("OSLO2MEITOobj")
 
 x = data_input$x_NC
-out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 
 p = Vis_heatmap(x, out)
 plot(p)

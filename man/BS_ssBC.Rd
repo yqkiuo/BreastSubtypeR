@@ -18,7 +18,7 @@ BS_ssBC(
 
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{s}{Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
+\item{s}{Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024.}
 
 \item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 
@@ -33,7 +33,7 @@ This calls ssBC to do intrinsic subtyping.
 \examples{
 
 data("OSLO2MEITOobj")
-res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Subtype = FALSE, hasClinical =FALSE)
+res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER.v2", Subtype = FALSE, hasClinical =FALSE)
 
 }
 \references{

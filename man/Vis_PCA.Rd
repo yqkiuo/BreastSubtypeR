@@ -22,7 +22,7 @@ Function for PCAplot
 data("OSLO2MEITOobj")
 
 x = data_input$x_NC.log
-out = data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+out = data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 p = Vis_PCA(x = x, out = out)
 plot(p)
 

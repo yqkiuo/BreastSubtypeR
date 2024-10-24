@@ -16,7 +16,7 @@ Function for pieplot
 
 data("OSLO2MEITOobj")
 
-out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
+out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
 p = Vis_pie(out = out)
 plot(p)
 

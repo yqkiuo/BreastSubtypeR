@@ -21,8 +21,8 @@ Function for boxplot of correlation per subtype
 
 data("OSLO2MEITOobj")
 
-out= data.frame(PatientID = res$results$parker.median$BS.all$PatientID, Subtype = res$results$parker.median$BS.all$BS )
-correlations =res$results$parker.median$outList$distances
+out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+correlations =res$results$parker.original$outList$distances
 
 p = Vis_boxpot(out, correlations )
 plot(p)
