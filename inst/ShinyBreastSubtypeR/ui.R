@@ -226,7 +226,7 @@ ui = page_fluid(
   fluidRow(
     column(12, align = "center",
            div(style = "margin-top: 20px; margin-bottom: 20px;",
-               downloadButton("download", "", style = "width: 150px; height: 40px;"))
+               downloadButton("download", "Download", style = "width: 150px; height: 40px;"))
     )
   )
   
