@@ -277,7 +277,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' This calls ssBC to do intrinsic subtyping. 
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param s Options are "ER" or "TN" or "ER_JAMA" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER_JAMA" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param s Options are "ER" or "TN" or "ER.v2" or "HER2+" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "HER2+" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
 #' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' 
@@ -291,7 +291,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' @examples
 #' 
 #' data("OSLO2MEITOobj")
-#' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER_JAMA", Subtype = FALSE, hasClinical =FALSE)
+#' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER.v2", Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
 
@@ -438,17 +438,17 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     stop("Please select two methods at least")
   } 
   
-  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC_JAMA|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
+  if (length(methods[str_detect(methods, pattern =  "parker.median|parker.mean|parker.quantile|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
     stop("Please provide right method names")
   }
 
   ## check ER and if methods are feasible
-  if(  !("ER" %in% colnames(phenodata)) & ( length(methods[str_detect(methods, pattern =  "ssBC|ssBC_JAMA|cIHC|cIHC.itr")] ) > 0 ) ) {
-    stop("Please do not select any of ssBC, ssBC_JAMA, cIHC and cIHC.itr")
+  if(  !("ER" %in% colnames(phenodata)) & ( length(methods[str_detect(methods, pattern =  "ssBC|ssBC.v2|cIHC|cIHC.itr")] ) > 0 ) ) {
+    stop("Please do not select any of ssBC, ssBC.v2, cIHC and cIHC.itr")
   } 
   
-  if(  !("HER2" %in% colnames(phenodata)) & ( "ssBC_JAMA" %in% methods  ) ) {
-    stop("ssBC_JAMA is not supported")
+  if(  !("HER2" %in% colnames(phenodata)) & ( "ssBC.v2" %in% methods  ) ) {
+    stop("ssBC.v2 is not supported")
   }
 
   ## run each method
@@ -489,9 +489,9 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
       return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Subtype = Subtype, hasClinical = hasClinical ))
     }
     
-    if(method == "ssBC_JAMA"){
+    if(method == "ssBC.v2"){
       print(paste0(method," is running!"))
-      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER_JAMA", Subtype = Subtype, hasClinical = hasClinical ))
+      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER.v2", Subtype = Subtype, hasClinical = hasClinical ))
     }
     
     if(method == "AIMS"){

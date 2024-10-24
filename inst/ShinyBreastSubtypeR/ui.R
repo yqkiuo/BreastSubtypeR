@@ -186,8 +186,8 @@ ui = page_fluid(
         selectInput(
           "s",
           "subgroup",
-          choices = list("ER" = "ER", "TN" = "TN", "ER_JAMA" = "ER_JAMA", "HER2+" = "HER2+", "TNBC" = "TNBC"),
-          selected = "ER_JAMA"
+          choices = list("ER" = "ER", "TN" = "TN", "ER.v2" = "ER.v2", "HER2+" = "HER2+", "TNBC" = "TNBC"),
+          selected = "ER.v2"
         ),
         selectInput(
           "hasClinical",

@@ -491,7 +491,7 @@ Vis_consensus = function(data){
     Category = rep( c("NC-based", "SSP-based", "consensus") , c(8,2,1)),
     row.names = c("parker.median","parker.mean", "parker.quantile", 
                   "cIHC","cIHC.itr", "PCAPAM50", 
-                  "ssBC", "ssBC_JAMA", 
+                  "ssBC", "ssBC.v2", 
                   "AIMS", "sspbc", "consensus.subtype")
   )
   categories$Category = factor(categories$Category, levels =  c("NC-based", "SSP-based", "consensus") )
