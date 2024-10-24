@@ -66,7 +66,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
 #' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
-#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
+#' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr", genefu.scale), or quantile-centered ("qCtr", genefu.robust).
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
 #' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
@@ -418,7 +418,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' 
 #' @param data_input The output of Mapping() function. 
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param methods Specify methods. 
+#' @param methods Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS and sspbc
 #' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The subtypes estimated by selected methods
@@ -439,7 +439,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   } 
   
   if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
-    stop("Please provide right method names")
+    stop("Please provide right method names; Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS and sspbc. ")
   }
 
   ## check ER and if methods are feasible
