@@ -476,14 +476,13 @@ Vis_pie = function(out){
 #' @examples
 #' 
 #' data("OSLO2MEITOobj")
-#' p = Vis_consensus(res$res_subtypes)
+#' p = Vis_Multi(res$res_subtypes)
 #' plot(p)
 #' @export
 #' 
 
-Vis_consensus = function(data){
+Vis_Multi = function(data){
 
-  
   Labels = unique(as.vector( as.matrix( data)))
   
   ## preset

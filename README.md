@@ -52,13 +52,13 @@ data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
 data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, phenodata = clinic_data, methods = methods, Subtype = TRUE)
+result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_consensus(res$res_subtypes)
+plot = Vis_Multi(res$res_subtypes)
 plot(plot)
 
 ```
