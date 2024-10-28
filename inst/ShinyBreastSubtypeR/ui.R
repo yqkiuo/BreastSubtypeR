@@ -134,12 +134,9 @@ ui = page_fluid(
         selectInput(
           "internal",
           "Internal",
-          choices = list("median" = "medianCtr", "mean" = "meanCtr", "quantile" = "qCtr"),
-          selected = "median")
-      )
-      
-      )
-      
+          choices = list("parker.original" = "medianCtr", "genefu.scale" = "meanCtr", "genefu.robust" = "qCtr"),
+          selected = "parker.original")
+      ) )
       ),
 
     conditionalPanel(
