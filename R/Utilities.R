@@ -125,7 +125,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   
   ## get matrix for NC (symbol as rows, sample as col)
   x_NC = x[ na.omit(match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )) ,]
-  rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[na.omit( match( rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID ) ) ]
+  rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[match(rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID)]
   x_NC = data.frame(x_NC)
   colnames(x_NC) = samplenames
   
