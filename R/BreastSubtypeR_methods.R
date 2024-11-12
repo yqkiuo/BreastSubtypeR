@@ -434,6 +434,8 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasClinical = FALSE,... ){
 
+  ## check 
+  
   if(length(methods) < 2 ){
     stop("Please select two methods at least")
   } 
