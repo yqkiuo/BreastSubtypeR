@@ -754,28 +754,56 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 
 makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE, seed=118){
   
+  # Initial checks for 'df.cln' and 'mat'
+  if (is.null(df.cln) || !'PatientID' %in% colnames(df.cln) || !'IHC' %in% colnames(df.cln)) {
+    stop("Clinical data 'df.cln' is missing or does not contain required columns 'PatientID' and 'IHC'. Refer to the vignette to create 'test.clinical' data.")
+  }
+  
+  if (is.null(mat) || !is.matrix(mat)) {
+    stop("Gene expression matrix 'mat' is missing or not correctly formatted. Refer to the vignette to create 'test.matrix' data.")
+  }
+  
   # Pull the PCA components
   #rv      = rowVars(mat)
   #select  = order(rv, decreasing = TRUE)[seq_len(dim(mat)[1])] # the input is PAM50 matrix --50 genes -- get from dimension
   pca     = prcomp(t(mat))#[select,]
-  pc12    = pca$x[,1:2] #get two principal 
+  pc12    = pca$x[,1:2] #get two principal
   df.pc1  = data.frame(PatientID=rownames(pc12),PC1 = pc12[,1],stringsAsFactors=F)
-  df.pca1 = left_join(df.cln,df.pc1,by="PatientID")
+  df.pca1 = merge(df.cln,df.pc1,by="PatientID")
   
-  ### function to count the number of mis-classified cases on a given PC1 point ---find the cutoff
-  getno = function(x){
-    p.rgt = length(which(df.pca1$ER %in% c("ER+") & df.pca1$PC1 >x))/length(which(df.pca1$ER %in% c("ER+") ))
-    n.lft = length(which(df.pca1$ER %in% c("ER-") & df.pca1$PC1 <x))/ length(which(df.pca1$ER %in% c("ER-")))
-    tot   = (p.rgt + n.lft) * 100
-    return(list(PC1=x,Mis=tot))
+  
+  #--our function works best if majority of ER- cases fall in the positive PC1 axis--check
+  # Identify ER-negative cases
+  er_negative <- !grepl("^L", df.pca1$IHC)
+  
+  # Determine if the majority of ER-negative cases fall in the negative axis of PC1
+  if (sum(df.pca1$PC1[er_negative] < 0) > sum(df.pca1$PC1[er_negative] >= 0)) {
+    #print("yes")
+    df.pca1$PC1 <- -df.pca1$PC1
+  }
+  
+  # Ensure that IHC is not a factor or has all necessary levels defined
+  if (is.factor(df.pca1$IHC)) {
+    df.pca1$IHC = as.character(df.pca1$IHC)
+  }
+  
+  # Convert IHC column to uppercase to handle case insensitivity
+  df.pca1$IHC <- toupper(df.pca1$IHC)
+
+  # Function to count the number of misclassified cases on a given PC1 point ---find the cutoff
+  getno = function(x) {
+    p.rgt = length(which(grepl("^L", df.pca1$IHC) & df.pca1$PC1 > x)) / length(which(grepl("^L", df.pca1$IHC)))
+    n.lft = length(which(!grepl("^L", df.pca1$IHC) & df.pca1$PC1 < x)) / length(which(!grepl("^L", df.pca1$IHC)))
+    tot = (p.rgt + n.lft) * 100
+    return(list(PC1 = x, Mis = tot))
   }
   
   df.mis  = do.call(rbind.data.frame,lapply(seq(-20,20,by=0.1),getno))
-  
+
   num.min = df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
   
-  ERP.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER+") & df.pca1$PC1 <= mean(num.min)),] # used mean to overcome situation where there are two minimum
-  ERN.pc1ihc = df.pca1[which(df.pca1$ER %in% c("ER-") & df.pca1$PC1 > mean(num.min)),]
+  ERP.pc1ihc = df.pca1[which(grepl("^L", df.pca1$IHC) & df.pca1$PC1 <= mean(num.min)), ] # used mean to overcome situation where there are two minimum
+  ERN.pc1ihc = df.pca1[which(!grepl("^L", df.pca1$IHC) & df.pca1$PC1 > mean(num.min)), ]
   
   dim(ERP.pc1ihc)
   dim(ERN.pc1ihc)
@@ -832,7 +860,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   
   return(list(BS.all=Int.sbs, score.ROR=out.ROR, mdns= df.al,outList=out))
   
-  
+
 }
 
 #' Function for the second step of PCA-PAM50 approach
@@ -849,7 +877,6 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
 makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE,seed=118 ){
   
 
-  
   ERN.pam = df.pam[which(df.pam$PAM50 %in% c("Basal")),] ### get ER- samples data.frame
   dim(ERN.pam)
   
@@ -895,6 +922,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
+  View(Int.sbs)
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln = df.pam, hasClinical = hasClinical,Subtype = Subtype )
   
