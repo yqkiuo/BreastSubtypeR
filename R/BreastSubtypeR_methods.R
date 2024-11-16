@@ -216,16 +216,24 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
   samples = phenodata$PatientID
 
   if ( "ER"  %in% colnames(phenodata) ) {
+    
+    ## create IHC column for PCAPAM50
+    phenodata$IHC = case_when(
+      phenodata$ER == "ER+" ~ "LA",
+      phenodata$ER == "ER-" ~ "TN",
+      .default = NA
+    )
+    
     phenodata$ER_status = NA
     
-    phenodata$ER_status[which(phenodata$ER %in% c("ER+"))] = "pos"
-    phenodata$ER_status[which(phenodata$ER %in% c("ER-"))] = "neg"
+    phenodata$ER_status[which(phenodata$ER == "ER+")] = "pos"
+    phenodata$ER_status[which(phenodata$ER == "ER-")] = "neg"
     phenodata = phenodata[order(phenodata$ER_status,decreasing=T),]
   } else {
     stop("Please prepare ER status in clinical table")
   }
   
-  gene_expression_matrix = gene_expression_matrix[,phenodata$PatientID]
+  gene_expression_matrix = as.matrix( gene_expression_matrix[,phenodata$PatientID])
 
   ## first step
   arguments = rlang::dots_list(
@@ -263,7 +271,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
   res_PCAPAM50 = eval(call)
   
   ## reorder
-  res_PCAPAM50$BS.all = res_PCAPAM50$BS.all[match(samples,res_PCAPAM50$BS.all$PatientID ),]
+  res_PCAPAM50$BS.all = res_PCAPAM50$BS.all[na.omit(match( samples, res_PCAPAM50$BS.all$PatientID)),]
 
   return(res_PCAPAM50)
   
@@ -418,7 +426,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' 
 #' @param data_input The output of Mapping() function. 
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
-#' @param methods Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS and sspbc
+#' @param methods Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc and AUTO. AUTO would choose methods for users automatically according to the distribution of biomarkers in the test cohort.
 #' @param Subtype Logic. Specify whether to predict four subtypes by removing the Normal-like subtype. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @return The subtypes estimated by selected methods
@@ -434,12 +442,13 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasClinical = FALSE,... ){
 
+  ## minor control
   if(length(methods) < 2 ){
     stop("Please select two methods at least")
   } 
   
   if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
-    stop("Please provide right method names; Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS and sspbc. ")
+    stop("Please provide right method names.")
   }
 
   ## check ER and if methods are feasible
@@ -535,7 +544,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   names(results) = paste0(names(results))
   
 
-  res_subtypes = data.table( row_id = colnames(data_input$x_NC))
+  res_subtypes = data.table(row_id = colnames(data_input$x_NC))
   if (Subtype) {
     res_subtypes.Subtype = data.table(row_id = colnames(data_input$x_NC))
   }
@@ -548,21 +557,20 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
       }
     }
   }
-
-  ## adding consensus
+  
+  ## entropy index
   res_subtypes = as.data.frame(res_subtypes)
   rownames(res_subtypes) = colnames(data_input$x_NC); res_subtypes[,1]= NULL
+  
+  entropy = apply(res_subtypes, 1, get_entropy  )
+  res_subtypes$entropy = entropy
 
-  consensus = apply(res_subtypes, 1, get_consensus_subtype)
-  res_subtypes$consensus = consensus
-
-
-  if (Subtype) {
+  if(Subtype){
     res_subtypes.Subtype = as.data.frame(res_subtypes.Subtype)
     rownames(res_subtypes.Subtype) = colnames(data_input$x_NC); res_subtypes.Subtype[,1]= NULL
-
-    consensus_Subtype = apply(res_subtypes.Subtype, 1, get_consensus_subtype)
-    res_subtypes.Subtype$consensus = consensus_Subtype
+    
+    entropy = apply(res_subtypes.Subtype, 1, get_entropy  )
+    res_subtypes.Subtype$entropy = entropy
   }
   
   if (Subtype) {

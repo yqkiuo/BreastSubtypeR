@@ -18,7 +18,7 @@ BS_Multi(
 
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{methods}{Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS and sspbc}
+\item{methods}{Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc and AUTO. AUTO would choose methods for users automatically according to the distribution of biomarkers in the test cohort.}
 
 \item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
 

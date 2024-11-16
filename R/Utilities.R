@@ -142,13 +142,22 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
 }
 
 
-#' Function for consensus subtype
-#' @noRd 
+#' #' Function for consensus subtype
+#' @noRd
 get_consensus_subtype <- function(patient_row) {
   patient_row = unlist(patient_row, use.names = FALSE)
   counts <- table(patient_row)
   max_subtype <- names(counts)[which.max(counts)]
   return(max_subtype)
+}
+
+#' Function for entropy calculation
+#' @noRd
+get_entropy = function(patient_row) {
+  freq = table(patient_row)
+  prob = freq / sum(freq)
+  entropy = -sum(prob * log2(prob))
+  return(entropy)
 }
 
 
