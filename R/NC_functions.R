@@ -922,7 +922,6 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   out$distances.Subtype =  -1 * out$distances.Subtype
   out$distances = -1 * out$distances
   
-  View(Int.sbs)
   ##calculate and grouping
   out.ROR = RORgroup(out, df.cln = df.pam, hasClinical = hasClinical,Subtype = Subtype )
   
