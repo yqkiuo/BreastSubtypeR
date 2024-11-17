@@ -590,6 +590,8 @@ Vis_Multi = function(data){
   row_anno = HeatmapAnnotation(df =row_anno, which = c("row"), col =list(Category = Category.color ),
                                annotation_legend_param = list(title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
                                                               gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white"))
+  # ## column annotation
+  # col_anno = HeatmapAnnotation(which = c("column"), Entropy = anno_barplot( res$res_subtypes[rownames(data) ,ncol(res$res_subtypes) ],bar_width = 1 ) )
 
   data = data[order(data[,ncol(data)]),]
   Subtype.color = Subtype.color[ names(Subtype.color) %in% Labels]
