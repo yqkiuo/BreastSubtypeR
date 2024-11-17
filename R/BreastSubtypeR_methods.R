@@ -34,7 +34,7 @@ NULL
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
 #' data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
 #' 
@@ -80,7 +80,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res = BS_parker(data_input$x_NC.log, phenodata = NA, calibration = "Internal", internal = "medianCtr",  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
@@ -120,7 +120,7 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
@@ -162,7 +162,7 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClin
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
@@ -206,7 +206,7 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res = BS_PCAPAM50(data_input$x_NC.log, phenodata = clinic.oslo, Subtype = FALSE, hasClinical =FALSE, seed=118)
 #' 
 #' @export
@@ -298,7 +298,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER.v2", Subtype = FALSE, hasClinical =FALSE)
 #' 
 #' @export
@@ -338,7 +338,7 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' @examples
 #' 
 #' data("BreastSubtypeR")
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' 
 #' genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
 #' res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
@@ -382,7 +382,7 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' res = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50" )
 #' 
 #' @export
@@ -433,7 +433,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #' 
 #' @examples
 #' 
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMITOobj")
 #' methods = c( "parker.original", "genefu.scale", "genefu.robust")
 #' res.test = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
 #' 
