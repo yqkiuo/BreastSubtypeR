@@ -12,12 +12,36 @@
 NULL
 
 
-#' function for mapping ID and supplementing missing data if necessary
-#' @param gene_expression_matrix Gene expression matrix
-#' @param featuredata Feature data provided by user. The table should contain at least two column, probe and ENTREZID. 
-#' @param method Method to deduplicated probes for microarray or RNAseq. Please select "IQR" for Affy, "mean" for Agilent and max for RNAseq
-#' @param impute Logic. Please specify if there are NA data adn want keep them
-#' @param verbose Logic. 
+#' Map Gene IDs and Supplement Missing Data
+#'
+#' @name MapGeneIDs
+#' @description
+#' This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and supplements missing data if necessary. It includes options for deduplicating probes based on the chosen method.
+#'
+#' @param gene_expression_matrix A matrix of gene expression data with genes in rows and samples in columns. The data should be pre-processed (e.g., log-transformed).
+#' @param featuredata A table containing feature data with at least two columns:
+#'   - `"probe"`: The probe identifiers (e.g., probe names).
+#'   - `"ENTREZID"`: Corresponding ENTREZ gene IDs.
+#' @param method A character string specifying the method to deduplicate probes:
+#'   - `"IQR"`: For Affymetrix microarray data, uses interquartile range (IQR) to select a representative probe.
+#'   - `"mean"`: For Agilent microarrays, selects the mean expression of probes that map to the same gene.
+#'   - `"max"`: For RNAseq data, selects the probe with the highest expression.
+#' @param impute Logical. If `TRUE`, missing values (NA) in the gene expression matrix are handled (e.g., imputation may occur). If `FALSE`, rows with NA values are excluded.
+#' @param verbose Logical. If `TRUE`, detailed information on the process is printed during execution.
+#'
+#' @return A gene expression matrix with mapped ENTREZ IDs, and optionally imputed missing values. The matrix will have genes in rows and samples in columns, with ENTREZ gene IDs as row names.
+#'
+#' @examples
+#' data("gene_expression_data")
+#' data("feature_data")
+#' res <- MapGeneIDs(
+#'   gene_expression_matrix = gene_expression_data,
+#'   featuredata = feature_data,
+#'   method = "IQR",
+#'   impute = TRUE,
+#'   verbose = TRUE
+#' )
+#'
 #' @export
 Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
 
@@ -264,24 +288,32 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 
 #### Visualization  ####
 
-#' Functions for visualization
-#' Function for boxplot of correlation per subtype
-#' @param out a data frame includes "patientID" and "Subtype"
-#' @param correlations  correlations table from NC-based methods
-#' 
+#' Boxplot of Correlation per Subtype
+#'
+#' @name Vis_boxplot
+#' @description
+#' This function generates a boxplot to visualize the correlation distribution between different subtypes of breast cancer, based on the provided correlation table and subtype information.
+#'
+#' @param out A data frame containing the columns `"PatientID"` and `"Subtype"`. The `"PatientID"` column should have unique identifiers for each patient, and the `"Subtype"` column should specify the assigned subtype for each patient.
+#' @param correlations A data frame or matrix containing the correlation values computed from NC-based methods. 
+#'
+#' @return A `ggplot` object representing the boxplot visualization of the correlation distributions across the different subtypes.
+#'
 #' @examples
+#' data("OSLO2EMITOobj")
 #' 
+#' # Prepare data: Subtype information and correlation matrix
+#' out = data.frame(
+#'   PatientID = res$results$parker.original$BS.all$PatientID,
+#'   Subtype = res$results$parker.original$BS.all$BS
+#' )
+#' correlations = res$results$parker.original$outList$distances
 #' 
-#' data("OSLO2MEITOobj")
-#' 
-#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
-#' correlations =res$results$parker.original$outList$distances
-#' 
-#' p = Vis_boxpot(out, correlations )
+#' # Generate the boxplot
+#' p = Vis_boxplot(out, correlations)
 #' plot(p)
-#' 
+#'
 #' @export
-#' 
 
 Vis_boxpot = function(out, correlations ){
   
@@ -304,21 +336,32 @@ Vis_boxpot = function(out, correlations ){
 }
 
 
-#' Function for heatmap visualizayion
-#' @param x gene expression matrix, log2 transformed
-#' @param out a data frame includes "patientID" and "Subtype"
+#' Heatmap Visualization of Gene Expression by Subtype
+#'
+#' @name Vis_heatmap
+#' @description
+#' This function generates a heatmap to visualize gene expression patterns across breast cancer subtypes, based on the provided gene expression matrix and subtype information.
+#'
+#' @param x A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.
+#' @param out A data frame containing two columns: `"PatientID"` and `"Subtype"`. The `"PatientID"` column should contain unique patient identifiers, and the `"Subtype"` column should specify the assigned subtype for each patient.
+#'
+#' @return A `ggplot` or `heatmap` object (depending on implementation) representing the heatmap of gene expression across different subtypes.
+#'
 #' @examples
+#' data("OSLO2EMITOobj")
 #' 
-#' data("OSLO2MEITOobj")
-#' 
+#' # Prepare data: Gene expression matrix and subtype information
 #' x = data_input$x_NC
-#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+#' out = data.frame(
+#'   PatientID = res$results$parker.original$BS.all$PatientID,
+#'   Subtype = res$results$parker.original$BS.all$BS
+#' )
 #' 
+#' # Generate the heatmap
 #' p = Vis_heatmap(x, out)
 #' plot(p)
-#' 
+#'
 #' @export
-#' 
 
 Vis_heatmap = function(x, out){
 
@@ -358,23 +401,37 @@ Vis_heatmap = function(x, out){
 
 
 
-#' Function for PCAplot 
-#' @param x gene expression matrix, log2 transformed
-#' @param out a data table includes "patientID" and "Subtype"
-#' @param Eigen Logic. Please specify if show screeplot
-#' 
+#' PCA Plot Visualization of Gene Expression by Subtype
+#'
+#' @name Vis_PCA
+#' @description
+#' This function generates a PCA plot to visualize the principal components of gene expression data, colored by the assigned subtypes. Optionally, it can display a scree plot of eigenvalues to evaluate the explained variance.
+#'
+#' @param x A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.
+#' @param out A data frame containing two columns: `"PatientID"` and `"Subtype"`. The `"PatientID"` column should contain unique patient identifiers, and the `"Subtype"` column should specify the assigned subtype for each patient.
+#' @param Eigen Logical. If `TRUE`, the function will display a scree plot showing the eigenvalues of the principal components.
+#'
+#' @return A `ggplot` object representing the PCA plot, colored by subtype. If `Eigen` is set to `TRUE`, a scree plot of the eigenvalues is also included.
+#'
 #' @examples
-#' 
-#' 
-#' data("OSLO2MEITOobj")
-#' 
+#' data("OSLO2EMITOobj")
+#'
+#' # Prepare data: Gene expression matrix and subtype information
 #' x = data_input$x_NC.log
-#' out = data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+#' out = data.frame(
+#'   PatientID = res$results$parker.original$BS.all$PatientID,
+#'   Subtype = res$results$parker.original$BS.all$BS
+#' )
+#'
+#' # Generate the PCA plot
 #' p = Vis_PCA(x = x, out = out)
 #' plot(p)
-#' 
+#'
+#' # Generate PCA plot with scree plot of eigenvalues
+#' p_with_eigen = Vis_PCA(x = x, out = out, Eigen = TRUE)
+#' plot(p_with_eigen)
+#'
 #' @export
-#' 
 
 Vis_PCA = function(x, out, Eigen = FALSE){
 
@@ -431,18 +488,30 @@ Vis_PCA = function(x, out, Eigen = FALSE){
   
  }
 
-#' Function for pieplot 
-#' @param out a data table includes "patientID" and "Subtype"
+#' Pie Chart Visualization of Subtype Distribution
+#'
+#' @name Vis_pie
+#' @description
+#' This function generates a pie chart to visualize the distribution of breast cancer subtypes in a cohort, based on the provided `Subtype` data.
+#'
+#' @param out A data frame containing two columns: `"PatientID"` and `"Subtype"`. The `"PatientID"` column should contain unique patient identifiers, and the `"Subtype"` column should specify the assigned subtype for each patient.
+#'
+#' @return A `ggplot` object representing a pie chart showing the proportion of each subtype in the dataset.
+#'
 #' @examples
-#' 
-#' data("OSLO2MEITOobj")
-#' 
-#' out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+#' data("OSLO2EMITOobj")
+#'
+#' # Prepare data: Subtype information
+#' out = data.frame(
+#'   PatientID = res$results$parker.original$BS.all$PatientID,
+#'   Subtype = res$results$parker.original$BS.all$BS
+#' )
+#'
+#' # Generate the pie chart
 #' p = Vis_pie(out = out)
 #' plot(p)
-#' 
+#'
 #' @export
-#' 
 
 Vis_pie = function(out){
   
@@ -479,16 +548,24 @@ Vis_pie = function(out){
 }
 
 
-#' Function for pieplot 
-#' @param out a data table includes "patientID" and "Subtype"
-#' 
+#' Multi-Method Subtype Heatmap Visualization
+#'
+#' @name Vis_Multi
+#' @description
+#' This function generates a heatmap visualization of breast cancer subtypes based on multiple subtyping methods. It allows users to visualize how different methods classify samples into subtypes.
+#'
+#' @param out A data frame or matrix that includes the subtypes predicted by different methods. The rows should represent individual samples (e.g., `PatientID`), and columns should correspond to the subtypes predicted by different methods.
+#'
+#' @return A heatmap visualization of multi-method subtype results.
+#'
 #' @examples
-#' 
 #' data("OSLO2MEITOobj")
-#' p = Vis_Multi(res$res_subtypes)
+#'
+#' # Assuming `res$res_subtypes` contains multi-method subtype results
+#' p = Vis_Multi(res$res_subtypes[,-ncol(res$res_subtypes)])  # Removing the last entropy column
 #' plot(p)
+#'
 #' @export
-#' 
 
 Vis_Multi = function(data){
 
