@@ -2,28 +2,39 @@
 % Please edit documentation in R/Utilities.R
 \name{Vis_PCA}
 \alias{Vis_PCA}
-\title{Function for PCAplot}
+\title{PCA Plot Visualization of Gene Expression by Subtype}
 \usage{
 Vis_PCA(x, out, Eigen = FALSE)
 }
 \arguments{
-\item{x}{gene expression matrix, log2 transformed}
+\item{x}{A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.}
 
-\item{out}{a data table includes "patientID" and "Subtype"}
+\item{out}{A data frame containing two columns: \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should contain unique patient identifiers, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
 
-\item{Eigen}{Logic. Please specify if show screeplot}
+\item{Eigen}{Logical. If \code{TRUE}, the function will display a scree plot showing the eigenvalues of the principal components.}
+}
+\value{
+A \code{ggplot} object representing the PCA plot, colored by subtype. If \code{Eigen} is set to \code{TRUE}, a scree plot of the eigenvalues is also included.
 }
 \description{
-Function for PCAplot
+This function generates a PCA plot to visualize the principal components of gene expression data, colored by the assigned subtypes. Optionally, it can display a scree plot of eigenvalues to evaluate the explained variance.
 }
 \examples{
+data("OSLO2EMITOobj")
 
-
-data("OSLO2MEITOobj")
-
+# Prepare data: Gene expression matrix and subtype information
 x = data_input$x_NC.log
-out = data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+out = data.frame(
+  PatientID = res$results$parker.original$BS.all$PatientID,
+  Subtype = res$results$parker.original$BS.all$BS
+)
+
+# Generate the PCA plot
 p = Vis_PCA(x = x, out = out)
 plot(p)
+
+# Generate PCA plot with scree plot of eigenvalues
+p_with_eigen = Vis_PCA(x = x, out = out, Eigen = TRUE)
+plot(p_with_eigen)
 
 }

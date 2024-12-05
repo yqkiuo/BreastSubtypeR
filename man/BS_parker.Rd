@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_parker}
 \alias{BS_parker}
-\title{BS_parker}
+\title{Original Parker Intrinsic Subtyping (BS_parker)}
 \usage{
 BS_parker(
   gene_expression_matrix,
@@ -19,33 +19,55 @@ BS_parker(
 \arguments{
 \item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+\item{phenodata}{A clinical information table. The first column must be named \code{"PatientID"}.}
 
-\item{calibration}{The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.}
+\item{calibration}{The calibration method to use. Options include:
+\itemize{
+\item \code{"None"}: No calibration is applied.
+\item \code{"Internal"}: Calibration is performed using internal strategies. See the \code{internal} parameter for details.
+\item \code{"External"}: Calibration is performed using external medians. See the \code{external} parameter for details.
+}}
 
-\item{internal}{Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr", genefu.scale), or quantile-centered ("qCtr", genefu.robust).}
+\item{internal}{The internal calibration strategy to apply when \code{calibration = "Internal"}. Options are:
+\itemize{
+\item \code{"medianCtr"} (default): Median-centered calibration.
+\item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
+\item \code{"qCtr"}: Quantile-centered calibration (aligned with \code{genefu.robust}).
+}}
 
-\item{external}{Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter.}
+\item{external}{Specify the platform name (i.e., column name) for external medians calculated from the training cohort. To use user-provided medians, set this parameter to \code{"Given.mdns"} and provide the values via the \code{medians} parameter.}
 
-\item{medians}{If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.}
+\item{medians}{A matrix or table of user-provided medians. Required if \code{external = "Given.mdns"}. The first column should list 50 genes, and the second column should provide the corresponding median values.}
 
-\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\itemize{
+\item \code{"T"}: Tumor size.
+\item \code{"NODE"}: Lymph node status.
+}}
 }
 \value{
-The intrinsic subtypes estimated using the Parker-based method.
+A list containing the intrinsic subtypes assigned using the Parker-based method.
 }
 \description{
-This calls parker-based intrinsic subtyping methods.
+This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
 }
 \examples{
-
-data("OSLO2MEITOobj")
-res = BS_parker(data_input$x_NC.log, phenodata = NA, calibration = "Internal", internal = "medianCtr",  Subtype = FALSE, hasClinical =FALSE)
+data("OSLO2EMITOobj")
+res <- BS_parker(
+  gene_expression_matrix = data_input$x_NC.log[],
+  phenodata = NA,
+  calibration = "Internal",
+  internal = "medianCtr",
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
 }
 \references{
-Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al. Supervised risk predictor of breast cancer based on intrinsic subtypes. Journal of Clinical Oncology. 2009;27(8). https://doi.org/10.1200/JCO.2008.18.1370
-Gendoo DMA, Ratanasirigulchai N, Schr"der MS, Par' L, Parker JS, Prat A, et al. Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
+\itemize{
+\item Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al. \emph{Supervised risk predictor of breast cancer based on intrinsic subtypes}. Journal of Clinical Oncology. 2009;27(8). https://doi.org/10.1200/JCO.2008.18.1370
+\item Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al. \emph{Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer}. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
+}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_Multi}
 \alias{BS_Multi}
-\title{BS_Multi}
+\title{Consensus Intrinsic Subtyping with Multiple Methods (BS_Multi)}
 \usage{
 BS_Multi(
   data_input,
@@ -14,27 +14,51 @@ BS_Multi(
 )
 }
 \arguments{
-\item{data_input}{The output of Mapping() function.}
+\item{data_input}{The output from the \code{Mapping()} function, containing processed gene expression data prepared for subtyping analysis.}
 
 \item{phenodata}{A clinical information table. The first column must be named "PatientID".}
 
-\item{methods}{Specify methods. Any two of parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc and AUTO. AUTO would choose methods for users automatically according to the distribution of biomarkers in the test cohort.}
+\item{methods}{A character vector specifying the subtyping methods to be used. Options include:
+\itemize{
+\item "parker.original"
+\item "genefu.scale"
+\item "genefu.robust"
+\item "ssBC"
+\item "ssBC.v2"
+\item "cIHC"
+\item "cIHC.itr"
+\item "PCAPAM50"
+\item "AIMS"
+\item "sspbc"
+\item "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
+}
 
-\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
+If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.}
 
-\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{Subtype}{Logical. If \code{TRUE}, predicts four subtypes by excluding the Normal-like subtype.}
+
+\item{hasClinical}{Logical. If \code{TRUE}, includes clinical information in the analysis (e.g., tumor size in the "T" column and lymph node status in the "NODE" column).}
 }
 \value{
-The subtypes estimated by selected methods
+A list of intrinsic subtypes estimated by the selected methods.
 }
 \description{
-This calls consensus subtyping and users can specify subtyping methods.
+Performs consensus intrinsic subtyping of breast cancer using multiple methods, allowing users to specify or automatically select subtyping approaches based on the test cohort's biomarker distribution.
 }
 \examples{
+# Load required dataset
+data("OSLO2EMITOobj")
 
-data("OSLO2MEITOobj")
-methods = c( "parker.original", "genefu.scale", "genefu.robust")
-res.test = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = FALSE, hasClinical = FALSE)
+# Define methods to use for consensus subtyping
+methods <- c("parker.original", "genefu.scale", "genefu.robust")
 
+# Perform subtyping
+res.test <- BS_Multi(
+  data_input = data_input,
+  phenodata = clinic.oslo,
+  methods = methods,
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
 }

@@ -68,7 +68,7 @@ ui = page_fluid(
 
   #### Please choose your method ####
   # Main page section with a title
-  h3("Please choose your method"),  # Add a title here
+  h3("Please choose your method"),  
   
   ## options
   card(
