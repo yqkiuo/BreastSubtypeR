@@ -83,6 +83,7 @@ ui = page_fluid(
 
   #### Please select your method ####
   # Main page section with a title
+
   h3("Step 2: Please select method & parameters for subtyping"),  # Add a title here
   
   ## options

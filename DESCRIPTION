@@ -13,4 +13,4 @@ Depends:
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 LazyData: true
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2

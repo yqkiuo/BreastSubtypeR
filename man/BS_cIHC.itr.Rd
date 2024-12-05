@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_cIHC.itr}
 \alias{BS_cIHC.itr}
-\title{BS_cIHC.itr}
+\title{Iterative conventional IHC Intrinsic Subtyping (BS_cIHC.itr)}
 \usage{
 BS_cIHC.itr(
   gene_expression_matrix,
@@ -18,28 +18,43 @@ BS_cIHC.itr(
 \arguments{
 \item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+\item{phenodata}{A clinical information table. The first column must contain sample or patient names and be named \code{"PatientID"}. Additionally, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.}
 
-\item{ratio}{The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The latter was ER ratio used for UNC230 train cohort.}
+\item{ratio}{Numeric. Specifies the ER+ to ER− ratio for balancing. Options are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.}
 
-\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\itemize{
+\item \code{"T"}: Tumor size.
+\item \code{"NODE"}: Lymph node status.
+}}
 
-\item{iterative}{Times to do iterative ER balanced procedure with certain ratio.}
+\item{seed}{An integer value is used to set the random seed.}
+
+\item{iterative}{Integer. Number of iterations for the ER-balanced procedure with a specified ratio.}
 }
 \value{
-The intrinsic subtypes, confidential level, percentages.
+A list containing:
+\itemize{
+\item Intrinsic subtype predictions.
+\item Confidence levels for each subtype.
+\item Percentages of ER+ and ER− subsets across iterations.
+}
 }
 \description{
-This predicts breast cancer intrinsic subtypes with ER subset for gene centering. It supports the selection of ER subset ratio.
+Predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. Supports customization of ER subset ratios.
 }
 \examples{
-
-data("OSLO2MEITOobj")
-res =  BS_cIHC.itr(data_input$x_NC.log, phenodata = clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
+data("OSLO2EMIT0obj")
+res = BS_cIHC.itr(
+  gene_expression_matrix = data_input$x_NC.log,
+  phenodata = clinic.oslo,
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
 }
 \references{
-Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
+Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. \emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups}. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
 }

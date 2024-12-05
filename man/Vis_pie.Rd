@@ -2,21 +2,29 @@
 % Please edit documentation in R/Utilities.R
 \name{Vis_pie}
 \alias{Vis_pie}
-\title{Function for pieplot}
+\title{Pie Chart Visualization of Subtype Distribution}
 \usage{
 Vis_pie(out)
 }
 \arguments{
-\item{out}{a data table includes "patientID" and "Subtype"}
+\item{out}{A data frame containing two columns: \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should contain unique patient identifiers, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
+}
+\value{
+A \code{ggplot} object representing a pie chart showing the proportion of each subtype in the dataset.
 }
 \description{
-Function for pieplot
+This function generates a pie chart to visualize the distribution of breast cancer subtypes in a cohort, based on the provided \code{Subtype} data.
 }
 \examples{
+data("OSLO2EMITOobj")
 
-data("OSLO2MEITOobj")
+# Prepare data: Subtype information
+out = data.frame(
+  PatientID = res$results$parker.original$BS.all$PatientID,
+  Subtype = res$results$parker.original$BS.all$BS
+)
 
-out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+# Generate the pie chart
 p = Vis_pie(out = out)
 plot(p)
 

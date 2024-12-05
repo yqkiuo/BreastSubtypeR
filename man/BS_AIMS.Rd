@@ -2,30 +2,40 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_AIMS}
 \alias{BS_AIMS}
-\title{BS_AIMS}
+\title{AIMS Intrinsic Subtyping (BS_AIMS)}
 \usage{
 BS_AIMS(gene_expression_matrix, EntrezID, ...)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.}
 
-\item{EntrezID}{A list of Entrez gene ids}
+\item{EntrezID}{A vector of Entrez gene IDs corresponding to the genes in the gene expression matrix.}
 }
 \value{
-The subtypes estimated by AIMS method
+A vector of intrinsic subtypes assigned to the samples, as estimated by the AIMS method.
 }
 \description{
-This calls AIMS to do intrinsic subtyping.
+Performs intrinsic subtyping of breast cancer using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method. This method provides a robust assignment of breast cancer molecular subtypes based on Entrez gene IDs.
 }
 \examples{
-
+# Load required datasets
 data("BreastSubtypeR")
-data("OSLO2MEITOobj")
+data("OSLO2EMIT0obj")
 
-genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
-res = BS_AIMS(data_input$x_SSP[genes,], rownames(data_input$x_SSP[genes,]) )
+# Extract AIMS-specific genes
+genes = as.character(
+  BreastSubtypeR$genes.signature$EntrezGene.ID[
+    which(BreastSubtypeR$genes.signature$AIMS == "Yes")
+  ]
+)
+
+# Perform subtyping
+res = BS_AIMS(
+  gene_expression_matrix = data_input$x_SSP[genes, ],
+  EntrezID = rownames(data_input$x_SSP[genes, ])
+)
 
 }
 \references{
-Paquet ER, Hallett MT. Absolute assignment of breast cancer intrinsic molecular subtype. J Natl Cancer Inst. 2015;107(1). https://doi.org/10.1093/jnci/dju357
+Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1). https://doi.org/10.1093/jnci/dju357
 }

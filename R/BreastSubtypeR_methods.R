@@ -5,7 +5,7 @@
 #' 
 #' @name BreastSubtypeR
 #' 
-#' @docType package
+#' @docType _PACKAGE
 #' 
 #' @import AIMS
 #' @import stringr
@@ -40,9 +40,9 @@ NULL
 #' If the rows of the gene expression matrix/table represent gene symbols, an additional `SYMBOL` column must be added to the feature table and renamed as `probe`.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' data <- OSLO2EMITO.103.genematrix_noNeg[, clinic.oslo$PatientID]
-#' data_input <- Mapping(
+#' data("OSLO2EMIT0obj")
+#' data = OSLO2EMITO.103.genematrix_noNeg.subset[, clinic.oslo$PatientID]
+#' data_input = Mapping(
 #'   gene_expression_matrix = data,
 #'   featuredata = anno_feature,
 #'   method = "max",
@@ -77,7 +77,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
-#' @param phenodata A clinical information table. The first column must be named `"PatientID"`.
+#' @param phenodata A clinical information table. The first column must be named `"PatientID"`. The default is NA.
 #' @param calibration The calibration method to use. Options include:
 #'   - `"None"`: No calibration is applied.
 #'   - `"Internal"`: Calibration is performed using internal strategies. See the `internal` parameter for details.
@@ -97,12 +97,12 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #'
 #' @references
 #' - Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al. *Supervised risk predictor of breast cancer based on intrinsic subtypes*. Journal of Clinical Oncology. 2009;27(8). https://doi.org/10.1200/JCO.2008.18.1370
-#' - Gendoo DMA, Ratanasirigulchai N, Schr"der MS, Par' L, Parker JS, Prat A, et al. *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer*. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
+#' - Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al. *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer*. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_parker(
-#'   gene_expression_matrix = data_input$x_NC.log[],
+#' data("OSLO2EMIT0obj")
+#' res = BS_parker(
+#'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = NA,
 #'   calibration = "Internal",
 #'   internal = "medianCtr",
@@ -113,6 +113,10 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @export
 
 BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Subtype = FALSE, hasClinical = FALSE, ...){
+  
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  }
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -144,15 +148,15 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.
 #'
 #' @references
 #' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al. *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer*. Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_cIHC(
+#' data("OSLO2EMIT0obj")
+#' res = BS_cIHC(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
@@ -161,13 +165,20 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #'
 #' @export
 
-BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClinical = FALSE, ...){
+BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClinical = FALSE, seed = 118, ...){
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
     Subtype = Subtype, 
-    hasClinical = hasClinical,..., .homonyms = "last"
+    hasClinical = hasClinical,
+    seed = seed, ..., .homonyms = "last"
   )
   
   
@@ -188,23 +199,23 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClin
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
 #' @param iterative Integer. Number of iterations for the ER-balanced procedure with a specified ratio.
-#' @param ratio Numeric. Specifies the ER+ to ER- ratio for balancing. Options are `1:1` or `54:64` (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.
+#' @param ratio Numeric. Specifies the ER+ to ER− ratio for balancing. Options are `1:1` or `54:64` (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A list containing:
 #' - Intrinsic subtype predictions.
 #' - Confidence levels for each subtype.
-#' - Percentages of ER+ and ER- subsets across iterations.
+#' - Percentages of ER+ and ER− subsets across iterations.
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups*. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_cIHC.itr(
+#' data("OSLO2EMIT0obj")
+#' res = BS_cIHC.itr(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
@@ -214,6 +225,13 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClin
 #' @export
 
 BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Subtype = FALSE, hasClinical = FALSE,seed=118, ...){
+  
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -245,34 +263,39 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.
 #'
 #' @references
 #' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al. *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.* Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_PCAPAM50(
+#' data("OSLO2EMIT0obj")
+#' res = BS_PCAPAM50(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
-#'   hasClinical = FALSE,
-#'   seed = 118
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE,seed=118){
+BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE, seed=118, ...){
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   samples = phenodata$PatientID
 
   if ( "ER"  %in% colnames(phenodata) ) {
     
     ## create IHC column for PCAPAM50
     phenodata$IHC = case_when(
-      phenodata$ER == "ER+" ~ "LA",
-      phenodata$ER == "ER-" ~ "TN",
+      phenodata$ER == "ER+" ~ "Luminal",
+      phenodata$ER == "ER-" ~ "non-Luminal",
       .default = NA
     )
     
@@ -292,7 +315,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     mat = gene_expression_matrix,
     df.cln = phenodata,
     Subtype = Subtype,
-    hasClinical = hasClinical, .homonyms = "last"
+    hasClinical = hasClinical, seed=seed, ..., .homonyms = "last"
     )
   
   call = rlang::call2(makeCalls.PC1ihc, !!!arguments)
@@ -315,7 +338,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     df.pam = df.pc1pam,
     Subtype = Subtype,
     hasClinical = hasClinical,
-    seed=118, .homonyms = "last"
+    seed=seed, ..., .homonyms = "last"
   )
   
   call = rlang::call2(makeCalls.v1PAM, !!!arguments2)
@@ -340,10 +363,10 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' @param phenodata A clinical information table. The first column must contain sample or patient names, named `"PatientID"`. 
 #'   - When `"s"` is set as `"ER"`, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
 #'   - When `"s"` is set as `"ER.v2"`, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`, and a `"HER2"` column, where human epidermal growth factor receptor 2 (HER2) status is recorded as `"HER2+"` or `"HER2-"`.
-#'   - When `"s"` is set as `"TN"` or `"TNBC"`, the table must include a `"TN"` column, recording triple-negative samples as `"TN"`.
-#' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TNBC"`. Specifies the quantiles to use:
+#'   - When `"s"` is set as `"TN"` or `"TN.v2"`, the table must include a `"TN"` column, recording triple-negative samples as `"TN"`.
+#' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TN.v2"`. Specifies the quantiles to use:
 #'   - `"ER"` and `"TN"`: Original quantiles published in *Breast Cancer Research* (2015).
-#'   - `"ER.v2"` and `"TNBC"`: Updated quantiles published in *Journal of Clinical Oncology* (2024).
+#'   - `"ER.v2"` and `"TN.v2"`: Updated quantiles published in *Journal of Clinical Oncology* (2024).
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
@@ -356,8 +379,9 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer.* Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_ssBC(
+#' ## ssBC.v2
+#' data("OSLO2EMIT0obj")
+#' res = BS_ssBC(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   s = "ER.v2",
@@ -369,6 +393,13 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 
 BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasClinical =FALSE, ...) {
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
+  
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
@@ -402,17 +433,17 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' @examples
 #' # Load required datasets
 #' data("BreastSubtypeR")
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Extract AIMS-specific genes
-#' genes <- as.character(
+#' genes = as.character(
 #'   BreastSubtypeR$genes.signature$EntrezGene.ID[
 #'     which(BreastSubtypeR$genes.signature$AIMS == "Yes")
 #'   ]
 #' )
 #'
 #' # Perform subtyping
-#' res <- BS_AIMS(
+#' res = BS_AIMS(
 #'   gene_expression_matrix = data_input$x_SSP[genes, ],
 #'   EntrezID = rownames(data_input$x_SSP[genes, ])
 #' )
@@ -450,14 +481,14 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPBC method.
 #'
 #' @references
-#' Staaf J, H"kkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.* NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
+#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.* NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
 #' # Load required dataset
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Perform subtyping with the SSPBC method
-#' res <- BS_sspbc(
+#' res = BS_sspbc(
 #'   gene_expression_matrix = as.matrix(data_input$x_SSP),
 #'   ssp.name = "ssp.pam50"
 #' )
@@ -492,8 +523,6 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 }
 
-
-
 #' Consensus Intrinsic Subtyping with Multiple Methods (BS_Multi)
 #'
 #' @name BS_Multi
@@ -514,6 +543,8 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #'   - "AIMS"
 #'   - "sspbc"
 #'   - "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
+#'   
+#'   If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.
 #' @param Subtype Logical. If `TRUE`, predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, includes clinical information in the analysis (e.g., tumor size in the "T" column and lymph node status in the "NODE" column).
 #'
@@ -521,13 +552,13 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #'
 #' @examples
 #' # Load required dataset
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Define methods to use for consensus subtyping
-#' methods <- c("parker.original", "genefu.scale", "genefu.robust")
+#' methods = c("parker.original", "genefu.scale", "genefu.robust")
 #'
 #' # Perform subtyping
-#' res.test <- BS_Multi(
+#' res.test = BS_Multi(
 #'   data_input = data_input,
 #'   phenodata = clinic.oslo,
 #'   methods = methods,
@@ -539,12 +570,22 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasClinical = FALSE,... ){
 
+  # ## test 
+  # methods = "AUTO"
+  # phenodata= clinic.oslo
+  # data_input = data_input
+  # Subtype=FALSE
+  # hasClinical = F
+  
   ## minor control
-  if(length(methods) < 2 ){
-    stop("Please select two methods at least")
+
+  if (length(methods) ==1 && methods[1] =="AUTO") {
+      message("Running AUTO mode for subtyping.")
+  } else if (length(methods)< 2){
+    stop("Please select two methods at least or set methdos as \"AUTO\". " )
   } 
   
-  if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc")] ) < length(methods)){
+  if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc|AUTO")] ) < length(methods)){
     stop("Please provide right method names.")
   }
 
@@ -557,6 +598,165 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     stop("ssBC.v2 is not supported")
   }
 
+  #### AUTO mode
+  samples_ER.icd = NULL
+  samples_ERHER2.icd = NULL
+  if( length(methods) ==1 && methods[1] =="AUTO"){
+    
+    ## first check ER and HER2 status
+    if ( !("ER" %in% colnames(phenodata) ) || !("HER2" %in% colnames(phenodata) ) ) {
+      stop("Please provide ER and HER2 status for \"AUTO\". " )
+    }
+    
+    ## first check sample size 
+    n_ERpos = length(phenodata$ER[which(phenodata$ER == "ER+" )])
+    n_ERneg = length(phenodata$ER[which(phenodata$ER == "ER-" )])
+    n_ERnegHER2pos = length(phenodata$HER2[which(phenodata$HER2 == "HER2+" & phenodata$ER == "ER-" )])
+    n_ERnegHER2neg = length(phenodata$HER2[which(phenodata$HER2 == "HER2-" & phenodata$ER == "ER-" )])
+    n_ERposHER2pos = length(phenodata$HER2[which(phenodata$HER2 == "HER2+" & phenodata$ER == "ER+" )])
+    n_ERposHER2neg = length(phenodata$HER2[which(phenodata$HER2 == "HER2-" & phenodata$ER == "ER+" )])
+    
+    ## setting cutoff
+    n_ER = 10
+    n_ERHER2 = 5
+    per_ratio = 0.2
+    upper_ratio = 54/64 + (54/64)*per_ratio
+    lower_ratio = 54/64 - (54/64)*per_ratio
+    
+    ## main panel
+    if (n_ERposHER2neg == 0 && n_ERnegHER2neg ==0 ) {
+      message("A HER2-positive cohort has been detected." )
+      
+      if (n_ERposHER2pos > n_ERHER2 && n_ERnegHER2pos > n_ERHER2) { ## ssBC.v2
+        
+        if(n_ERpos < n_ER && n_ERneg < n_ER ){
+          message("A small HER2-positive cohort has been detected.")
+          message("Running methods: ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC.v2", "AIMS", "sspbc")
+        } else if ( n_ERpos > n_ER  ){
+          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        } else if ( n_ERneg > n_ER ){
+          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        }
+        
+      } else if (n_ERposHER2pos > n_ERHER2) {
+        
+        if ( n_ERpos > n_ER  ){
+          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        } else {
+          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC.v2", "AIMS", "sspbc")
+        }
+        
+      } else if (n_ERnegHER2pos > n_ERHER2) {
+        if ( n_ERneg > n_ER  ){
+          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        } else {
+          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+          methods = c("ssBC.v2", "AIMS", "sspbc")
+        }
+      }
+      
+    } else if(n_ERnegHER2pos == 0 && n_ERposHER2pos ==0 && n_ERposHER2neg ==0){
+      message("A TNBC cohort has been detected." )
+      
+      if( !( "TN" %in% colnames(phenodata) ) ){
+        stop("Please provide \"TN\" column for methods: ssBC(TN) & ssBC.v2 (TN)" )
+      }
+      #### ??? later
+      message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc" )
+      methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+      
+    }else if ( n_ERpos < n_ER && n_ERneg < n_ER ) {
+      message("A small number of ER-/ER+ samples has been detected." )
+      message("Running methods: AIMS & sspbc" )
+      methods = c( "AIMS", "sspbc")
+    } else if(n_ERpos > n_ER && n_ERneg < n_ER ) {
+
+      if (n_ERposHER2pos > n_ERHER2 && n_ERposHER2neg > n_ERHER2) {
+        message("Running methods for ER+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        
+      } else if (n_ERposHER2pos > n_ERHER2) {
+        message("Running methods for ER+/HER2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        
+      } else if (n_ERposHER2neg > n_ERHER2) {
+        message("Running methods for ER+/HER2- samples: ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        
+      }
+      
+    } else if(n_ERpos < n_ER && n_ERneg > n_ER ) {
+      if (n_ERnegHER2pos > n_ERHER2 && n_ERnegHER2neg > n_ERHER2) {
+        message("Running methods for ER- samples: ssBC, ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+  
+      } else if (n_ERnegHER2pos > n_ERHER2) {
+        message("Running methods for ER-/HER2+ samples: ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        
+      } else if (n_ERnegHER2neg > n_ERHER2) {
+        message("Running methods for ER-/HER2- samples: ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+        
+      }
+
+    } else if (n_ERpos > n_ER && n_ERneg > n_ER ){
+
+      ## for other NC-based methods
+      ratio_ER = n_ERpos/n_ERneg
+
+      if ( ratio_ER > lower_ratio && ratio_ER < upper_ratio){
+        message("Running methods: parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
+        methods = c("parker.original", "genefu.scale", "genefu.robust", "ssBC", "ssBC.v2","cIHC", "cIHC.itr", "PCAPAM50", "AIMS", "sspbc")
+        
+      } else {
+        message("The ER+/ER- ratio in the current dataset differs from the ER+/ER- ratio observed in the UNC232 training cohort." )
+        message("Running methods: ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
+        methods = c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50", "AIMS", "sspbc")
+      }
+      
+    }
+    
+    
+    ## subsetting samples for ssBC and ssBC.v2
+    # Handle ssBC & ssBC.v2 method for imbalanced subtypes
+    ERHER2_counts = c(n_ERpos,n_ERneg, n_ERnegHER2pos, n_ERnegHER2neg, n_ERposHER2pos, n_ERposHER2neg)
+    names(ERHER2_counts) = c("ERpos", "ERneg","ERnegHER2pos", "ERnegHER2neg", "ERposHER2pos", "ERposHER2neg")
+    samples_ER = names(ERHER2_counts)[1:2][ERHER2_counts[1:2] > n_ER ]
+    samples_ERHER2 = names(ERHER2_counts)[3:6][ERHER2_counts[3:6] > n_ERHER2 ]
+    
+    if (length(samples_ER) > 0) {
+      message("ssBC for samples: ", paste(samples_ER, collapse = ", "))
+      samples_ER.icd = unlist(lapply(samples_ER, function(subtype) {
+        subtype = str_replace_all(subtype, "pos", "+" )
+        subtype = str_replace_all(subtype, "neg", "-" )
+        ER_status = subtype
+        rownames(phenodata)[phenodata$ER == ER_status]
+      }))
+    }
+    
+    if (length(samples_ERHER2) > 0) {
+      message("ssBC.v2 for samples: ", paste(samples_ERHER2, collapse = ", "))
+      samples_ERHER2.icd = unlist(lapply(samples_ERHER2, function(subtype) {
+        subtype = str_replace_all(subtype, "pos", "+" )
+        subtype = str_replace_all(subtype, "neg", "-" )
+        ER_status = substr(subtype, 1, 3)
+        HER2_status = substr(subtype, 4, 8)
+        rownames(phenodata)[phenodata$ER == ER_status & phenodata$HER2 == HER2_status]
+      }))
+    }
+    
+
+  }  
+ 
+  
+   
   ## run each method
   results = sapply(methods, function(method) {
     
@@ -592,13 +792,38 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     
     if(method == "ssBC"){
       print(paste0(method," is running!"))
-      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Subtype = Subtype, hasClinical = hasClinical ))
+      
+      if( "TN" %in% colnames(phenodata)  ){
+        res_ssBC = BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Subtype = Subtype, hasClinical = hasClinical )
+      } else{
+        res_ssBC = BS_ssBC( data_input$x_NC.log, phenodata, s= "ER",Subtype = Subtype, hasClinical = hasClinical )
+      }
+      
+      ## removing results for AUTO mode
+      if(!is.null(samples_ER.icd ) && length(samples_ER.icd ) < nrow(phenodata) ){
+        res_ssBC$BS.all[ !(res_ssBC$BS.all$PatientID %in% samples_ER.icd  ), c(2:ncol(res_ssBC$BS.all)) ]= NA
+      }
+      
+      return(res_ssBC)
     }
     
     if(method == "ssBC.v2"){
       print(paste0(method," is running!"))
-      return(BS_ssBC( data_input$x_NC.log, phenodata, s= "ER.v2", Subtype = Subtype, hasClinical = hasClinical ))
+      
+      if ("TN" %in% colnames(phenodata) ){
+        res_ssBC.v2 = BS_ssBC( data_input$x_NC.log, phenodata, s= "TN.v2", Subtype = Subtype, hasClinical = hasClinical )
+      } else{
+        res_ssBC.v2 = BS_ssBC( data_input$x_NC.log, phenodata, s= "ER.v2", Subtype = Subtype, hasClinical = hasClinical )
+      }
+      
+      ## removing results for AUTO mode
+      if( !is.null(samples_ERHER2.icd) && length(samples_ERHER2.icd) < nrow(phenodata) ){
+        res_ssBC.v2$BS.all[ !(res_ssBC.v2$BS.all$PatientID %in% samples_ERHER2.icd ), c(2:ncol(res_ssBC.v2$BS.all)) ]= NA
+      }
+      
+      return(res_ssBC.v2)
     }
+    
     
     if(method == "AIMS"){
       print(paste0(method," is running!"))

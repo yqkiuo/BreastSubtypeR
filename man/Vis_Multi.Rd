@@ -2,19 +2,24 @@
 % Please edit documentation in R/Utilities.R
 \name{Vis_Multi}
 \alias{Vis_Multi}
-\title{Function for pieplot}
+\title{Multi-Method Subtype Heatmap Visualization}
 \usage{
 Vis_Multi(data)
 }
 \arguments{
-\item{out}{a data table includes "patientID" and "Subtype"}
+\item{out}{A data frame or matrix that includes the subtypes predicted by different methods. The rows should represent individual samples (e.g., \code{PatientID}), and columns should correspond to the subtypes predicted by different methods.}
+}
+\value{
+A heatmap visualization of multi-method subtype results.
 }
 \description{
-Function for pieplot
+This function generates a heatmap visualization of breast cancer subtypes based on multiple subtyping methods. It allows users to visualize how different methods classify samples into subtypes.
 }
 \examples{
-
 data("OSLO2MEITOobj")
-p = Vis_Multi(res$res_subtypes)
+
+# Assuming `res$res_subtypes` contains multi-method subtype results
+p = Vis_Multi(res$res_subtypes) 
 plot(p)
+
 }

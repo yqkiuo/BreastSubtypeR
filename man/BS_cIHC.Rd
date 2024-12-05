@@ -2,37 +2,48 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_cIHC}
 \alias{BS_cIHC}
-\title{BS_cIHC}
+\title{Conventional IHC Intrinsic Subtyping (BS_cIHC)}
 \usage{
 BS_cIHC(
   gene_expression_matrix,
   phenodata,
   Subtype = FALSE,
   hasClinical = FALSE,
+  seed = 118,
   ...
 )
 }
 \arguments{
 \item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+\item{phenodata}{A clinical information table. The first column must contain sample or patient names and be named \code{"PatientID"}. Additionally, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.}
 
-\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\itemize{
+\item \code{"T"}: Tumor size.
+\item \code{"NODE"}: Lymph node status.
+}}
+
+\item{seed}{An integer value is used to set the random seed.}
 }
 \value{
-The intrinsic subtypes estimated using the conventinal IHC (cIHC) method.
+A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.
 }
 \description{
-This predicts breast cancer intrinsic subtypes with ER balanced subset for gene centering.
+This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, balancing estrogen receptor (ER) subsets for gene centering.
 }
 \examples{
-
-data("OSLO2MEITOobj")
-res = BS_cIHC(data_input$x_NC.log, phenodata= clinic.oslo,  Subtype = FALSE, hasClinical =FALSE)
+data("OSLO2EMIT0obj")
+res = BS_cIHC(
+  gene_expression_matrix = data_input$x_NC.log,
+  phenodata = clinic.oslo,
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
 }
 \references{
-Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al. Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer. Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
+Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al. \emph{Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer}. Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
 }

@@ -20,7 +20,7 @@ medianCtr=function(x){
 }
 
 #' Function for quantile central
-#' this is adapted from genefu package
+#' This is adapted from genefu package
 #' @param x Gene expression matrix or vector
 #' @noRd 
 rescale = function(x, na.rm=FALSE, q=0) {
@@ -37,6 +37,22 @@ rescale = function(x, na.rm=FALSE, q=0) {
   return(xx)
 }
 
+#' Function for ordering gene in expression matrix as PAM50 genes 
+#' @param x centroid matrix
+#' @param y Gene expression matrix
+#' @noRd
+overlapSets=function(x,y){
+  
+  # subset the two lists to have a commonly ordered gene list
+  x=x[dimnames(x)[[1]] %in% dimnames(y)[[1]],]
+  y=y[dimnames(y)[[1]] %in% dimnames(x)[[1]],]
+  
+  #and sort such that thing are in the correct order
+  x=x[sort.list(row.names(x)),]
+  y=y[sort.list(row.names(y)),]
+  
+  return(list(x=x,y=y))
+}
 
 #' Function for calibration methods
 #' @param y Gene expression matrix 
@@ -56,11 +72,11 @@ docalibration = function( y, df.al, calibration = "None", internal=internal, ext
             else if(internal == "qCtr") { y = t(apply(y, 1, function(x) {  return( (rescale(x, q=mq, na.rm=TRUE) - 0.5) * 2 ) }) )  } ## "robust" in genefu method; mp = 0.05
             else if(internal == internal) { ## which column to use
               medians = df.al
-              #print(paste("calibration to:",internal))
+              
               tm = overlapSets(medians,y)
               y = (tm$y-tm$x[,internal])
             }
-            else { print( "Please choose internal calibration stategy: medianCtr, meanCtr, qCtr or ER+/- relevant ")}
+            else { message( "Please choose internal calibration stategy: medianCtr, meanCtr, qCtr.")}
           },
           "External" = { ## external
             medians = df.al 
@@ -83,24 +99,6 @@ standardize=function(x){
   x=scale(x)
   dimnames(x)=annAll
   return(x)
-}
-
-
-#' Function for ordering gene in expression matrix as PAM50 genes 
-#' @param x centroid matrix
-#' @param y Gene expression matrix
-#' @noRd
-overlapSets=function(x,y){
-  
-  # subset the two lists to have a commonly ordered gene list
-  x=x[dimnames(x)[[1]] %in% dimnames(y)[[1]],]
-  y=y[dimnames(y)[[1]] %in% dimnames(x)[[1]],]
-  
-  #and sort such that thing are in the correct order
-  x=x[sort.list(row.names(x)),]
-  y=y[sort.list(row.names(y)),]
-  
-  return(list(x=x,y=y))
 }
 
 
@@ -203,10 +201,9 @@ sspPredict=function(x, y, std=FALSE, distm="spearman", Subtype = TRUE){
   temp = overlapSets(dataMatrix,tdataMatrix)
   dataMatrix = temp$x
   tdataMatrix = temp$y
-  
-  
+
   ## omitting normal
-  dataMatrix = dataMatrix[,1:4] ## omitting normal or not for ROR???
+  dataMatrix = dataMatrix[,1:4] ## omitting normal
   nGenes = dim(dataMatrix)[1]
   centroids.Subtype = dataMatrix
   nClasses =dim(centroids.Subtype)[2] ## four subtypes
@@ -547,7 +544,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 }
 
 
-#### function to form a ER-balance subet and derive its median---write it to PAM50 dir
+#### function to form a ER-balance subet and derive its median
 
 #' Function to form a ER-balance subet and derive its median
 #' @param mat gene expression matrix 
@@ -558,6 +555,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
 #' @param Subtype Logic.
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @param seed An integer value is used to set the random seed.
 #' @noRd
 
 makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Subtype = FALSE , hasClinical = FALSE, seed=118){
@@ -598,7 +596,6 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   ## centroids
   centroids = BreastSubtypeR$centroid #pam50_centroids.txt
   
-  
   ## normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
@@ -631,8 +628,9 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
 #' @param internal Specify the strategy for internal calibration. Options are median-centered ("medianCtr", default), mean-centered ("meanCtr"), or quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for external medians, which are calculated by the training cohort. If you want to use user-provided medians, set this parameter to "Given.mdns" and provide the medians via the "medians" parameter. 
 #' @param medians If "Given.mdns" is specified for the "external" parameter, input a matrix/table where the first column contains 50 genes and the second column contains the corresponding "Given.mdns" values.
-#' @param Subtype Logic. 
-#' @param hasClinical provide clinical information, default is NA. 
+#' @param Subtype Logic. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
+#' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
+#' @param seed An integer value is used to set the random seed.
 #' @noRd
 
 makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , Subtype = FALSE, hasClinical = FALSE, seed=118){
@@ -675,10 +673,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 
     
     mbal.ihc = mat[,c(ERP.ihc$PatientID[i],ERN.ihc$PatientID)]
-    
-    dim(mbal.ihc) #[1]  50 60
-    
-    
+
     surffix = getsurffix(calibration = calibration, internal)
     
     # Calculate median
@@ -750,6 +745,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 #' @param medians NA
 #' @param Subtype Logic
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @param seed 
 #' @noRd
 
 makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE, seed=118){
@@ -872,6 +868,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
 #' @param medians NA
 #' @param Subtype Logic. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
+#' @param seed An integer value is used to set the random seed.
 #' @noRd
 
 makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE,seed=118 ){
@@ -934,15 +931,11 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 #' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table. The first column must be named "PatientID".
-#' @param s Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param s Options are "ER" or "TN" or "ER.v2" or "TN.v2". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TN.v2", it means you choose quantile from TNBC-JAMAOncol2024. 
 #' @param Subtype Logic. Specify whether to predict Subtype-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
 #' 
-
-## add one more module sub-group specific BC 
-## https://github.com/afernan4/PAM50_ER_HER2_normalization/blob/main/SIGMA.txt
-## https://ascopubs.org/doi/suppl/10.1200/JCO.20.01276/suppl_file/ds_jco.20.01276-2.pdf
 
 makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  ){
   
@@ -950,10 +943,8 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
     stop("Please input equal number of patient clinical information to the number of patient in gene expression matrix.")
   }
     
-    
   gene.sigma = BreastSubtypeR$ssBC.subgroupQuantile
-  
-  
+
   if( s == "ER") { ## use ER selected strategy
     
     ## if there is no sample in either of both, wont influence the code
@@ -981,7 +972,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
                              HER2pos_ERneg = ERN_HER2P_samples, HER2pos_ERpos = ERP_HER2P_samples)
     
     
-  } else if ( s == "TNBC") { ## selected cohort; TNBC-JAMAOncol2024
+  } else if ( s == "TN.v2") { ## selected cohort; TNBC-JAMAOncol2024
     
     ## if there is no sample in either of both, wont influence the code
     TN_samples = rownames(df.cln)[which(df.cln$TN == "TN" )]
@@ -1000,8 +991,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
     x.sigma = unlist(lapply(1:nrow(x.m), function(i) quantile(x.m[i,], probs = gene.sigma.o[i], na.rm = T)))
     x.m = sweep(x.m, 1, x.sigma) 
     ## it has been calibrated by selected quantile 
-    
-    
+
     out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", Subtype = Subtype)
     
     
@@ -1048,7 +1038,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
       predictions.Subtype = res$TN$predictions.Subtype
     }
     
-  } else if (s == "TNBC")  {
+  } else if (s == "TN.v2")  {
     
     predictions = res$TNBC$predictions
     distances = res$TNBC$distances
@@ -1059,7 +1049,6 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
       predictions.Subtype = res$TNBC$predictions.Subtype
     }
   } 
-  
   
   
   if(Subtype){
