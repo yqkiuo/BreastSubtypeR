@@ -9,7 +9,8 @@ BS_PCAPAM50(
   phenodata,
   Subtype = FALSE,
   hasClinical = FALSE,
-  seed = 118
+  seed = 118,
+  ...
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ BS_PCAPAM50(
 \item \code{"T"}: Tumor size.
 \item \code{"NODE"}: Lymph node status.
 }}
+
+\item{seed}{An integer value is used to set the random seed.}
 }
 \value{
 A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.

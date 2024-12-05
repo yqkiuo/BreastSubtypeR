@@ -31,7 +31,9 @@ BS_Multi(
 \item "AIMS"
 \item "sspbc"
 \item "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
-}}
+}
+
+If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.}
 
 \item{Subtype}{Logical. If \code{TRUE}, predicts four subtypes by excluding the Normal-like subtype.}
 

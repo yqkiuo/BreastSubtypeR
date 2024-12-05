@@ -30,6 +30,8 @@ BS_cIHC.itr(
 \item \code{"NODE"}: Lymph node status.
 }}
 
+\item{seed}{An integer value is used to set the random seed.}
+
 \item{iterative}{Integer. Number of iterations for the ER-balanced procedure with a specified ratio.}
 }
 \value{

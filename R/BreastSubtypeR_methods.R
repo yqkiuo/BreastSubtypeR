@@ -149,7 +149,7 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.
 #'
 #' @references
@@ -166,13 +166,14 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #'
 #' @export
 
-BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClinical = FALSE, ...){
+BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClinical = FALSE, seed = 118, ...){
 
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
     Subtype = Subtype, 
-    hasClinical = hasClinical,..., .homonyms = "last"
+    hasClinical = hasClinical,
+    seed = seed, ..., .homonyms = "last"
   )
   
   
@@ -198,7 +199,7 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE ,  hasClin
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A list containing:
 #' - Intrinsic subtype predictions.
 #' - Confidence levels for each subtype.
@@ -250,7 +251,7 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size.
 #'   - `"NODE"`: Lymph node status.
-#'
+#' @param seed An integer value is used to set the random seed.
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.
 #'
 #' @references
@@ -268,7 +269,7 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #'
 #' @export
 
-BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE,seed=118){
+BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE, seed=118, ...){
 
   samples = phenodata$PatientID
 
@@ -276,8 +277,8 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     
     ## create IHC column for PCAPAM50
     phenodata$IHC = case_when(
-      phenodata$ER == "ER+" ~ "LA",
-      phenodata$ER == "ER-" ~ "TN",
+      phenodata$ER == "ER+" ~ "Luminal",
+      phenodata$ER == "ER-" ~ "non-Luminal",
       .default = NA
     )
     
@@ -297,7 +298,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     mat = gene_expression_matrix,
     df.cln = phenodata,
     Subtype = Subtype,
-    hasClinical = hasClinical, .homonyms = "last"
+    hasClinical = hasClinical, seed=seed, ..., .homonyms = "last"
     )
   
   call = rlang::call2(makeCalls.PC1ihc, !!!arguments)
@@ -320,7 +321,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     df.pam = df.pc1pam,
     Subtype = Subtype,
     hasClinical = hasClinical,
-    seed=118, .homonyms = "last"
+    seed=seed, ..., .homonyms = "last"
   )
   
   call = rlang::call2(makeCalls.v1PAM, !!!arguments2)
@@ -519,6 +520,8 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #'   - "AIMS"
 #'   - "sspbc"
 #'   - "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
+#'   
+#'   If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.
 #' @param Subtype Logical. If `TRUE`, predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, includes clinical information in the analysis (e.g., tumor size in the "T" column and lymph node status in the "NODE" column).
 #'
@@ -552,7 +555,10 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   # hasClinical = F
   
   ## minor control
-  if( methods != "AUTO" & length(methods) < 2 ){
+
+  if (length(methods) ==1 && methods[1] =="AUTO") {
+      message("Running AUTO mode for subtyping.")
+  } else if (length(methods)< 2){
     stop("Please select two methods at least or set methdos as \"AUTO\". " )
   } 
   
@@ -572,7 +578,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   #### AUTO mode
   samples_ER.icd = NULL
   samples_ERHER2.icd = NULL
-  if(methods =="AUTO"){
+  if( length(methods) ==1 && methods[1] =="AUTO"){
     
     ## first check ER and HER2 status
     if ( !("ER" %in% colnames(phenodata) ) || !("HER2" %in% colnames(phenodata) ) ) {

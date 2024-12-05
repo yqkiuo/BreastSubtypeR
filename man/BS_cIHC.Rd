@@ -9,6 +9,7 @@ BS_cIHC(
   phenodata,
   Subtype = FALSE,
   hasClinical = FALSE,
+  seed = 118,
   ...
 )
 }
@@ -24,6 +25,8 @@ BS_cIHC(
 \item \code{"T"}: Tumor size.
 \item \code{"NODE"}: Lymph node status.
 }}
+
+\item{seed}{An integer value is used to set the random seed.}
 }
 \value{
 A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.

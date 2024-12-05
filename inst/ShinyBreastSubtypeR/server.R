@@ -9,7 +9,6 @@ server = function(input, output) {
     deleteFile = FALSE 
   ) 
   
-  
   #### upload data ####
 
   # Reactive values to store uploaded data and results
