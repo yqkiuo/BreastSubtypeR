@@ -254,7 +254,7 @@ server = function(input, output) {
         )
       })
       
-      incProgress(1, detail = "Analysis complete.")
+      incProgress(1, detail = "Analysis is complete.")
      })
      
      # Show a notification when the analysis is complete
