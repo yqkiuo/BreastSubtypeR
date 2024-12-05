@@ -1,12 +1,7 @@
-### what to do for Binconductor 
-## https://contributions.bioconductor.org/general.html
-
-
-
-#' Collection of breast cancer intrinsic subtyping methods
+#' Collection of Breast Cancer Intrinsic Subtyping methods
 #' 
-#' @title Collection of breast cancer intrinsic subtyping methods
-#' @description BreastSubtypeR is an R package that grant the access to intrinsic subtyping methods. 
+#' @title Collection of Breast Cancer Intrinsic Subtyping methods
+#' @description BreastSubtypeR is an R package that provides access to several intrinsic subtyping approaches. 
 #' 
 #' @name BreastSubtypeR
 #' 
@@ -32,7 +27,7 @@ NULL
 #' @param featuredata Feature data provided by the user. The table must contain at least three columns: `probe` (ProbeID or TranscriptID), `SYMBOL`, and `ENTREZID`.
 #' @param method Method for deduplicating probes in microarray or RNA-seq data. Choose from:
 #'   - `"IQR"` for Affymetrix arrays,
-#'   - `"mean"` for Agilent arrays,
+#'   - `"mean"` for Agilent/Illumina arrays,
 #'   - `"max"` for RNA-seq data.
 #' @param impute Logical. Specify whether to perform K-Nearest Neighbors (KNN) imputation on missing data (`NA` values).
 #' @param verbose Logical. If `TRUE`, progress messages will be displayed during execution.
