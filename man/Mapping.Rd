@@ -42,9 +42,9 @@ A function to map gene IDs and preprocess gene expression data for downstream an
 If the rows of the gene expression matrix/table represent gene symbols, an additional \code{SYMBOL} column must be added to the feature table and renamed as \code{probe}.
 }
 \examples{
-data("OSLO2EMITOobj")
-data <- OSLO2EMITO.103.genematrix_noNeg[, clinic.oslo$PatientID]
-data_input <- Mapping(
+data("OSLO2EMIT0obj")
+data = OSLO2EMITO.103.genematrix_noNeg.subset[, clinic.oslo$PatientID]
+data_input = Mapping(
   gene_expression_matrix = data,
   featuredata = anno_feature,
   method = "max",

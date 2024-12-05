@@ -47,13 +47,13 @@ Performs consensus intrinsic subtyping of breast cancer using multiple methods, 
 }
 \examples{
 # Load required dataset
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Define methods to use for consensus subtyping
-methods <- c("parker.original", "genefu.scale", "genefu.robust")
+methods = c("parker.original", "genefu.scale", "genefu.robust")
 
 # Perform subtyping
-res.test <- BS_Multi(
+res.test = BS_Multi(
   data_input = data_input,
   phenodata = clinic.oslo,
   methods = methods,

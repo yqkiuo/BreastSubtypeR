@@ -35,13 +35,12 @@ A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-
 Performs intrinsic subtyping of breast cancer using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
 }
 \examples{
-data("OSLO2EMITOobj")
-res <- BS_PCAPAM50(
+data("OSLO2EMIT0obj")
+res = BS_PCAPAM50(
   gene_expression_matrix = data_input$x_NC.log,
   phenodata = clinic.oslo,
   Subtype = FALSE,
-  hasClinical = FALSE,
-  seed = 118
+  hasClinical = FALSE
 )
 
 }

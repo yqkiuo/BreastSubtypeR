@@ -19,7 +19,7 @@ This function generates a heatmap visualization of breast cancer subtypes based 
 data("OSLO2MEITOobj")
 
 # Assuming `res$res_subtypes` contains multi-method subtype results
-p = Vis_Multi(res$res_subtypes[,-ncol(res$res_subtypes)])  # Removing the last entropy column
+p = Vis_Multi(res$res_subtypes) 
 plot(p)
 
 }

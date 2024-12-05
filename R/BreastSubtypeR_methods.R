@@ -45,9 +45,9 @@ NULL
 #' If the rows of the gene expression matrix/table represent gene symbols, an additional `SYMBOL` column must be added to the feature table and renamed as `probe`.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' data <- OSLO2EMITO.103.genematrix_noNeg[, clinic.oslo$PatientID]
-#' data_input <- Mapping(
+#' data("OSLO2EMIT0obj")
+#' data = OSLO2EMITO.103.genematrix_noNeg.subset[, clinic.oslo$PatientID]
+#' data_input = Mapping(
 #'   gene_expression_matrix = data,
 #'   featuredata = anno_feature,
 #'   method = "max",
@@ -82,7 +82,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
-#' @param phenodata A clinical information table. The first column must be named `"PatientID"`.
+#' @param phenodata A clinical information table. The first column must be named `"PatientID"`. The default is NA.
 #' @param calibration The calibration method to use. Options include:
 #'   - `"None"`: No calibration is applied.
 #'   - `"Internal"`: Calibration is performed using internal strategies. See the `internal` parameter for details.
@@ -105,9 +105,9 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' - Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al. *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer*. Bioinformatics. 2016;32(7). https://doi.org/10.1093/bioinformatics/btv693
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_parker(
-#'   gene_expression_matrix = data_input$x_NC.log[],
+#' data("OSLO2EMIT0obj")
+#' res = BS_parker(
+#'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = NA,
 #'   calibration = "Internal",
 #'   internal = "medianCtr",
@@ -118,6 +118,10 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @export
 
 BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Subtype = FALSE, hasClinical = FALSE, ...){
+  
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  }
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -156,8 +160,8 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al. *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer*. Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_cIHC(
+#' data("OSLO2EMIT0obj")
+#' res = BS_cIHC(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
@@ -168,6 +172,12 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 
 BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClinical = FALSE, seed = 118, ...){
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
@@ -209,8 +219,8 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClini
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups*. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_cIHC.itr(
+#' data("OSLO2EMIT0obj")
+#' res = BS_cIHC.itr(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
@@ -220,6 +230,13 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClini
 #' @export
 
 BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Subtype = FALSE, hasClinical = FALSE,seed=118, ...){
+  
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -258,19 +275,24 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al. *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.* Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_PCAPAM50(
+#' data("OSLO2EMIT0obj")
+#' res = BS_PCAPAM50(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   Subtype = FALSE,
-#'   hasClinical = FALSE,
-#'   seed = 118
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
 
 BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE, seed=118, ...){
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
   samples = phenodata$PatientID
 
   if ( "ER"  %in% colnames(phenodata) ) {
@@ -362,8 +384,9 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer.* Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
-#' res <- BS_ssBC(
+#' ## ssBC.v2
+#' data("OSLO2EMIT0obj")
+#' res = BS_ssBC(
 #'   gene_expression_matrix = data_input$x_NC.log,
 #'   phenodata = clinic.oslo,
 #'   s = "ER.v2",
@@ -375,6 +398,13 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 
 BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasClinical =FALSE, ...) {
 
+  if(!is.na(phenodata)){
+    rownames(phenodata) = phenodata$PatientID
+  } else {
+    message("Please provide phenodata table as required.")
+  }
+  
+  
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
     df.cln = phenodata,
@@ -408,17 +438,17 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' @examples
 #' # Load required datasets
 #' data("BreastSubtypeR")
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Extract AIMS-specific genes
-#' genes <- as.character(
+#' genes = as.character(
 #'   BreastSubtypeR$genes.signature$EntrezGene.ID[
 #'     which(BreastSubtypeR$genes.signature$AIMS == "Yes")
 #'   ]
 #' )
 #'
 #' # Perform subtyping
-#' res <- BS_AIMS(
+#' res = BS_AIMS(
 #'   gene_expression_matrix = data_input$x_SSP[genes, ],
 #'   EntrezID = rownames(data_input$x_SSP[genes, ])
 #' )
@@ -460,10 +490,10 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #'
 #' @examples
 #' # Load required dataset
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Perform subtyping with the SSPBC method
-#' res <- BS_sspbc(
+#' res = BS_sspbc(
 #'   gene_expression_matrix = as.matrix(data_input$x_SSP),
 #'   ssp.name = "ssp.pam50"
 #' )
@@ -498,8 +528,6 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 }
 
-
-
 #' Consensus Intrinsic Subtyping with Multiple Methods (BS_Multi)
 #'
 #' @name BS_Multi
@@ -529,13 +557,13 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #'
 #' @examples
 #' # Load required dataset
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Define methods to use for consensus subtyping
-#' methods <- c("parker.original", "genefu.scale", "genefu.robust")
+#' methods = c("parker.original", "genefu.scale", "genefu.robust")
 #'
 #' # Perform subtyping
-#' res.test <- BS_Multi(
+#' res.test = BS_Multi(
 #'   data_input = data_input,
 #'   phenodata = clinic.oslo,
 #'   methods = methods,

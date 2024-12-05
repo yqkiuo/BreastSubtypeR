@@ -19,7 +19,7 @@ BS_parker(
 \arguments{
 \item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must be named \code{"PatientID"}.}
+\item{phenodata}{A clinical information table. The first column must be named \code{"PatientID"}. The default is NA.}
 
 \item{calibration}{The calibration method to use. Options include:
 \itemize{
@@ -54,9 +54,9 @@ A list containing the intrinsic subtypes assigned using the Parker-based method.
 This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
 }
 \examples{
-data("OSLO2EMITOobj")
-res <- BS_parker(
-  gene_expression_matrix = data_input$x_NC.log[],
+data("OSLO2EMIT0obj")
+res = BS_parker(
+  gene_expression_matrix = data_input$x_NC.log,
   phenodata = NA,
   calibration = "Internal",
   internal = "medianCtr",
