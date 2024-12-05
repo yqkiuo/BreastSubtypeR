@@ -558,18 +558,21 @@ Vis_pie = function(out){
 #' data("OSLO2MEITOobj")
 #'
 #' # Assuming `res$res_subtypes` contains multi-method subtype results
-#' p = Vis_Multi(res$res_subtypes[,-ncol(res$res_subtypes)])  # Removing the last entropy column
+#' p = Vis_Multi(res$res_subtypes) 
 #' plot(p)
 #'
 #' @export
 
 Vis_Multi = function(data){
 
-  Labels = unique(as.vector( as.matrix( data)))
+  data = data[order(data[,ncol(data)],decreasing = FALSE ) ,]
+  mat = data[,-ncol(data)]
+  
+  Labels = unique(as.vector( as.matrix( mat)))
   
   ## preset
   categories = data.frame(
-    Category = rep( c("NC-based", "SSP-based") , c(8,2,1)),
+    Category = rep( c("NC-based", "SSP-based") , c(8,2)),
     row.names = c("parker.original","genefu.scale", "genefu.robust", 
                   "cIHC","cIHC.itr", "PCAPAM50", 
                   "ssBC", "ssBC.v2", 
@@ -582,21 +585,22 @@ Vis_Multi = function(data){
   Category.color = setNames( c("#fb9a99", "#a6cee3") , c("NC-based", "SSP-based") )
   
   ## make row annotation
-  row_anno = data.frame(Category = categories[colnames(data),], row.names = colnames(data) )
+  row_anno = data.frame(Category = categories[colnames(mat),], row.names = colnames(mat) )
   row_anno = HeatmapAnnotation(df =row_anno, which = c("row"), col =list(Category = Category.color ),
-                               annotation_legend_param = list(title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
-                                                              gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white"))
+                               annotation_legend_param = list(title_gp = grid::gpar(fontsize = 10, fontface = "bold"),
+                                                              gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 10) , border = "white"))
   # ## column annotation
-  # col_anno = HeatmapAnnotation(which = c("column"), Entropy = anno_barplot( res$res_subtypes[rownames(data) ,ncol(res$res_subtypes) ],bar_width = 1 ) )
-
-  data = data[order(data[,ncol(data)]),]
+  col_anno = HeatmapAnnotation(which = c("column"), Entropy = anno_barplot( data[rownames(data) ,ncol(data) ],bar_width = 1 ) )
+  
+  mat = mat[order(mat[,ncol(mat)]),]
   Subtype.color = Subtype.color[ names(Subtype.color) %in% Labels]
-  p =  ComplexHeatmap::Heatmap(t( as.matrix(data)), name="Subtypes", col = Subtype.color,
-                          row_names_gp = grid::gpar(fontsize = 12,fontface = "bold" ),
-                          right_annotation = row_anno,show_column_names = FALSE,
+  p =  ComplexHeatmap::Heatmap(t( as.matrix(mat)), name="Subtypes", col = Subtype.color,
+                          row_names_gp = grid::gpar(fontsize = 10,fontface = "bold" ),
+                          right_annotation = row_anno,top_annotation = col_anno,
+                          show_column_names = FALSE,
                           heatmap_legend_param = list(title = "Intrinsic Subtype", labels = Labels[match( names(Subtype.color), Labels)],
-                                                      title_gp = grid::gpar(fontsize = 14, fontface = "bold"),
-                                                      gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 12) , border = "white")
+                                                      title_gp = grid::gpar(fontsize = 10, fontface = "bold"),
+                                                      gap = unit(2, "points"),labels_gp = grid::gpar(fontsize= 10) , border = "white")
                           )
   
  return(p)

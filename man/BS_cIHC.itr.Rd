@@ -46,8 +46,8 @@ A list containing:
 Predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. Supports customization of ER subset ratios.
 }
 \examples{
-data("OSLO2EMITOobj")
-res <- BS_cIHC.itr(
+data("OSLO2EMIT0obj")
+res = BS_cIHC.itr(
   gene_expression_matrix = data_input$x_NC.log,
   phenodata = clinic.oslo,
   Subtype = FALSE,

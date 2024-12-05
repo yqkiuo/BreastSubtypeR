@@ -44,8 +44,9 @@ A vector of intrinsic subtypes assigned to the samples, as estimated by the ssBC
 Performs intrinsic subtyping of breast cancer using the ssBC (single-sample Breast Cancer) method. This method allows for quantile selection tailored to specific breast cancer cohorts and published guidelines.
 }
 \examples{
-data("OSLO2EMITOobj")
-res <- BS_ssBC(
+## ssBC.v2
+data("OSLO2EMIT0obj")
+res = BS_ssBC(
   gene_expression_matrix = data_input$x_NC.log,
   phenodata = clinic.oslo,
   s = "ER.v2",

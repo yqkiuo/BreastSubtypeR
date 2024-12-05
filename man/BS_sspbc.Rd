@@ -19,10 +19,10 @@ Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Pre
 }
 \examples{
 # Load required dataset
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Perform subtyping with the SSPBC method
-res <- BS_sspbc(
+res = BS_sspbc(
   gene_expression_matrix = as.matrix(data_input$x_SSP),
   ssp.name = "ssp.pam50"
 )

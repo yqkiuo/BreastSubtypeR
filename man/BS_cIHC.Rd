@@ -35,8 +35,8 @@ A data frame containing the intrinsic subtypes estimated using the conventional 
 This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, balancing estrogen receptor (ER) subsets for gene centering.
 }
 \examples{
-data("OSLO2EMITOobj")
-res <- BS_cIHC(
+data("OSLO2EMIT0obj")
+res = BS_cIHC(
   gene_expression_matrix = data_input$x_NC.log,
   phenodata = clinic.oslo,
   Subtype = FALSE,

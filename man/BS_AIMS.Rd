@@ -20,17 +20,17 @@ Performs intrinsic subtyping of breast cancer using the AIMS (Absolute assignmen
 \examples{
 # Load required datasets
 data("BreastSubtypeR")
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Extract AIMS-specific genes
-genes <- as.character(
+genes = as.character(
   BreastSubtypeR$genes.signature$EntrezGene.ID[
     which(BreastSubtypeR$genes.signature$AIMS == "Yes")
   ]
 )
 
 # Perform subtyping
-res <- BS_AIMS(
+res = BS_AIMS(
   gene_expression_matrix = data_input$x_SSP[genes, ],
   EntrezID = rownames(data_input$x_SSP[genes, ])
 )
