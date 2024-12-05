@@ -544,12 +544,12 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasClinical = FALSE,... ){
 
-  ## test 
-  methods = "AUTO"
-  phenodata= clinic.oslo
-  data_input = data_input
-  Subtype=FALSE
-  hasClinical = F
+  # ## test 
+  # methods = "AUTO"
+  # phenodata= clinic.oslo
+  # data_input = data_input
+  # Subtype=FALSE
+  # hasClinical = F
   
   ## minor control
   if( methods != "AUTO" & length(methods) < 2 ){
