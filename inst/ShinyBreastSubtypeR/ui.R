@@ -2,21 +2,36 @@
 
 ui = page_fluid(
 
-  titlePanel("interactive Breast Cancer Intrinsic Subtype (iBreastSubtypeR)"),
+  titlePanel("iBreastSubtypeR: Interactive Breast Cancer Intrinsic Subtyping"),
 
   card(
-    card_header("Welcom to iBreastSubtypeR"),
-    "BreastSubtypeR integrates intrinsic molecular subtyping methods for breast cancer, 
-    including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
-    It employs standardized input and output formats, 
-    offering a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
-    card_image("logo.svg", height = "150px"),
-    card_footer("Enjoy this subtyping journey.")
+    tags$div(
+      style = "display: flex; align-items: center;",  # Flexbox container
+      tags$div(
+        style = "flex: 1; text-align: left; margin-right: 20px;",  # Left-aligned logo
+        card_image("logo.svg", height = "180px")
+      ),
+      tags$div(
+        style = "flex: 3; text-align: center;",  # Right-aligned text
+        tags$div(
+          style = "margin-bottom: 10px;",
+          card_header("Welcome to iBreastSubtypeR!")
+        ),
+        "This tool integrates intrinsic molecular subtyping methods for breast cancer, 
+      including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
+      It employs standardized input and output formats, 
+      providing a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
+        tags$div(
+          style = "margin-top: 10px;",
+          card_footer("Enjoy your subtyping journey!")
+        )
+      )
+    )
   ),
   
   #### input your data ####
   # Main page section with a title
-  h3("Please input your data"),  # Add a title here
+  h3("Step 1: Please enter your data"),  # Add a title here
 
   ## main page, input gene expression etc.
   layout_column_wrap(
@@ -24,7 +39,7 @@ ui = page_fluid(
     col_width = 3,
     ## gene expression
     card(
-      card_header("Gene expression table"),
+      card_header("Input 1: Gene expression table"),
       fileInput("GEX", "choose file",
                 accept = c(
                   "text/csv",
@@ -37,7 +52,7 @@ ui = page_fluid(
     
     ## clinic information
     card(
-      card_header("Clinical table"),
+      card_header("Input 2: Clinical table"),
       fileInput("clinic", "choose file",
                 accept = c(
                   "text/csv",
@@ -49,7 +64,7 @@ ui = page_fluid(
     
     ## feature information
     card(
-      card_header("Feature table"),
+      card_header("Input 3: Feature table"),
       fileInput("anno", "choose file",
                 accept = c(
                   "text/csv",
@@ -62,17 +77,16 @@ ui = page_fluid(
   
   #### Map button ####
   card(
-    actionButton("map", "Step 1: Map" )
+    actionButton("map", "Map Now", icon = icon("map"))
   )
   , ## layout 3
 
-  #### Please choose your method ####
+  #### Please select your method ####
   # Main page section with a title
-  h3("Please choose your method"),  # Add a title here
+  h3("Step 2: Please select method & parameters for subtyping"),  # Add a title here
   
   ## options
   card(
-    card_header( "Subtyping method setting"),
 
     selectInput(
       "BSmethod",
@@ -92,14 +106,13 @@ ui = page_fluid(
       condition = "input.BSmethod == 'PAM50.parker' ", ## parker
 
       layout_column_wrap(
-        ##calibration
         selectInput(
           "hasClinical",
           "Has Clinical", choices =  list( "FALSE" = "FALSE", "TRUE" = "TRUE" ),
           selected = "FALSE"),
         selectInput(
           "calibration",
-          "calibration",
+          "Select calibration",
           choices = list("None" = "None","External" = "External", "Internal" = "Internal"),
           selected = "Internal")
       ),
@@ -182,7 +195,7 @@ ui = page_fluid(
       layout_column_wrap(
         selectInput(
           "s",
-          "subgroup",
+          "Subgroup",
           choices = list("ER" = "ER", "TN" = "TN", "ER.v2" = "ER.v2", "HER2+" = "HER2+", "TNBC" = "TNBC"),
           selected = "ER.v2"
         ),
@@ -204,7 +217,7 @@ ui = page_fluid(
       layout_column_wrap(
         selectInput(
           "Subtype",
-          "Subtype",
+          "Subtype method (4-subtypes)",
           choices = list("FALSE" = "FALSE", "TRUE" = "TRUE"),
           selected = "FALSE"
         )
@@ -212,8 +225,9 @@ ui = page_fluid(
     ),
 
     card(
-    actionButton("run", "Step 2: Run" )
+    actionButton("run", "Subtype Now", icon = icon("cog"))
     )
+
   ), ## card option
   
   # Visualization layout placed separately and conditionally rendered
@@ -223,7 +237,7 @@ ui = page_fluid(
   fluidRow(
     column(12, align = "center",
            div(style = "margin-top: 20px; margin-bottom: 20px;",
-               downloadButton("download", "Download", style = "width: 150px; height: 40px;"))
+               downloadButton("download", "Download Results", style = "width: 220px; height: 40px; background-color: #FF69B4; color: white; border: none; text-align: center; line-height: 20px;"))
     )
   )
   
