@@ -16,7 +16,7 @@ A \code{ggplot} object representing a pie chart showing the proportion of each s
 This function generates a pie chart to visualize the distribution of breast cancer subtypes in a cohort, based on the provided \code{Subtype} data.
 }
 \examples{
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Prepare data: Subtype information
 out = data.frame(

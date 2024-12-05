@@ -301,7 +301,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 #' @return A `ggplot` object representing the boxplot visualization of the correlation distributions across the different subtypes.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #' 
 #' # Prepare data: Subtype information and correlation matrix
 #' out = data.frame(
@@ -345,7 +345,7 @@ Vis_boxpot = function(out, correlations ){
 #' @return A `ggplot` or `heatmap` object (depending on implementation) representing the heatmap of gene expression across different subtypes.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #' 
 #' # Prepare data: Gene expression matrix and subtype information
 #' x = data_input$x_NC
@@ -411,7 +411,7 @@ Vis_heatmap = function(x, out){
 #' @return A `ggplot` object representing the PCA plot, colored by subtype. If `Eigen` is set to `TRUE`, a scree plot of the eigenvalues is also included.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Prepare data: Gene expression matrix and subtype information
 #' x = data_input$x_NC.log
@@ -496,7 +496,7 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 #' @return A `ggplot` object representing a pie chart showing the proportion of each subtype in the dataset.
 #'
 #' @examples
-#' data("OSLO2EMITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Prepare data: Subtype information
 #' out = data.frame(
@@ -555,7 +555,7 @@ Vis_pie = function(out){
 #' @return A heatmap visualization of multi-method subtype results.
 #'
 #' @examples
-#' data("OSLO2MEITOobj")
+#' data("OSLO2EMIT0obj")
 #'
 #' # Assuming `res$res_subtypes` contains multi-method subtype results
 #' p = Vis_Multi(res$res_subtypes) 

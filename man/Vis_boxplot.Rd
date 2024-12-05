@@ -19,7 +19,7 @@ A \code{ggplot} object representing the boxplot visualization of the correlation
 This function generates a boxplot to visualize the correlation distribution between different subtypes of breast cancer, based on the provided correlation table and subtype information.
 }
 \examples{
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Prepare data: Subtype information and correlation matrix
 out = data.frame(
