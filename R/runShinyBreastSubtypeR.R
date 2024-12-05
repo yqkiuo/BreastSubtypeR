@@ -6,12 +6,12 @@
 #' BreastSubtypeR integrates intrinsic molecular subtyping methods for breast cancer, 
 #' including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
 #' It employs standardized input and output formats, 
-#' offering a unified framework that is highly compatible with other R packages in the gene expression profiling field.   
+#' providing a unified framework that is highly compatible with other R packages in the gene expression profiling field.   
 #' 
-#' The `iBreastSubtypeR()` function starts an interactive shiny web app that allows
-#' the user to configure the arguments of subtyping functions and
-#' runs it on the local computer. Please see the manual page of the functions for a description of the arguments and their
-#' default and alternative values.   
+#' The `iBreastSubtypeR()` function launches an interactive Shiny web application. This app enables users 
+#' to configure the arguments of subtyping functions and
+#' execute subtyping on their local computer. For detailed descriptions of the arguments,
+#' including their default and alternative values, please refer to the manual pages of the respective functions.
 #' 
 #' Step 1:   
 #' 
