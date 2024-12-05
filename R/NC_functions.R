@@ -934,7 +934,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 #' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table. The first column must be named "PatientID".
-#' @param s Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TNBC", it means you choose quantile from TNBC-JAMAOncol2024. 
+#' @param s Options are "ER" or "TN" or "ER.v2" or "TN.v2". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TN.v2", it means you choose quantile from TNBC-JAMAOncol2024. 
 #' @param Subtype Logic. Specify whether to predict Subtype-like subtyping. 
 #' @param hasClinical Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.
 #' @noRd
@@ -981,7 +981,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
                              HER2pos_ERneg = ERN_HER2P_samples, HER2pos_ERpos = ERP_HER2P_samples)
     
     
-  } else if ( s == "TNBC") { ## selected cohort; TNBC-JAMAOncol2024
+  } else if ( s == "TN.v2") { ## selected cohort; TNBC-JAMAOncol2024
     
     ## if there is no sample in either of both, wont influence the code
     TN_samples = rownames(df.cln)[which(df.cln$TN == "TN" )]
@@ -1048,7 +1048,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
       predictions.Subtype = res$TN$predictions.Subtype
     }
     
-  } else if (s == "TNBC")  {
+  } else if (s == "TN.v2")  {
     
     predictions = res$TNBC$predictions
     distances = res$TNBC$distances
@@ -1059,7 +1059,6 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
       predictions.Subtype = res$TNBC$predictions.Subtype
     }
   } 
-  
   
   
   if(Subtype){

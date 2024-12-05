@@ -2,25 +2,32 @@
 % Please edit documentation in R/Utilities.R
 \name{Vis_heatmap}
 \alias{Vis_heatmap}
-\title{Function for heatmap visualizayion}
+\title{Heatmap Visualization of Gene Expression by Subtype}
 \usage{
 Vis_heatmap(x, out)
 }
 \arguments{
-\item{x}{gene expression matrix, log2 transformed}
+\item{x}{A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.}
 
-\item{out}{a data frame includes "patientID" and "Subtype"}
+\item{out}{A data frame containing two columns: \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should contain unique patient identifiers, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
+}
+\value{
+A \code{ggplot} or \code{heatmap} object (depending on implementation) representing the heatmap of gene expression across different subtypes.
 }
 \description{
-Function for heatmap visualizayion
+This function generates a heatmap to visualize gene expression patterns across breast cancer subtypes, based on the provided gene expression matrix and subtype information.
 }
 \examples{
+data("OSLO2EMITOobj")
 
-data("OSLO2MEITOobj")
-
+# Prepare data: Gene expression matrix and subtype information
 x = data_input$x_NC
-out= data.frame(PatientID = res$results$parker.original$BS.all$PatientID, Subtype = res$results$parker.original$BS.all$BS )
+out = data.frame(
+  PatientID = res$results$parker.original$BS.all$PatientID,
+  Subtype = res$results$parker.original$BS.all$BS
+)
 
+# Generate the heatmap
 p = Vis_heatmap(x, out)
 plot(p)
 

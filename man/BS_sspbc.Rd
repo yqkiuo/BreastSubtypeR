@@ -2,27 +2,32 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_sspbc}
 \alias{BS_sspbc}
-\title{BS_sspbc}
+\title{Intrinsic Subtyping using SSPBC (BS_sspbc)}
 \usage{
 BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.}
 
-\item{ssp.name}{Specify model names. Option is either "ssp.pam50" or "ssp.subtype". The latter one was used to predict four subtypes by removing the Normal-like subtype.}
+\item{ssp.name}{Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).}
 }
 \value{
-The subtypes estimated by sspbc method
+A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPBC method.
 }
 \description{
-This calls sspbc to do intrinsic subtyping.
+Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
 }
 \examples{
+# Load required dataset
+data("OSLO2EMITOobj")
 
-data("OSLO2MEITOobj")
-res = BS_sspbc( gene_expression_matrix = as.matrix(data_input$x_SSP), ssp.name= "ssp.pam50" )
+# Perform subtyping with the SSPBC method
+res <- BS_sspbc(
+  gene_expression_matrix = as.matrix(data_input$x_SSP),
+  ssp.name = "ssp.pam50"
+)
 
 }
 \references{
-Staaf J, H"kkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer. NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.} NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
 }

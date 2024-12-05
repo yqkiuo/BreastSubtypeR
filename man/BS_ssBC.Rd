@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_ssBC}
 \alias{BS_ssBC}
-\title{BS_ssBC}
+\title{ssBC Intrinsic Subtyping (BS_ssBC)}
 \usage{
 BS_ssBC(
   gene_expression_matrix,
@@ -16,27 +16,45 @@ BS_ssBC(
 \arguments{
 \item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+\item{phenodata}{A clinical information table. The first column must contain sample or patient names, named \code{"PatientID"}.
+\itemize{
+\item When \code{"s"} is set as \code{"ER"}, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.
+\item When \code{"s"} is set as \code{"ER.v2"}, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}, and a \code{"HER2"} column, where human epidermal growth factor receptor 2 (HER2) status is recorded as \code{"HER2+"} or \code{"HER2-"}.
+\item When \code{"s"} is set as \code{"TN"} or \code{"TN.v2"}, the table must include a \code{"TN"} column, recording triple-negative samples as \code{"TN"}.
+}}
 
-\item{s}{Options are "ER" or "TN" or "ER.v2" or "TNBC". Specify the medians you want. The original quantiles of ssBC is "ER" and "TN", published on Breast Cancer Research in 2015.  If you choose "ER.v2" or "TNBC", it means you choose quantiles published on Journal of Clinical Oncology in 2024.}
+\item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}. Specifies the quantiles to use:
+\itemize{
+\item \code{"ER"} and \code{"TN"}: Original quantiles published in \emph{Breast Cancer Research} (2015).
+\item \code{"ER.v2"} and \code{"TN.v2"}: Updated quantiles published in \emph{Journal of Clinical Oncology} (2024).
+}}
 
-\item{Subtype}{Logic. Specify whether to predict four subtypes by removing the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logic. Specify whether clinical information is included. For example, tumor size should be in the "T" column, and lymph node status should be in the "NODE" column.}
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\itemize{
+\item \code{"T"}: Tumor size.
+\item \code{"NODE"}: Lymph node status.
+}}
 }
 \value{
-The intrinsic subtypes estimated by ssBC method
+A vector of intrinsic subtypes assigned to the samples, as estimated by the ssBC method.
 }
 \description{
-This calls ssBC to do intrinsic subtyping.
+Performs intrinsic subtyping of breast cancer using the ssBC (single-sample Breast Cancer) method. This method allows for quantile selection tailored to specific breast cancer cohorts and published guidelines.
 }
 \examples{
-
-data("OSLO2MEITOobj")
-res = BS_ssBC(data_input$x_NC.log, phenodata = clinic.oslo, s = "ER.v2", Subtype = FALSE, hasClinical =FALSE)
+data("OSLO2EMITOobj")
+res <- BS_ssBC(
+  gene_expression_matrix = data_input$x_NC.log,
+  phenodata = clinic.oslo,
+  s = "ER.v2",
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
 }
 \references{
-Zhao X, Rodland EA, Tibshirani R, Plevritis S. Molecular subtyping for clinically defined breast cancer subgroups. Breast Cancer Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer. In: Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular subtyping for clinically defined breast cancer subgroups.} Breast Cancer Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
+Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. \emph{Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer.} Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
 }
