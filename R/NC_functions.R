@@ -19,7 +19,7 @@ medianCtr=function(x){
   return(x)
 }
 
-#' Function for quantile central
+#' Function to rescale values based on quantiles
 #' This is adapted from genefu package
 #' @param x Gene expression matrix or vector
 #' @noRd 
@@ -37,7 +37,7 @@ rescale = function(x, na.rm=FALSE, q=0) {
   return(xx)
 }
 
-#' Function for ordering gene in expression matrix as PAM50 genes 
+#' Function for ordering genes in expression matrix as PAM50 genes 
 #' @param x centroid matrix
 #' @param y Gene expression matrix
 #' @noRd
@@ -91,7 +91,7 @@ docalibration = function( y, df.al, calibration = "None", internal=internal, ext
 }
 
 
-#' Function for standardize
+#' Function for standardization
 #' @param x gene expression matrix
 #' @noRd
 standardize=function(x){
@@ -117,7 +117,7 @@ getsurffix = function( calibration,internal=internal, external=external){
 }
 
 
-#' Function for predict PAM50 subtyping
+#' Function for predicting PAM50 subtypes
 #' @param x median train file
 #' @param y gene expression matrix
 #' @param std Logic
@@ -470,13 +470,14 @@ RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
 
 
 #' 
-#' Function for predicting PAM50 intrinsic subtypes and calculation of proliferation 
+#' Functions for predicting PAM50 intrinsic subtypes and calculation of proliferation 
 #' 
 
 
-####function to make calls using near-centroid strategy #### 
-#' Function for calling PAM50 subtypes by parker based methods
-#' Here, we integrated parker-based methods and genefu PAM50 model
+#### functions to make calls using nearest-centroid (NC-based) strategies #### 
+
+#' Function for calling PAM50 subtypes by Parker et al.-based methods
+#' Here, we integrated Parker et al.-based methods and genefu PAM50 implementation
 #' @param mat gene expression matrix, log of normalized
 #' @param df.cln clicnical information table with PatientID and IHC column
 #' @param calibration How to do calibration, "None"(default) means no calibration for gene expression matrix. When setting calibration =None, you dont need to set internal and external parameters.  "Internal" means calibration for gene expression matrix by itself. "External" means calibration by external cohort. 
@@ -544,9 +545,9 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 }
 
 
-#### function to form a ER-balance subet and derive its median
+#### function to form an ER-balanced subset and derive its median
 
-#' Function to form a ER-balance subet and derive its median
+#' Function to form an ER-balanced subset and derive its median
 #' @param mat gene expression matrix 
 #' @param df.cln clicnical information table with PatientID 
 #' @param calibration The calibration method to use. Options are "None", "Internal", or "External". If "Internal" is selected, see the "internal" parameter for further details. If "External" is selected, see the "external" parameter.
@@ -619,7 +620,7 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
 
 
 
-#' Function for iterative ER subset gene centering 
+#' Function for iterative ER-balanced subset gene centering 
 #' @param mat gene expression matrix 
 #' @param df.cln clicnical information table with PatientID and IHC column
 #' @param iterative Times to do iterative ER balanced procedure with certain ratio. 
@@ -734,7 +735,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 }
 
 
-#### form Secondary ER-balanced set (refer to paper) leveraing PCA and subsequent intermediate intrinsic subtype
+#### form secondary ER-balanced set (refer to paper) leveraging PCA and subsequent intermediate intrinsic subtypes
 
 #' Function for the first step of PCA-PAM50 approach
 #' @param mat gene expression matrix 
@@ -927,8 +928,8 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 }
 
 
-#' Function for calling PAM50 subtypes by ssBC methods
-#' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgrou specific TNBC-JAMAOncol2024 
+#' Function for calling PAM50 subtypes by subgroup-specifc (ssBC) methods
+#' This function is adapted from ssBC TNBC-BreastCancerRes2015 and subgroup specific TNBC-JAMAOncol2024 
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table. The first column must be named "PatientID".
 #' @param s Options are "ER" or "TN" or "ER.v2" or "TN.v2". Specify the medians you want. The original quantile is "ER" and "TN" of TNBC-BreastCancerRes2015.  If you choose "ER.v2" or "TN.v2", it means you choose quantile from TNBC-JAMAOncol2024. 

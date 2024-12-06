@@ -44,10 +44,10 @@
 #' 
 #' @rdname iBreastSubtypeR
 #' 
-#' @keywords BreastSubtypeR shiny
+#' @keywords BreastSubtypeR Shiny
 #' @examples
 #' 
-#' iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny web app
+#' iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR Shiny web app
 
 #'
 #' @export
