@@ -20,7 +20,7 @@ A \code{ggplot} object representing the PCA plot, colored by subtype. If \code{E
 This function generates a PCA plot to visualize the principal components of gene expression data, colored by the assigned subtypes. Optionally, it can display a scree plot of eigenvalues to evaluate the explained variance.
 }
 \examples{
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Prepare data: Gene expression matrix and subtype information
 x = data_input$x_NC.log

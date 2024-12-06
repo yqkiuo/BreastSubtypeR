@@ -18,7 +18,7 @@ A \code{ggplot} or \code{heatmap} object (depending on implementation) represent
 This function generates a heatmap to visualize gene expression patterns across breast cancer subtypes, based on the provided gene expression matrix and subtype information.
 }
 \examples{
-data("OSLO2EMITOobj")
+data("OSLO2EMIT0obj")
 
 # Prepare data: Gene expression matrix and subtype information
 x = data_input$x_NC

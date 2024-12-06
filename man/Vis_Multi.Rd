@@ -16,7 +16,7 @@ A heatmap visualization of multi-method subtype results.
 This function generates a heatmap visualization of breast cancer subtypes based on multiple subtyping methods. It allows users to visualize how different methods classify samples into subtypes.
 }
 \examples{
-data("OSLO2MEITOobj")
+data("OSLO2EMIT0obj")
 
 # Assuming `res$res_subtypes` contains multi-method subtype results
 p = Vis_Multi(res$res_subtypes) 
