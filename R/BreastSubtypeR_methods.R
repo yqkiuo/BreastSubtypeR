@@ -630,40 +630,20 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     
     ## main panel
     if (n_ERposHER2neg == 0 && n_ERnegHER2neg ==0 ) {
-      message("A HER2-positive cohort has been detected." )
+      message("A HER2+ cohort has been detected." )
       
-      if (n_ERposHER2pos > n_ERHER2 && n_ERnegHER2pos > n_ERHER2) { ## ssBC.v2
-        
-        if(n_ERpos < n_ER && n_ERneg < n_ER ){
-          message("A small HER2-positive cohort has been detected.")
-          message("Running methods: ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC.v2", "AIMS", "sspbc")
-        } else if ( n_ERpos > n_ER  ){
-          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        } else if ( n_ERneg > n_ER ){
-          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        }
-        
-      } else if (n_ERposHER2pos > n_ERHER2) {
-        
-        if ( n_ERpos > n_ER  ){
-          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        } else {
-          message("Running methods for ER+/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC.v2", "AIMS", "sspbc")
-        }
-        
-      } else if (n_ERnegHER2pos > n_ERHER2) {
-        if ( n_ERneg > n_ER  ){
-          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        } else {
-          message("Running methods for ER-/her2+ samples: ssBC, ssBC.v2, AIMS, & sspbc")
-          methods = c("ssBC.v2", "AIMS", "sspbc")
-        }
+      if (n_ERposHER2pos < n_ERHER2 && n_ERnegHER2pos < n_ERHER2 ) { 
+        message("A small HER2+ cohort has been detected.")
+        message("Running methods: ssBC.v2, AIMS, & sspbc")
+        methods = c("AIMS", "sspbc")
+      }else if (n_ERposHER2pos >= n_ERHER2){
+        message("A ER+/HER2+ cohort has been detected.")
+        message("Running methods: ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC.v2","AIMS", "sspbc")
+      } else if (n_ERnegHER2pos >= n_ERHER2 ){
+        message("A ER-/HER2+ cohort has been detected.")
+        message("Running methods: ssBC.v2, AIMS, & sspbc")
+        methods = c("ssBC.v2","AIMS", "sspbc")
       }
       
     } else if(n_ERnegHER2pos == 0 && n_ERposHER2pos ==0 && n_ERposHER2neg ==0){
