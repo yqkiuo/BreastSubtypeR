@@ -20,7 +20,7 @@ Mapping(
 \item{method}{Method for deduplicating probes in microarray or RNA-seq data. Choose from:
 \itemize{
 \item \code{"IQR"} for Affymetrix arrays,
-\item \code{"mean"} for Agilent arrays,
+\item \code{"mean"} for Agilent/Illumina arrays,
 \item \code{"max"} for RNA-seq data.
 }}
 
