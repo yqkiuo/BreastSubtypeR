@@ -1,7 +1,7 @@
 #' Collection of Breast Cancer Intrinsic Subtyping methods
 #' 
 #' @title Collection of Breast Cancer Intrinsic Subtyping methods
-#' @description BreastSubtypeR is an R package that provides access to several intrinsic subtyping approaches. 
+#' @description is an R package designed to unify and streamline intrinsic molecular subtyping approaches for breast cancer.  
 #' 
 #' @name BreastSubtypeR
 #' 
@@ -21,11 +21,11 @@ NULL
 #'
 #' @name Mapping
 #' @description
-#' A function to map gene IDs and preprocess gene expression data for downstream analyses.
+#' A function to map gene IDs and preprocess gene expression data for subsequent analyses.
 #'
 #' @param gene_expression_matrix Gene expression matrix with probes in rows and samples in columns.
 #' @param featuredata Feature data provided by the user. The table must contain at least three columns: `probe` (ProbeID or TranscriptID), `SYMBOL`, and `ENTREZID`.
-#' @param method Method for deduplicating probes in microarray or RNA-seq data. Choose from:
+#' @param method Method for deduplicating probes in microarray or RNA-seq data. Choose one of the following options:
 #'   - `"IQR"` for Affymetrix arrays,
 #'   - `"mean"` for Agilent/Illumina arrays,
 #'   - `"max"` for RNA-seq data.
@@ -33,8 +33,8 @@ NULL
 #' @param verbose Logical. If `TRUE`, progress messages will be displayed during execution.
 #' 
 #' @return A list containing three gene expression matrices:
-#'   - `"x_NC.log"`: Preprocessed matrix for nearest-centroid (NC)-based methods.
-#'   - `"x_SSP"`: Preprocessed matrix for single-sample predictor (SSP)-based methods.
+#'   - `"x_NC.log"`: Preprocessed matrix for input into nearest-centroid (NC)-based methods.
+#'   - `"x_SSP"`: Preprocessed matrix for input into single-sample predictor (SSP)-based methods.
 #'
 #' @details
 #' If the rows of the gene expression matrix/table represent gene symbols, an additional `SYMBOL` column must be added to the feature table and renamed as `probe`.
@@ -74,7 +74,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #'
 #' @name BS_parker
 #' @description
-#' This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
+#' This function predicts breast cancer intrinsic subtypes using the original Parker et al., 2019 method, as well as some variations of the original approach.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must be named `"PatientID"`. The default is NA.
@@ -84,8 +84,8 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #'   - `"External"`: Calibration is performed using external medians. See the `external` parameter for details.
 #' @param internal The internal calibration strategy to apply when `calibration = "Internal"`. Options are:
 #'   - `"medianCtr"` (default): Median-centered calibration.
-#'   - `"meanCtr"`: Mean-centered calibration (aligned with `genefu.scale`).
-#'   - `"qCtr"`: Quantile-based calibration (aligned with `genefu.robust`).
+#'   - `"meanCtr"`: Mean-centered calibration (aligned with `genefu.scale` function).
+#'   - `"qCtr"`: Quantile-based calibration (aligned with `genefu.robust` function).
 #' @param external Specify the platform name (i.e., column name) for external medians calculated from the training cohort. To use user-provided medians, set this parameter to `"Given.mdns"` and provide the values via the `medians` parameter.
 #' @param medians A matrix or table of user-provided medians. Required if `external = "Given.mdns"`. The first column should list 50 genes, and the second column should provide the corresponding median values.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
@@ -140,7 +140,7 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #'
 #' @name BS_cIHC
 #' @description
-#' This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, balancing estrogen receptor (ER) subsets for gene centering.
+#' This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, which employs ER-balanced subsets for gene centering.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
@@ -194,12 +194,12 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClini
 #'
 #' @name BS_cIHC.itr
 #' @description
-#' Predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. Supports customization of ER subset ratios.
+#' This function predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. It supports customization of the ER+/ER- ratio.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
-#' @param iterative Integer. Number of iterations for the ER-balanced procedure with a specified ratio.
-#' @param ratio Numeric. Specifies the ER+ to ER− ratio for balancing. Options are `1:1` or `54:64` (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.
+#' @param iterative Integer. Number of iterations for the ER-balanced procedure with the specified ratio.
+#' @param ratio Numeric. Specifies the ER+/ER− ratio for balancing. Options are `1:1` or `54:64` (default). The latter corresponds to the ER+/ER- ratio used in the UNC232 training cohort.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
@@ -255,7 +255,7 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #'
 #' @name BS_PCAPAM50
 #' @description
-#' Performs intrinsic subtyping of breast cancer using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
+#' This function predicts breast cancer intrinsic subtypes using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
@@ -357,16 +357,16 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #'
 #' @name BS_ssBC
 #' @description
-#' Performs intrinsic subtyping of breast cancer using the ssBC (single-sample Breast Cancer) method. This method allows for quantile selection tailored to specific breast cancer cohorts and published guidelines.
+#' This function predicts breast cancer intrinsic subtypes using the subgroup-specific (ssBC) method. This method applies a subgroup-specific gene-centering approach to a test cohort with a skewed distribution of clinicopathological characteristics compared to the original training cohort (e.g., an ER+ selected cohort).
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.
 #' @param phenodata A clinical information table. The first column must contain sample or patient names, named `"PatientID"`. 
 #'   - When `"s"` is set as `"ER"`, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
 #'   - When `"s"` is set as `"ER.v2"`, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`, and a `"HER2"` column, where human epidermal growth factor receptor 2 (HER2) status is recorded as `"HER2+"` or `"HER2-"`.
 #'   - When `"s"` is set as `"TN"` or `"TN.v2"`, the table must include a `"TN"` column, recording triple-negative samples as `"TN"`.
-#' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TN.v2"`. Specifies the quantiles to use:
-#'   - `"ER"` and `"TN"`: Original quantiles published in *Breast Cancer Research* (2015).
-#'   - `"ER.v2"` and `"TN.v2"`: Updated quantiles published in *Journal of Clinical Oncology* (2024).
+#' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TN.v2"`. These specifies which subgroup-specific quantiles to use:
+#'   - `"ER"` and `"TN"`: Original subgroup-specific quantiles published in *Breast Cancer Research* (2015).
+#'   - `"ER.v2"` and `"TN.v2"`: Updated subgroup-specific quantiles published in *Journal of Clinical Oncology* (2020).
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
 #'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
@@ -420,7 +420,7 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #'
 #' @name BS_AIMS
 #' @description
-#' Performs intrinsic subtyping of breast cancer using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method. This method provides a robust assignment of breast cancer molecular subtypes based on Entrez gene IDs.
+#' This function predicts breast cancer intrinsic subtypes using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.
 #' @param EntrezID A vector of Entrez gene IDs corresponding to the genes in the gene expression matrix.
@@ -473,7 +473,7 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #'
 #' @name BS_sspbc
 #' @description
-#' Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
+#' This function predicts breast cancer intrinsic subtypes using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is based on a refined version of AIMS' original methodology, using a large, uniformly accrued population-based cohort (SCAN-B) for training.
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.
 #' @param ssp.name Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).
@@ -523,11 +523,11 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 }
 
-#' Consensus Intrinsic Subtyping with Multiple Approaches (BS_Multi)
+#' Intrinsic Subtyping with Multiple Approaches (BS_Multi)
 #'
 #' @name BS_Multi
 #' @description
-#' Performs consensus intrinsic subtyping of breast cancer using multiple approaches Users can specify subtyping approaches or automatically select them based on the ER/HER2 distribution of the test cohort.
+#' This function predicts breast cancer intrinsic subtypes using multiple methods, allowing users to either specify the subtyping approaches directly or enable automatic selection based on the ER/HER2 distribution of the test cohort.
 #'
 #' @param data_input The output from the `Mapping()` function, containing processed gene expression data prepared for subtyping analysis.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
@@ -584,20 +584,20 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
   if (length(methods) ==1 && methods[1] =="AUTO") {
       message("Running AUTO mode for subtyping.")
   } else if (length(methods)< 2){
-    stop("Please select two methods at least or set methdos as \"AUTO\". " )
+    stop("Please select at least two methods or set the method to \"AUTO\". " )
   } 
   
   if (length(methods[str_detect(methods, pattern =  "parker.original|genefu.scale|genefu.robust|ssBC|ssBC.v2|cIHC|cIHC.itr|PCAPAM50|AIMS|sspbc|AUTO")] ) < length(methods)){
-    stop("Please provide right method names.")
+    stop("Please specify the correct method names.")
   }
 
   ## check ER and if methods are feasible
   if(  !("ER" %in% colnames(phenodata)) & ( length(methods[str_detect(methods, pattern =  "ssBC|ssBC.v2|cIHC|cIHC.itr")] ) > 0 ) ) {
-    stop("Please do not select any of ssBC, ssBC.v2, cIHC and cIHC.itr")
+    stop("Please avoid selecting any of the following methods: ssBC, ssBC.v2, cIHC, and cIHC.itr.")
   } 
   
   if(  !("HER2" %in% colnames(phenodata)) & ( "ssBC.v2" %in% methods  ) ) {
-    stop("ssBC.v2 is not supported")
+    stop("The method ssBC.v2 is not supported")
   }
 
   #### AUTO mode
@@ -607,7 +607,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     
     ## first check ER and HER2 status
     if ( !("ER" %in% colnames(phenodata) ) || !("HER2" %in% colnames(phenodata) ) ) {
-      stop("Please provide ER and HER2 status for \"AUTO\". " )
+      stop("Please provide the ER and HER2 status for the \"AUTO\" mode." )
     }
     
     ## first check sample size 
