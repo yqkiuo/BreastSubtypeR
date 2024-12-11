@@ -9,6 +9,7 @@
 
 ## Features
 - **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods.
+- **Auto Mode Feature**: "Auto" mode simplifies subtyping by checking the distribution of ER and HER2 status and running multiple methods that do not significantly violate underlying assumptions, ensuring that the chosen methods are suitable for the cohort in question.
 - **Optimized Gene Mapping**: Provides gene mapping through Entrez IDs to maximize the number of genes included in each method.
 - **Flexible Input and Output**: Features standardized input/output formats, facilitating seamless integration with other gene expression profiling tools.
 - **Shiny App Interface**: Provides a user-friendly, web-based interface designed for users who prefer not to use R directly.
