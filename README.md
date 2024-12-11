@@ -5,11 +5,11 @@
 
 ## Overview
 
-**BreastSubtypeR** is an R package designed to integrate multiple intrinsic molecular subtyping methods for breast cancer (BC), including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with an AUTO mode feature. It employs standardized input and output formats, providing a unified framework that is highly compatible with other R packages in the gene expression profiling field. The core functions of the package can also be used through an **interactive Shiny app**, making it user-friendly for those unfamiliar with R. 
+**BreastSubtypeR** is an R package designed to unify and streamline intrinsic molecular subtyping methods for breast cancer (BC). It integrates both nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with an innovative "AUTO" mode feature (described below). The package utilizes standardized input and output formats, providing a cohesive framework that is fully compatible with other R packages in the gene expression profiling field. Additionally, its core functions are accessible through an **interactive Shiny app**, making it user-friendly for researchers and clinicians with limited R programming experience. 
 
 ## Features
 - **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods.
-- **AUTO Mode Feature**: "AUTO" mode simplifies subtyping by checking the distribution of ER and HER2 status and running multiple methods that do not significantly violate underlying assumptions, ensuring that the chosen methods are suitable for the test cohort.
+- **AUTO Mode Feature**: The "AUTO" mode streamlines subtyping by analyzing the distribution of ER and HER2 status and selecting methods that align with the test cohort's characteristics. It ensures that only methods with assumptions compatible with the data are applied, enhancing the accuracy and reliability of the results.
 - **Optimized Gene Mapping**: Provides gene mapping through Entrez IDs to maximize the number of genes included in each method.
 - **Flexible Input and Output**: Features standardized input/output formats, facilitating seamless integration with other gene expression profiling tools.
 - **Shiny App Interface**: Provides a user-friendly, web-based interface designed for users who prefer not to use R directly.
