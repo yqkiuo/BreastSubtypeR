@@ -91,6 +91,24 @@ plot(plot)
 
 ```
 
+## Method usage
+
+| Methods | Group | Usage |
+|-----------------|-----------------|-----------------|-----------------|
+| parker.orginal   | NC-based   | BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
+| genefu (scale and robust)  | NC-based   | BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| cIHC-based iterative ER subset (cIHC.itr)    | NC-based | BS_cIHC.itr(...) |
+| conventional IHC (cIHC) | NC-based    | BS_cIHC(...) |
+| PCA-PAM50   | NC-based |  BS_PCAPAM50(...) |
+| ssBC    | NC-based    | BS_ssBC(s = "ER", ...) |
+| ssBC.v2   | NC-based    | BS_ssBC(s = "ER.v2", ...) |
+| AIMS   | SSP-based    | BS_AIMS(...) |
+| sspbc | SSP-based | BS_Multi(...) |
+
+
+
+
+
 ## Shiny App
 For users unfamiliar with R, we provide an easy-to-use Shiny app that allows you to perform molecular subtyping interactively.
 
