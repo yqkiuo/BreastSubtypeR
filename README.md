@@ -16,8 +16,8 @@
 
 ## Methods included
 
-| Methods | Group | Citation | Usage |
-|-----------------|-----------------|-----------------|-----------------|
+| Methods | Group | Citation |
+|-----------------|-----------------|-----------------|
 | parker.orginal   | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)   | 
 | genefu (scale and robust)  | NC-based   |  [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)  |
 | cIHC-based iterative ER subset (cIHC.itr)    | NC-based    | [Curtis  et al., 2012](https://doi.org/10.1038/nature10983)  |
@@ -93,17 +93,17 @@ plot(plot)
 
 ## Method usage
 
-| Methods | Group | Usage |
+| Methods | Usage |
 |-----------------|-----------------|-----------------|
-| parker.orginal   | NC-based   | BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
-| genefu (scale and robust)  | NC-based   | BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
-| cIHC-based iterative ER subset (cIHC.itr)    | NC-based | BS_cIHC.itr(...) |
-| conventional IHC (cIHC) | NC-based    | BS_cIHC(...) |
-| PCA-PAM50   | NC-based |  BS_PCAPAM50(...) |
-| ssBC    | NC-based    | BS_ssBC(s = "ER", ...) |
-| ssBC.v2   | NC-based    | BS_ssBC(s = "ER.v2", ...) |
-| AIMS   | SSP-based    | BS_AIMS(...) |
-| sspbc | SSP-based | BS_Multi(...) |
+| parker.orginal   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
+| genefu (scale and robust)  |BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| cIHC-based iterative ER subset (cIHC.itr)    |  BS_cIHC.itr(...) |
+| conventional IHC (cIHC) | BS_cIHC(...) |
+| PCA-PAM50   |  BS_PCAPAM50(...) |
+| ssBC    |  BS_ssBC(s = "ER", ...) |
+| ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
+| AIMS   | BS_AIMS(...) |
+| sspbc | BS_Multi(...) |
 
 
 
