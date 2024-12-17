@@ -45,13 +45,12 @@
 #' 
 #' @rdname iBreastSubtypeR
 #' 
-#' @keywords BreastSubtypeR shiny
+#' @keywords BreastSubtypeR Shiny
 #' @examples
 #' 
 #' library(BreastSubtypeR)
 #' 
 #' iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny web app
-
 #'
 #' @export
 iBreastSubtypeR = function() {

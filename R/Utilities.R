@@ -11,20 +11,20 @@
 NULL
 
 
-#' Map Gene IDs and Supplement Missing Data
+#' Map Gene IDs and Handle missing data
 #'
 #' @name MapGeneIDs
 #' @description
-#' This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and supplements missing data if necessary. It includes options for deduplicating probes based on the chosen method.
+#' This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and handles missing data if necessary. It includes options for deduplicating probes based on the selected method.
 #'
-#' @param gene_expression_matrix A matrix of gene expression data with genes in rows and samples in columns. The data should be pre-processed (e.g., log-transformed).
+#' @param gene_expression_matrix A matrix of gene expression data with genes in rows and samples in columns. The data should be pre-processed and log-transformed.
 #' @param featuredata A table containing feature data with at least two columns:
 #'   - `"probe"`: The probe identifiers (e.g., probe names).
 #'   - `"ENTREZID"`: Corresponding ENTREZ gene IDs.
 #' @param method A character string specifying the method to deduplicate probes:
-#'   - `"IQR"`: For Affymetrix microarray data, uses interquartile range (IQR) to select a representative probe.
-#'   - `"mean"`: For Agilent microarrays, selects the mean expression of probes that map to the same gene.
-#'   - `"max"`: For RNAseq data, selects the probe with the highest expression.
+#'   - `"IQR"`: Uses interquartile range (IQR) to select a representative probe (preferred for short oligo, e.g., for Affymetrix microarrays).
+#'   - `"mean"`: Uses the mean expression of probes that map to the same gene (preferred for long oligo, e.g., for Agilent/Illumina microarrays).
+#'   - `"max"`: Selects the probe with the highest expression (e.g., for RNA-seq).
 #' @param impute Logical. If `TRUE`, missing values (NA) in the gene expression matrix are handled (e.g., imputation may occur). If `FALSE`, rows with NA values are excluded.
 #' @param verbose Logical. If `TRUE`, detailed information on the process is printed during execution.
 #'

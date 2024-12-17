@@ -85,7 +85,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @param internal The internal calibration strategy to apply when `calibration = "Internal"`. Options are:
 #'   - `"medianCtr"` (default): Median-centered calibration.
 #'   - `"meanCtr"`: Mean-centered calibration (aligned with `genefu.scale`).
-#'   - `"qCtr"`: Quantile-centered calibration (aligned with `genefu.robust`).
+#'   - `"qCtr"`: Quantile-based calibration (aligned with `genefu.robust`).
 #' @param external Specify the platform name (i.e., column name) for external medians calculated from the training cohort. To use user-provided medians, set this parameter to `"Given.mdns"` and provide the values via the `medians` parameter.
 #' @param medians A matrix or table of user-provided medians. Required if `external = "Given.mdns"`. The first column should list 50 genes, and the second column should provide the corresponding median values.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
@@ -369,8 +369,8 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 #'   - `"ER.v2"` and `"TN.v2"`: Updated quantiles published in *Journal of Clinical Oncology* (2024).
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
-#'   - `"T"`: Tumor size.
-#'   - `"NODE"`: Lymph node status.
+#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
+#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
 #'
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the ssBC method.
 #'
@@ -517,11 +517,11 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 
 }
 
-#' Consensus Intrinsic Subtyping with Multiple Methods (BS_Multi)
+#' Consensus Intrinsic Subtyping with Multiple Approaches (BS_Multi)
 #'
 #' @name BS_Multi
 #' @description
-#' Performs consensus intrinsic subtyping of breast cancer using multiple methods, allowing users to specify or automatically select subtyping approaches based on the test cohort's biomarker distribution.
+#' Performs consensus intrinsic subtyping of breast cancer using multiple approaches Users can specify subtyping approaches or automatically select them based on the ER/HER2 distribution of the test cohort.
 #'
 #' @param data_input The output from the `Mapping()` function, containing processed gene expression data prepared for subtyping analysis.
 #' @param phenodata A clinical information table. The first column must be named "PatientID".
@@ -536,11 +536,13 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
 #'   - "PCAPAM50"
 #'   - "AIMS"
 #'   - "sspbc"
-#'   - "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
+#'   - "AUTO" (Automatically selects methods based on the ER/HER2 distribution of the test cohort).
 #'   
-#'   If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.
+#'   If "AUTO" is selected, it must be the sole value in the vector. Otherwise, specify at least two other methods for subtyping. An error will occur if fewer than two methods (excluding "AUTO") are provided.
 #' @param Subtype Logical. If `TRUE`, predicts four subtypes by excluding the Normal-like subtype.
-#' @param hasClinical Logical. If `TRUE`, includes clinical information in the analysis (e.g., tumor size in the "T" column and lymph node status in the "NODE" column).
+#' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
+#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
+#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
 #'
 #' @return A list of intrinsic subtypes estimated by the selected methods.
 #'
@@ -690,7 +692,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
         methods = c("parker.original", "genefu.scale", "genefu.robust", "ssBC", "ssBC.v2","cIHC", "cIHC.itr", "PCAPAM50", "AIMS", "sspbc")
         
       } else {
-        message("The ER+/ER- ratio in the current dataset differs from the ER+/ER- ratio observed in the UNC232 training cohort." )
+        message("The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort." )
         message("Running methods: ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
         methods = c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50", "AIMS", "sspbc")
       }
