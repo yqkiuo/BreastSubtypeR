@@ -1,15 +1,15 @@
-# BreastSubtypeR <a href='https://github.com/yqkiuo/BreastSubtypeR.git'><img src='inst/ShinyBreastSubtypeR/logo.svg' align="right" height="100" /></a>
+# BreastSubtypeR <a href='https://github.com/yqkiuo/BreastSubtypeR.git'><img src='inst/ShinyBreastSubtypeR/logo.svg' align="right" height="110" /></a>
 
 <!-- badges: start -->
 <!-- badges: end -->
 
 ## Overview
 
-**BreastSubtypeR** is an R package designed to integrate multiple intrinsic molecular subtyping methods for breast cancer (BC), including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with a new consensus approach. It employs standardized input and output formats, providing a unified framework that is highly compatible with other R packages in the gene expression profiling field. The core functions of the package can also be used through an **interactive Shiny app**, making it user-friendly for those unfamiliar with R. 
+**BreastSubtypeR** is an R package designed to unify and streamline intrinsic molecular subtyping methods for breast cancer (BC). It integrates both nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with an innovative "AUTO" mode feature (described below). The package utilizes standardized input and output formats, providing a cohesive framework that is fully compatible with other R packages in the gene expression profiling field. Additionally, its core functions are accessible through an **interactive Shiny app**, making it user-friendly for researchers and clinicians with limited R programming experience. 
 
 ## Features
 - **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods.
-- **Consensus Intrinsic Subtyping Approach**: Introduces a new consensus approach, running multiple intrinsic subtyping methods and using a majority voting scheme to determine the final subtype.
+- **AUTO Mode Feature**: The "AUTO" mode streamlines subtyping by analyzing the distribution of ER and HER2 status and selecting methods that align with the test cohort's characteristics. It ensures that only methods with assumptions compatible with the data are applied, enhancing the accuracy and reliability of the results.
 - **Optimized Gene Mapping**: Provides gene mapping through Entrez IDs to maximize the number of genes included in each method.
 - **Flexible Input and Output**: Features standardized input/output formats, facilitating seamless integration with other gene expression profiling tools.
 - **Shiny App Interface**: Provides a user-friendly, web-based interface designed for users who prefer not to use R directly.
@@ -44,7 +44,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping:
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
 ```R
 library(BreastSubtypeR)
 
@@ -58,6 +58,29 @@ data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, 
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
 result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
+
+# View the results
+head(result$res_subtypes)
+
+## visualization
+plot = Vis_Multi(res$res_subtypes)
+plot(plot)
+
+```
+
+Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+```R
+library(BreastSubtypeR)
+
+# Example data input: gene expression and clinical data
+data("BreastSubtypeR")
+data("OSLO2MEITOobj")
+
+## do mapping before subtyping
+data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+# Run the subtyping with AUTO mode
+result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
 
 # View the results
 head(result$res_subtypes)
