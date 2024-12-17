@@ -46,4 +46,4 @@ iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny w
 
 }
 \keyword{BreastSubtypeR}
-\keyword{shiny}
+\keyword{Shiny}

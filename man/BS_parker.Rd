@@ -32,7 +32,7 @@ BS_parker(
 \itemize{
 \item \code{"medianCtr"} (default): Median-centered calibration.
 \item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
-\item \code{"qCtr"}: Quantile-centered calibration (aligned with \code{genefu.robust}).
+\item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust}).
 }}
 
 \item{external}{Specify the platform name (i.e., column name) for external medians calculated from the training cohort. To use user-provided medians, set this parameter to \code{"Given.mdns"} and provide the values via the \code{medians} parameter.}

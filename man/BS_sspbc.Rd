@@ -21,7 +21,7 @@ To install \code{sspbc}, use the following commands in the example.
 }
 \examples{
 # install `sspbc` package 
-sspbc_path <- system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
+sspbc_path = system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
 install.packages(sspbc_path, repos = NULL, type = "source")
 
 # Load required dataset

@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_Multi}
 \alias{BS_Multi}
-\title{Consensus Intrinsic Subtyping with Multiple Methods (BS_Multi)}
+\title{Consensus Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
 \usage{
 BS_Multi(
   data_input,
@@ -30,20 +30,24 @@ BS_Multi(
 \item "PCAPAM50"
 \item "AIMS"
 \item "sspbc"
-\item "AUTO" (automatically selects methods based on the biomarker distribution of the test cohort).
+\item "AUTO" (Automatically selects methods based on the ER/HER2 distribution of the test cohort).
 }
 
-If "AUTO" is selected, it must be the only value in the vector. Otherwise, specify at least two other methods to perform subtyping. An error will be thrown if fewer than two methods (other than "AUTO") are provided.}
+If "AUTO" is selected, it must be the sole value in the vector. Otherwise, specify at least two other methods for subtyping. An error will occur if fewer than two methods (excluding "AUTO") are provided.}
 
 \item{Subtype}{Logical. If \code{TRUE}, predicts four subtypes by excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logical. If \code{TRUE}, includes clinical information in the analysis (e.g., tumor size in the "T" column and lymph node status in the "NODE" column).}
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\itemize{
+\item \code{"T"}: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
+\item \code{"NODE"}: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+}}
 }
 \value{
 A list of intrinsic subtypes estimated by the selected methods.
 }
 \description{
-Performs consensus intrinsic subtyping of breast cancer using multiple methods, allowing users to specify or automatically select subtyping approaches based on the test cohort's biomarker distribution.
+Performs consensus intrinsic subtyping of breast cancer using multiple approaches Users can specify subtyping approaches or automatically select them based on the ER/HER2 distribution of the test cohort.
 }
 \examples{
 # Load required dataset
