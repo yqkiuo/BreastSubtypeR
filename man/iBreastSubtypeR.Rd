@@ -40,6 +40,8 @@ If you wish to continue your analysis, you can directly run another method witho
 }
 \examples{
 
+library(BreastSubtypeR)
+
 iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny web app
 
 }

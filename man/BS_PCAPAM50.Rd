@@ -22,7 +22,7 @@ BS_PCAPAM50(
 
 \item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
 \itemize{
-\item \code{"T"}: Tumor size.
+\item \code{"TSIZE"}: Tumor size.
 \item \code{"NODE"}: Lymph node status.
 }}
 
