@@ -31,7 +31,8 @@
 #' Two visualizations will be displayed, and you will have the option to download the results as a text file.
 #' If you wish to continue your analysis, you can directly run another method without needing to repeat Step 1.
 #'  
-#'    
+#' @import bslib
+#' @import shiny
 #' 
 #' @usage iBreastSubtypeR()
 #' 
@@ -47,8 +48,9 @@
 #' @keywords BreastSubtypeR Shiny
 #' @examples
 #' 
-#' iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR Shiny web app
-
+#' library(BreastSubtypeR)
+#' 
+#' iBreastSubtypeR() ## this will open your browser with the BreastSubtypeR shiny web app
 #'
 #' @export
 iBreastSubtypeR = function() {
@@ -63,12 +65,6 @@ iBreastSubtypeR = function() {
   if (appDir == "")
     stop("The iBreastSubtypeR Shiny app cannot be found within the package.")
   
-  
-  suppressMessages(suppressWarnings({
-    require(bslib, quietly = T)
-    require(shiny, quietly = T)
-    require(BreastSubtypeR, quietly = T)
-  }))
 
   ## increase file limit
   options(shiny.maxRequestSize=1000*1024^2) 
