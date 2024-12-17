@@ -96,7 +96,7 @@ plot(plot)
 | Methods | Usage |
 |-----------------|-----------------|-----------------|
 | parker.orginal   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
-| genefu (scale and robust)  |BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| genefu (scale and robust)  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
 | cIHC-based iterative ER subset (cIHC.itr)    |  BS_cIHC.itr(...) |
 | conventional IHC (cIHC) | BS_cIHC(...) |
 | PCA-PAM50   |  BS_PCAPAM50(...) |
