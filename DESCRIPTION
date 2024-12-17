@@ -25,7 +25,9 @@ Suggests:
     ggplot2 (>= 3.5.1),
     ComplexHeatmap (>= 2.22.0),
     RColorBrewer (>= 1.1-3),
-    ggrepel (>= 0.9.6)
+    ggrepel (>= 0.9.6),
+    knitr,
+    rmarkdown
 URL: https://github.com/yqkiuo/BreastSubtypeR
 BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL (>= 3)
