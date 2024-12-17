@@ -3,7 +3,7 @@
 \name{MapGeneIDs}
 \alias{MapGeneIDs}
 \alias{Mapping}
-\title{Map Gene IDs and Supplement Missing Data}
+\title{Map Gene IDs and Handle missing data}
 \usage{
 Mapping(
   gene_expression_matrix,
@@ -14,7 +14,7 @@ Mapping(
 )
 }
 \arguments{
-\item{gene_expression_matrix}{A matrix of gene expression data with genes in rows and samples in columns. The data should be pre-processed (e.g., log-transformed).}
+\item{gene_expression_matrix}{A matrix of gene expression data with genes in rows and samples in columns. The data should be pre-processed and log-transformed.}
 
 \item{featuredata}{A table containing feature data with at least two columns:
 \itemize{
@@ -24,9 +24,9 @@ Mapping(
 
 \item{method}{A character string specifying the method to deduplicate probes:
 \itemize{
-\item \code{"IQR"}: For Affymetrix microarray data, uses interquartile range (IQR) to select a representative probe.
-\item \code{"mean"}: For Agilent microarrays, selects the mean expression of probes that map to the same gene.
-\item \code{"max"}: For RNAseq data, selects the probe with the highest expression.
+\item \code{"IQR"}: Uses interquartile range (IQR) to select a representative probe (preferred for short oligo, e.g., for Affymetrix microarrays).
+\item \code{"mean"}: Uses the mean expression of probes that map to the same gene (preferred for long oligo, e.g., for Agilent/Illumina microarrays).
+\item \code{"max"}: Selects the probe with the highest expression (e.g., for RNA-seq).
 }}
 
 \item{impute}{Logical. If \code{TRUE}, missing values (NA) in the gene expression matrix are handled (e.g., imputation may occur). If \code{FALSE}, rows with NA values are excluded.}
@@ -37,7 +37,7 @@ Mapping(
 A gene expression matrix with mapped ENTREZ IDs, and optionally imputed missing values. The matrix will have genes in rows and samples in columns, with ENTREZ gene IDs as row names.
 }
 \description{
-This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and supplements missing data if necessary. It includes options for deduplicating probes based on the chosen method.
+This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and handles missing data if necessary. It includes options for deduplicating probes based on the selected method.
 }
 \examples{
 data("gene_expression_data")

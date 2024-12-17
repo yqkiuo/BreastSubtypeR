@@ -109,7 +109,7 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #'   Subtype = FALSE,
 #'   hasClinical = FALSE
 #' )
-#'
+#' 
 #' @export
 
 BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Subtype = FALSE, hasClinical = FALSE, ...){
@@ -434,14 +434,14 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' # Load required datasets
 #' data("BreastSubtypeR")
 #' data("OSLO2EMIT0obj")
-#'
+#' 
 #' # Extract AIMS-specific genes
 #' genes = as.character(
 #'   BreastSubtypeR$genes.signature$EntrezGene.ID[
 #'     which(BreastSubtypeR$genes.signature$AIMS == "Yes")
 #'   ]
 #' )
-#'
+#' 
 #' # Perform subtyping
 #' res = BS_AIMS(
 #'   gene_expression_matrix = data_input$x_SSP[genes, ],
@@ -484,7 +484,7 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #'
 #' @examples
 #' # install `sspbc` package 
-#' sspbc_path <- system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
+#' sspbc_path = system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
 #' install.packages(sspbc_path, repos = NULL, type = "source")
 #' 
 #' # Load required dataset
