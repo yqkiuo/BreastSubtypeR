@@ -90,8 +90,8 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 #' @param medians A matrix or table of user-provided medians. Required if `external = "Given.mdns"`. The first column should list 50 genes, and the second column should provide the corresponding median values.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
-#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+#'   - `"TSIZE"`: Tumor size.
+#'   - `"NODE"`: Lymph node status.
 #'
 #' @return A list containing the intrinsic subtypes assigned using the Parker-based method.
 #'
@@ -146,8 +146,8 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
-#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+#'   - `"TSIZE"`: Tumor size.
+#'   - `"NODE"`: Lymph node status.
 #' @param seed An integer value is used to set the random seed.
 #' @return A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.
 #'
@@ -202,8 +202,8 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClini
 #' @param ratio Numeric. Specifies the ER+ to ER− ratio for balancing. Options are `1:1` or `54:64` (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
-#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+#'   - `"TSIZE"`: Tumor size.
+#'   - `"NODE"`: Lymph node status.
 #' @param seed An integer value is used to set the random seed.
 #' @return A list containing:
 #' - Intrinsic subtype predictions.
@@ -261,8 +261,8 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 #' @param phenodata A clinical information table. The first column must contain sample or patient names and be named `"PatientID"`. Additionally, the table must include an `"ER"` column, where estrogen receptor (ER) status is recorded as `"ER+"` or `"ER-"`.
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from the `phenodata` table. Required columns include:
-#'   - `"T"`: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-#'   - `"NODE"`: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+#'   - `"TSIZE"`: Tumor size.
+#'   - `"NODE"`: Lymph node status.
 #' @param seed An integer value is used to set the random seed.
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.
 #'
@@ -303,7 +303,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
     
     phenodata$ER_status[which(phenodata$ER == "ER+")] = "pos"
     phenodata$ER_status[which(phenodata$ER == "ER-")] = "neg"
-    phenodata = phenodata[order(phenodata$ER_status,decreasing=T),]
+    phenodata = phenodata[order(phenodata$ER_status,decreasing=TRUE),]
   } else {
     stop("Please prepare ER status in clinical table")
   }
@@ -325,11 +325,11 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
   ## second step
   if (hasClinical) {
     df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS,
-                           T = phenodata[res_PC1IHC$BS.all$PatientID,]$T, NODE= phenodata[res_PC1IHC$BS.all$PatientID,]$NODE,
-                           stringsAsFactors=F)
+                           TSIZE = phenodata[res_PC1IHC$BS.all$PatientID,]$TSIZE, NODE= phenodata[res_PC1IHC$BS.all$PatientID,]$NODE,
+                           stringsAsFactors=FALSE)
   } else {
     df.pc1pam = data.frame(PatientID=res_PC1IHC$BS.all$PatientID, PAM50=res_PC1IHC$BS.all$BS,
-                           stringsAsFactors=F)
+                           stringsAsFactors=FALSE)
   }
   
 
@@ -452,11 +452,6 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
-  ## check dependencies
-  suppressMessages(suppressWarnings({
-    require(AIMS,quietly = TRUE)
-  }))
-  
   arguments = rlang::dots_list(
     eset =as.matrix(gene_expression_matrix),
     EntrezID = EntrezID 
@@ -473,7 +468,10 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #'
 #' @name BS_sspbc
 #' @description
-#' Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
+#' Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.  
+#' The `sspbc` package is required for `BreastSubtypeR` but is not available on CRAN or Bioconductor.   
+#' To install `sspbc`, use the following commands in the example.   
+#' 
 #'
 #' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.
 #' @param ssp.name Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).
@@ -484,6 +482,10 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.* NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
+#' # install `sspbc` package 
+#' sspbc_path <- system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
+#' install.packages(sspbc_path, repos = NULL, type = "source")
+#' 
 #' # Load required dataset
 #' data("OSLO2EMIT0obj")
 #'
@@ -499,17 +501,9 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
   
   ## check dependencies
   if (!requireNamespace("sspbc", quietly = TRUE)) {
-    sspbc_1.0.tar.gz = system.file("extdata", "sspbc","sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
-    install.packages(sspbc_1.0.tar.gz, repos = NULL, type="source")
-    if (!requireNamespace("sspbc", quietly = TRUE)) {
-      stop("Package 'sspbc' should be installed manually.")
-    }
+    stop("Package 'sspbc' is required but not installed. 
+          Please install it manually from the provided source tarball.")
   }
-  
-  #data(sspbc.models)
-  suppressMessages(suppressWarnings({
-    require(sspbc,quietly = TRUE)
-  }))
   
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
@@ -704,8 +698,7 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
       }
       
     }
-    
-    
+
     ## subsetting samples for ssBC and ssBC.v2
     # Handle ssBC & ssBC.v2 method for imbalanced subtypes
     ERHER2_counts = c(n_ERpos,n_ERneg, n_ERnegHER2pos, n_ERnegHER2neg, n_ERposHER2pos, n_ERposHER2neg)

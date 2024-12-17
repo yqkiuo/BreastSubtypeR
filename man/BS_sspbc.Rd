@@ -16,8 +16,14 @@ A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPB
 }
 \description{
 Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
+The \code{sspbc} package is required for \code{BreastSubtypeR} but is not available on CRAN or Bioconductor.
+To install \code{sspbc}, use the following commands in the example.
 }
 \examples{
+# install `sspbc` package 
+sspbc_path <- system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
+install.packages(sspbc_path, repos = NULL, type = "source")
+
 # Load required dataset
 data("OSLO2EMIT0obj")
 

@@ -1,6 +1,5 @@
 #' 
 #' Functions adapted from NC-based subtyping methods
-#' @name NC-based
 #' @import magrittr
 #' @import impute
 #' @importFrom dplyr select
@@ -13,8 +12,8 @@ NULL
 #' @noRd 
 medianCtr=function(x){
   annAll = dimnames(x)
-  medians = apply(x,1,median,na.rm=T)
-  x = t(scale(t(x),center=medians,scale=F))
+  medians = apply(x,1,median,na.rm=TRUE)
+  x = t(scale(t(x),center=medians,scale=FALSE))
   dimnames(x) = annAll
   return(x)
 }
@@ -296,9 +295,9 @@ RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
   er_her2 = data.frame( "ER" = erScore, "HER2" = her2Score, row.names = colnames(out$testData ))
   
   # calculate the proliferation score
-  prolifScore = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes), ], 2, mean, na.rm =T )
+  prolifScore = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes), ], 2, mean, na.rm =TRUE )
   
-  prolifScore.Subtype = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes.Subtype) , ], 2, mean, na.rm =T )
+  prolifScore.Subtype = apply(out$testData[ which( rownames(out$testData) %in% proliferationGenes.Subtype) , ], 2, mean, na.rm =TRUE )
   
   ## confidence
   call.conf = c()
@@ -341,9 +340,9 @@ RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
     Clinical = df.cln[match(names(out$predictions),df.cln$PatientID ),]
     rownames(Clinical) = Clinical$PatientID
 
-    if ( "T" %in% colnames(Clinical)) {
+    if ( "TSIZE" %in% colnames(Clinical)) {
       
-      xT= as.numeric(as.vector(Clinical$T))
+      xT= as.numeric(as.vector(Clinical$TSIZE))
       
       combined = 0.0442770*out$distances[,1] + 0.1170297*out$distances[,2] + -0.2608388*out$distances[,3] + 0.1055908*out$distances[,4] + 
         0.1813751*xT
@@ -524,7 +523,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   # normalization
   mat = docalibration( mat, df.al, calibration, internal=internal, external=external)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   
   if (Subtype) {
@@ -569,7 +568,11 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   
   #seed = 118
   if( dim(ERN.ihc)[1] > dim(ERP.ihc)[1] ) {  temp = ERP.ihc; ERP.ihc = ERN.ihc; ERN.ihc = temp }
-  set.seed(seed); i = sample(dim(ERP.ihc)[1],dim(ERN.ihc)[1]) # take equal number of ER+ and ER- samples
+  # set.seed(seed); i = sample(dim(ERP.ihc)[1],dim(ERN.ihc)[1]) # take equal number of ER+ and ER- samples
+  withr::with_seed(seed, {
+    i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+  })
+  
   length(ERP.ihc$PatientID[i]) # ER positive samples
   length(ERN.ihc$PatientID)    # ER negative samples
   
@@ -581,7 +584,7 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   # Find median
   surffix = getsurffix(calibration = calibration, internal,external)
   
-  mdns      = apply(mbal.ihc,1,median,na.rm=T) # compute median of each row i.e gene
+  mdns      = apply(mbal.ihc,1,median,na.rm=TRUE) # compute median of each row i.e gene
   mdns.df   = as.data.frame(mdns)
   df.mdns   = data.frame(X=rownames(mdns.df),mdns.ihc=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
   
@@ -600,7 +603,7 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   ## normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict( centroids, mat, std=F, distm="spearman",  Subtype = Subtype)
+  out = sspPredict( centroids, mat, std=FALSE, distm="spearman",  Subtype = Subtype)
   
   if (Subtype) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype, row.names = NULL )
@@ -678,7 +681,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     surffix = getsurffix(calibration = calibration, internal)
     
     # Calculate median
-    mdns      = apply(mbal.ihc,1,median,na.rm=T) # compute median of each row i.e gene
+    mdns      = apply(mbal.ihc,1,median,na.rm=TRUE) # compute median of each row i.e gene
     mdns.df   = as.data.frame(mdns)
     df.mdns   = data.frame(X=rownames(mdns.df),mdns.ihc=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
     colnames(df.mdns) = c("X",surffix)
@@ -694,7 +697,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     ## normalization
     mat = docalibration( mat, df.al, calibration,internal)
     
-    out = sspPredict(centroids, mat, std=F, distm="spearman",Subtype = Subtype)
+    out = sspPredict(centroids, mat, std=FALSE, distm="spearman",Subtype = Subtype)
     
     return( out )
     
@@ -765,7 +768,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   #select  = order(rv, decreasing = TRUE)[seq_len(dim(mat)[1])] # the input is PAM50 matrix --50 genes -- get from dimension
   pca     = prcomp(t(mat))#[select,]
   pc12    = pca$x[,1:2] #get two principal
-  df.pc1  = data.frame(PatientID=rownames(pc12),PC1 = pc12[,1],stringsAsFactors=F)
+  df.pc1  = data.frame(PatientID=rownames(pc12),PC1 = pc12[,1],stringsAsFactors=FALSE)
   df.pca1 = merge(df.cln,df.pc1,by="PatientID")
   
   
@@ -812,7 +815,10 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
     rm(temp)
   }
   
-  set.seed(seed);i = sample(dim(ERP.pc1ihc)[1],dim(ERN.pc1ihc)[1]) # take equal number of ER+ and ER- samples
+  # set.seed(seed);i = sample(dim(ERP.pc1ihc)[1],dim(ERN.pc1ihc)[1]) # take equal number of ER+ and ER- samples
+  withr::with_seed(seed, {
+    i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+  })
   length(ERP.pc1ihc$PatientID[i]) # ER positive samples
   length(ERN.pc1ihc$PatientID)    # ER negative samples
   
@@ -825,7 +831,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   
   surffix = getsurffix(calibration = calibration, internal)
   
-  mdns      = apply(mbal.pc1ihc,1,median,na.rm=T) # compute median of each row i.e gene
+  mdns      = apply(mbal.pc1ihc,1,median,na.rm=TRUE) # compute median of each row i.e gene
   mdns.df   = as.data.frame(mdns)
   df.mdns   = data.frame(X=rownames(mdns.df),mdns.pc1ihc=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
   colnames(df.mdns) = c("X",surffix)
@@ -841,7 +847,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   # normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   if(Subtype) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
@@ -881,7 +887,10 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   ERP.pam = df.pam[which(df.pam$PAM50 %in% c("LumA")),]
   dim(ERP.pam)
   
-  set.seed(seed);i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+  # set.seed(seed);i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+  withr::with_seed(seed, {
+    i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+  })
   
   length(ERP.pam$PatientID[i]) # ER positive samples
   length(ERN.pam$PatientID)    # ER negative samples
@@ -894,7 +903,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   # Find median
   surffix = getsurffix(calibration = calibration, internal)
   
-  mdns      = apply(mbal.pam,1,median,na.rm=T) # compute median of each row i.e gene
+  mdns      = apply(mbal.pam,1,median,na.rm=TRUE) # compute median of each row i.e gene
   mdns.df   = as.data.frame(mdns)
   df.mdns   = data.frame(X=rownames(mdns.df),mdns.pam=mdns.df$mdns) # ER-blanced set based on IHC status alone--- 
   colnames(df.mdns) = c("X",surffix)
@@ -910,7 +919,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   ## normalization
   mat= docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=F, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   if(Subtype) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype, row.names = NULL )
@@ -989,14 +998,14 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
     x.m = mat[, samples_selected[[element]] ]
 
     gene.sigma.o = gene.sigma[rownames(x.m), element]
-    x.sigma = unlist(lapply(1:nrow(x.m), function(i) quantile(x.m[i,], probs = gene.sigma.o[i], na.rm = T)))
+    x.sigma = unlist(lapply(1:nrow(x.m), function(i) quantile(x.m[i,], probs = gene.sigma.o[i], na.rm = TRUE)))
     x.m = sweep(x.m, 1, x.sigma) 
     ## it has been calibrated by selected quantile 
 
-    out = sspPredict(BreastSubtypeR$centroid, x.m , std=F, distm="spearman", Subtype = Subtype)
+    out = sspPredict(BreastSubtypeR$centroid, x.m , std=FALSE, distm="spearman", Subtype = Subtype)
     
     
-  }, names(samples_selected), SIMPLIFY = F, USE.NAMES = T )
+  }, names(samples_selected), SIMPLIFY = FALSE, USE.NAMES = TRUE )
   
   ## prepare data for ROR
   

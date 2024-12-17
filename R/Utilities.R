@@ -70,14 +70,13 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   ## for empty cells. imput or not ?
   if(sum(apply(x,2,is.na))>0 & impute){
     
-    library(impute)
     if(verbose){
       probeid_NA = rownames(x)[rowSums(is.na(x))]
       sample_NA = colnames(x)[colSums(is.na(x))]
-      print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
+      # print(paste0("The imput objects: ", probeid_NA, " in ", sample_NA))
     }
     
-    x = impute.knn(x)
+    x = impute::impute.knn(x)
     x = x$data
   }
   
@@ -101,7 +100,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   
   ## This is for probeID or transcriptID 
   ## split expression matrix
-  split_mat <- split( as.data.frame(x), entrezid, drop = F)
+  split_mat <- split( as.data.frame(x), entrezid, drop = FALSE)
   
   # function to calculate the desired statistic
   calculate_stat <- function(mat, method) {
@@ -125,7 +124,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   }
   
   ## keep processed x
-  x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = T, USE.NAMES = T)
+  x = mapply( calculate_stat, split_mat, MoreArgs = list(method = method), SIMPLIFY = TRUE, USE.NAMES = TRUE)
   x = apply(x, 1, unlist)
   
   ##print necessary information
@@ -431,11 +430,8 @@ Vis_heatmap = function(x, out){
 
 Vis_PCA = function(x, out, Eigen = FALSE){
 
-  
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )
-
-  
-  pca = prcomp(t(x), center = T, scale. = T)
+  pca = prcomp(t(x), center = TRUE, scale. = TRUE)
 
   if(Eigen){
     
