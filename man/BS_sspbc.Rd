@@ -15,6 +15,7 @@ BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
 A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPBC method.
 }
 \description{
+This function predicts breast cancer intrinsic subtypes using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is based on a refined version of AIMS' original methodology, using a large, uniformly accrued population-based cohort (SCAN-B) for training.
 Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
 The \code{sspbc} package is required for \code{BreastSubtypeR} but is not available on CRAN or Bioconductor.
 To install \code{sspbc}, use the following commands in the example.

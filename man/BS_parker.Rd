@@ -31,8 +31,8 @@ BS_parker(
 \item{internal}{The internal calibration strategy to apply when \code{calibration = "Internal"}. Options are:
 \itemize{
 \item \code{"medianCtr"} (default): Median-centered calibration.
-\item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
-\item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust}).
+\item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale} function).
+\item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust} function).
 }}
 
 \item{external}{Specify the platform name (i.e., column name) for external medians calculated from the training cohort. To use user-provided medians, set this parameter to \code{"Given.mdns"} and provide the values via the \code{medians} parameter.}
@@ -51,7 +51,7 @@ BS_parker(
 A list containing the intrinsic subtypes assigned using the Parker-based method.
 }
 \description{
-This function performs intrinsic subtyping of breast cancer samples using Parker-based methods.
+This function predicts breast cancer intrinsic subtypes using the original Parker et al., 2019 method, as well as some variations of the original approach.
 }
 \examples{
 data("OSLO2EMIT0obj")

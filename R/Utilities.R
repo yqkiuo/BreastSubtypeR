@@ -1,6 +1,5 @@
 #' 
 #' Functions for BreastSubtypeR package 
-#' @name NC-based
 #' @import ggplot2
 #' @import ComplexHeatmap
 #' @import RColorBrewer
@@ -13,7 +12,7 @@ NULL
 
 #' Map Gene IDs and Handle missing data
 #'
-#' @name MapGeneIDs
+#' @name Mapping
 #' @description
 #' This function maps gene IDs from the provided gene expression matrix to ENTREZ IDs and handles missing data if necessary. It includes options for deduplicating probes based on the selected method.
 #'
@@ -49,6 +48,8 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   # gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
   # featuredata = anno_feature
 
+  data("BreastSubtypeRobj")
+  
   x = gene_expression_matrix
   y = featuredata
   samplenames = colnames(x)
@@ -59,7 +60,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   }
   
   ## loading genes.signature
-  genes.signature = BreastSubtypeR$genes.signature
+  genes.signature = BreastSubtypeRobj$genes.signature
  
   ## filter by ENTREZID
   y = y[y$ENTREZID %in% genes.signature$EntrezGene.ID,]
@@ -129,7 +130,7 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   
   ##print necessary information
   ##Parker
-  missing_ID_parker = setdiff( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )
+  missing_ID_parker = setdiff( BreastSubtypeRobj$genes.sig50$EntrezGene.ID, rownames(x) )
   if( length(missing_ID_parker) == 0 & verbose ){ 
     cat("Genes used in NC-based methods are covered. \n")
   } else if(verbose) {
@@ -147,8 +148,8 @@ Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", imp
   }
   
   ## get matrix for NC (symbol as rows, sample as col)
-  x_NC = x[ na.omit(match( BreastSubtypeR$genes.sig50$EntrezGene.ID, rownames(x) )) ,]
-  rownames(x_NC) = BreastSubtypeR$genes.sig50$Symbol[match(rownames(x_NC), BreastSubtypeR$genes.sig50$EntrezGene.ID)]
+  x_NC = x[ na.omit(match( BreastSubtypeRobj$genes.sig50$EntrezGene.ID, rownames(x) )) ,]
+  rownames(x_NC) = BreastSubtypeRobj$genes.sig50$Symbol[match(rownames(x_NC), BreastSubtypeRobj$genes.sig50$EntrezGene.ID)]
   x_NC = data.frame(x_NC)
   colnames(x_NC) = samplenames
   
