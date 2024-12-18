@@ -20,7 +20,7 @@ BS_cIHC.itr(
 
 \item{phenodata}{A clinical information table. The first column must contain sample or patient names and be named \code{"PatientID"}. Additionally, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.}
 
-\item{ratio}{Numeric. Specifies the ER+ to ER− ratio for balancing. Options are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER ratio used in the UNC230 training cohort.}
+\item{ratio}{Numeric. Specifies the ER+/ER− ratio for balancing. Options are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER+/ER- ratio used in the UNC232 training cohort.}
 
 \item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
 
@@ -32,7 +32,7 @@ BS_cIHC.itr(
 
 \item{seed}{An integer value is used to set the random seed.}
 
-\item{iterative}{Integer. Number of iterations for the ER-balanced procedure with a specified ratio.}
+\item{iterative}{Integer. Number of iterations for the ER-balanced procedure with the specified ratio.}
 }
 \value{
 A list containing:
@@ -43,7 +43,7 @@ A list containing:
 }
 }
 \description{
-Predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. Supports customization of ER subset ratios.
+This function predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. It supports customization of the ER+/ER- ratio.
 }
 \examples{
 data("OSLO2EMIT0obj")

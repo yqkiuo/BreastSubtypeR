@@ -7,7 +7,6 @@
 #' 
 #' @docType _PACKAGE
 #' 
-#' @import AIMS
 #' @import stringr
 #' @importFrom data.table data.table
 #' @importFrom data.table set
@@ -114,8 +113,10 @@ Mapping = function(gene_expression_matrix, featuredata, method = "max", impute =
 
 BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None", internal = NA, external=NA, medians = NA, Subtype = FALSE, hasClinical = FALSE, ...){
   
-  if(!is.na(phenodata)){
+  if(!is.null(phenodata)){
     rownames(phenodata) = phenodata$PatientID
+  } else{
+    stop("Please provide phenodata table as required.")
   }
   
   arguments = rlang::dots_list(
@@ -167,10 +168,10 @@ BS_parker = function(gene_expression_matrix, phenodata = NA, calibration = "None
 
 BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClinical = FALSE, seed = 118, ...){
 
-  if(!is.na(phenodata)){
+  if(!is.null(phenodata)){
     rownames(phenodata) = phenodata$PatientID
   } else {
-    message("Please provide phenodata table as required.")
+    stop("Please provide phenodata table as required.")
   }
   
   arguments = rlang::dots_list(
@@ -226,10 +227,10 @@ BS_cIHC = function(gene_expression_matrix, phenodata, Subtype = FALSE , hasClini
 
 BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio = 54/64, Subtype = FALSE, hasClinical = FALSE,seed=118, ...){
   
-  if(!is.na(phenodata)){
+  if(!is.null(phenodata)){
     rownames(phenodata) = phenodata$PatientID
   } else {
-    message("Please provide phenodata table as required.")
+    stop("Please provide phenodata table as required.")
   }
   
   
@@ -282,10 +283,10 @@ BS_cIHC.itr = function(gene_expression_matrix, phenodata, iteration = 100, ratio
 
 BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasClinical =FALSE, seed=118, ...){
 
-  if(!is.na(phenodata)){
+  if(!is.null(phenodata)){
     rownames(phenodata) = phenodata$PatientID
   } else {
-    message("Please provide phenodata table as required.")
+    stop("Please provide phenodata table as required.")
   }
   
   samples = phenodata$PatientID
@@ -393,12 +394,11 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
 
 BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasClinical =FALSE, ...) {
 
-  if(!is.na(phenodata)){
+  if(!is.null(phenodata)){
     rownames(phenodata) = phenodata$PatientID
   } else {
-    message("Please provide phenodata table as required.")
+    stop("Please provide phenodata table as required.")
   }
-  
   
   arguments = rlang::dots_list(
     mat = gene_expression_matrix,
@@ -432,13 +432,13 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #'
 #' @examples
 #' # Load required datasets
-#' data("BreastSubtypeR")
+#' data("BreastSubtypeRobj")
 #' data("OSLO2EMIT0obj")
 #' 
 #' # Extract AIMS-specific genes
 #' genes = as.character(
-#'   BreastSubtypeR$genes.signature$EntrezGene.ID[
-#'     which(BreastSubtypeR$genes.signature$AIMS == "Yes")
+#'   BreastSubtypeRobj$genes.signature$EntrezGene.ID[
+#'     which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
 #'   ]
 #' )
 #' 
@@ -452,12 +452,18 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
+  if (!requireNamespace("AIMS", quietly = TRUE)) {
+    stop("The AIMS package is required but not installed.")
+  }
+
+  data("AIMSmodel", package = "AIMS")
+  
   arguments = rlang::dots_list(
     eset =as.matrix(gene_expression_matrix),
     EntrezID = EntrezID 
   )
   
-  call = rlang::call2(AIMS::applyAIMS, !!!arguments)
+  call = rlang::call2(applyAIMS, !!!arguments)
   
   res_AIMS = eval(call)
 
@@ -505,6 +511,9 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
     stop("Package 'sspbc' is required but not installed. 
           Please install it manually from the provided source tarball.")
   }
+  
+  data("sspbc.models", package = "sspbc")
+  data("sspbc.models.fullname", package = "sspbc")
   
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
@@ -803,8 +812,8 @@ BS_Multi = function(data_input, phenodata, methods = NA, Subtype = FALSE, hasCli
     
     if(method == "AIMS"){
       print(paste0(method," is running!"))
-      data("BreastSubtypeR")
-      genes.signature = BreastSubtypeR$genes.signature
+      data("BreastSubtypeRobj")
+      genes.signature = BreastSubtypeRobj$genes.signature
       
       ## loading library first or model
       genes = as.character( genes.signature$EntrezGene.ID[which( genes.signature$AIMS == "Yes" )])

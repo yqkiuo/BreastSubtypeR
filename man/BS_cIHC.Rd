@@ -32,7 +32,7 @@ BS_cIHC(
 A data frame containing the intrinsic subtypes estimated using the conventional IHC (cIHC) method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, balancing estrogen receptor (ER) subsets for gene centering.
+This function predicts breast cancer intrinsic subtypes using the conventional IHC (cIHC) method, which employs ER-balanced subsets for gene centering.
 }
 \examples{
 data("OSLO2EMIT0obj")

@@ -14,7 +14,6 @@ Authors@R: c(
 Depends:
     R (>= 4.4.0)
 Imports:
-    AIMS (>= 1.38.0),
     impute (>= 1.80.0),
     magrittr (>= 2.0.3),
     dplyr (>= 1.1.0),

@@ -23,10 +23,10 @@ BS_ssBC(
 \item When \code{"s"} is set as \code{"TN"} or \code{"TN.v2"}, the table must include a \code{"TN"} column, recording triple-negative samples as \code{"TN"}.
 }}
 
-\item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}. Specifies the quantiles to use:
+\item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}. These specifies which subgroup-specific quantiles to use:
 \itemize{
-\item \code{"ER"} and \code{"TN"}: Original quantiles published in \emph{Breast Cancer Research} (2015).
-\item \code{"ER.v2"} and \code{"TN.v2"}: Updated quantiles published in \emph{Journal of Clinical Oncology} (2024).
+\item \code{"ER"} and \code{"TN"}: Original subgroup-specific quantiles published in \emph{Breast Cancer Research} (2015).
+\item \code{"ER.v2"} and \code{"TN.v2"}: Updated subgroup-specific quantiles published in \emph{Journal of Clinical Oncology} (2020).
 }}
 
 \item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
@@ -41,7 +41,7 @@ BS_ssBC(
 A vector of intrinsic subtypes assigned to the samples, as estimated by the ssBC method.
 }
 \description{
-Performs intrinsic subtyping of breast cancer using the ssBC (single-sample Breast Cancer) method. This method allows for quantile selection tailored to specific breast cancer cohorts and published guidelines.
+This function predicts breast cancer intrinsic subtypes using the subgroup-specific (ssBC) method. This method applies a subgroup-specific gene-centering approach to a test cohort with a skewed distribution of clinicopathological characteristics compared to the original training cohort (e.g., an ER+ selected cohort).
 }
 \examples{
 ## ssBC.v2
