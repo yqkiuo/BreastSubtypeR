@@ -294,7 +294,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
   if ( "ER"  %in% colnames(phenodata) ) {
     
     ## create IHC column for PCAPAM50
-    phenodata$IHC = case_when(
+    phenodata$IHC = dplyr::case_when(
       phenodata$ER == "ER+" ~ "Luminal",
       phenodata$ER == "ER-" ~ "non-Luminal",
       .default = NA

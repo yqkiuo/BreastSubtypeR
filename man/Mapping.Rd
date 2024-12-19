@@ -68,14 +68,11 @@ data_input = Mapping(
   verbose = TRUE
 )
 
-data("gene_expression_data")
-data("feature_data")
-res <- MapGeneIDs(
-  gene_expression_matrix = gene_expression_data,
-  featuredata = feature_data,
-  method = "IQR",
-  impute = TRUE,
-  verbose = TRUE
-)
+data("OSLO2MEITOobj")
+
+## do mapping before subtyping
+data = OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+
 
 }

@@ -2,10 +2,9 @@
 % Please edit documentation in R/Utilities.R
 \name{Vis_boxplot}
 \alias{Vis_boxplot}
-\alias{Vis_boxpot}
 \title{Boxplot of Correlation per Subtype}
 \usage{
-Vis_boxpot(out, correlations)
+Vis_boxplot(out, correlations)
 }
 \arguments{
 \item{out}{A data frame containing the columns \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should have unique identifiers for each patient, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}

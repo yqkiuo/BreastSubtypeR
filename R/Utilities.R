@@ -3,10 +3,11 @@
 #' @import ggplot2
 #' @import ComplexHeatmap
 #' @import RColorBrewer
+#' @import circlize
 #' @import ggrepel
 #' @import magrittr
 #' @import impute
-#' @import dplyr
+#' 
 #' @noRd 
 NULL
 
@@ -31,19 +32,16 @@ NULL
 #' @return A gene expression matrix with mapped ENTREZ IDs, and optionally imputed missing values. The matrix will have genes in rows and samples in columns, with ENTREZ gene IDs as row names.
 #'
 #' @examples
-#' data("gene_expression_data")
-#' data("feature_data")
-#' res <- MapGeneIDs(
-#'   gene_expression_matrix = gene_expression_data,
-#'   featuredata = feature_data,
-#'   method = "IQR",
-#'   impute = TRUE,
-#'   verbose = TRUE
-#' )
+#' data("OSLO2MEITOobj")
+#' 
+#' ## do mapping before subtyping
+#' data = OSLO2EMIT0.103.genematrix_noNeg.subset
+#' data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+#' 
 #'
 #' @export
 
-Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
+Mapping = function(gene_expression_matrix,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
 
   data("BreastSubtypeRobj")
   
@@ -202,7 +200,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
     keep = res_ihc$predictions == consensus_subtypes
     res_ihc$distances[ !keep, ] = as.list(rep(NA, 5 ))
     
-    res = mutate_at(res_ihc$distances, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
+    res = dplyr::mutate_at(res_ihc$distances, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
     
     return(res )
     
@@ -249,7 +247,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
     keep = res_ihc$predictions == consensus_subtypes
     res_ihc$distances.Subtype[ !keep, ] = as.list(rep(NA, 4 ))
     
-    res = mutate_at(res_ihc$distances.Subtype, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
+    res = dplyr::mutate_at(res_ihc$distances.Subtype, vars( everything() ), ~ ifelse(!is.na(.), as.numeric(as.character(.)), NA))
     
     return(res )
     
@@ -312,7 +310,7 @@ get_average_subtype = function(res_ihc_iterative, consensus_subtypes) {
 #'
 #' @export
 
-Vis_boxpot = function(out, correlations ){
+Vis_boxplot = function(out, correlations ){
 
   df = data.frame( predictions = out$Subtype, cor = apply(correlations, 1, max))
   
@@ -344,7 +342,7 @@ Vis_boxpot = function(out, correlations ){
 #' data("OSLO2EMIT0obj")
 #' 
 #' # Prepare data: Gene expression matrix and subtype information
-#' x = data_input$x_NC
+#' x = data_input$x_NC.log
 #' out = data.frame(
 #'   PatientID = res$results$parker.original$BS.all$PatientID,
 #'   Subtype = res$results$parker.original$BS.all$BS
@@ -361,7 +359,7 @@ Vis_heatmap = function(x, out){
   scaled_mat = t(scale(t(x[,out$PatientID])))
 
   ## color
-  col_fun = colorRamp2(c(min(scaled_mat), 0 , max(scaled_mat)), c("green", "black", "red"))
+  col_fun = circlize::colorRamp2(c(min(scaled_mat), 0 , max(scaled_mat)), c("green", "black", "red"))
   
   ## column annotation
   col_anno = data.frame( row.names = out$PatientID, Subtype = out$Subtype )
@@ -455,7 +453,7 @@ Vis_PCA = function(x, out, Eigen = FALSE){
     ## PCA plot
     scores = as.data.frame(pca$x)
     scores$PatientID = rownames(scores)
-    scores = left_join(scores, out, by ="PatientID" )
+    scores = dplyr::left_join(scores, out, by ="PatientID" )
     rownames(scores) = scores$PatientID
     
     pcaplot = ggplot(data = scores, aes(x = PC1, y = PC2, color = Subtype)) +
@@ -505,15 +503,12 @@ Vis_PCA = function(x, out, Eigen = FALSE){
 
 Vis_pie = function(out){
   
-  # out= data.frame(PatientID = rownames(res$results$sspbc$BS.all),
-  #                 Subtype = res$results$sspbc$BS.all$BS )
-  
   data = data.frame( table(out$Subtype))
   data = data %>% 
-    mutate(perc = round( `Freq` / sum(`Freq`) * 100, 2),
+    dplyr::mutate(perc = round( `Freq` / sum(`Freq`) * 100, 2),
            csum = rev(cumsum(rev(perc))), 
-           pos = perc/2 + lead(csum, 1),
-           pos = if_else(is.na(pos), perc/2, pos)) 
+           pos = perc/2 + dplyr::lead(csum, 1),
+           pos = dplyr::if_else(is.na(pos), perc/2, pos)) 
     
     
   Subtype.color = c( "Basal" = "red", "Her2" = "hotpink","LumA" = "darkblue", "LumB" = "skyblue" , "Normal" = "green" )

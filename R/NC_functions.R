@@ -562,6 +562,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 #' @noRd
 
 makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Subtype = FALSE , hasClinical = FALSE, seed=118){
+  
   ## loading dataset
   data("BreastSubtypeRobj")
   
