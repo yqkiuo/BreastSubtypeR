@@ -106,9 +106,6 @@ plot(plot)
 | sspbc | BS_Multi(...) |
 
 
-
-
-
 ## Shiny App
 For users unfamiliar with R, we provide an easy-to-use Shiny app that allows you to perform molecular subtyping interactively.
 
