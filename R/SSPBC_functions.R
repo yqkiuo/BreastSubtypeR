@@ -1,3 +1,5 @@
+## adapted from original sspbc codes (Staaf et al., 2022)
+
 #' @title Single-Sample Predictors for Breast Cancer (sspbc)
 #'
 #' @description
