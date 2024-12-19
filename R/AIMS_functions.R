@@ -1,11 +1,11 @@
 ## adjusted from AIMS v1.38.0 
 
-.smaller <- function(x,y){
+.smaller_AIMS <- function(x,y){
   x < y
 }
 
 ## Functions necessary to run AIMS
-.comp.sel.pairs <- function(dataset,sel.pairs,func=.smaller){
+.comp.sel.pairs_AIMS <- function(dataset,sel.pairs,func=.smaller_AIMS){
   to.ret <- matrix(NA,nrow=length(sel.pairs),ncol(dataset$exprs))
   for (spi in 1:length(sel.pairs)){
     ss.cur <- strsplit(sel.pairs[spi],"<")[[1]]
@@ -24,10 +24,10 @@
   to.ret
 }
 
-.one.vs.all.tsp <- function(D,GeneName,one.vs.all.tsp){
+.one.vs.all.tsp_AIMS <- function(D,GeneName,one.vs.all.tsp){
   ## Need to add some QC
   ## First compute
-  train.pairs <- .comp.sel.pairs(list(exprs=D,GeneName=GeneName),one.vs.all.tsp$all.pairs)
+  train.pairs <- .comp.sel.pairs_AIMS(list(exprs=D,GeneName=GeneName),one.vs.all.tsp$all.pairs)
 
   classes <- matrix("",ncol=length(one.vs.all.tsp$k),nrow=ncol(D))
   prob <- matrix(0,ncol=length(one.vs.all.tsp$k),nrow=ncol(D))
@@ -57,7 +57,7 @@
   invisible(list(cl = classes,prob = prob,all.probs = all.probs,rules.matrix=train.pairs))
 }
 
-.get.all.pairs.genes <- function(all.pairs){
+.get.all.pairs.genes_AIMS <- function(all.pairs){
   genes <- c()
   for (cp in strsplit(all.pairs,"<")){
     genes <- c(genes,cp)
@@ -67,7 +67,7 @@
 ## Remove the duplicated Entrez by keeping the most higly expressed
 ## This is closer to the single sample selection
 ## D is a raw gene expression matrix rows == genes and columns patients
-.removeDuplicatedEntrezPerPatients <- function(D,EntrezID,probes){
+.removeDuplicatedEntrezPerPatients_AIMS<- function(D,EntrezID,probes){
   ## Maybe we have nothing to do already
   if (all(!duplicated(EntrezID))){
     return(list(dataset=D,EntrezID=EntrezID))
@@ -104,7 +104,7 @@
   }
 }
 
-.apply.nbc <- function(D,EntrezID,sel.nbc){
+.apply.nbc_AIMS <- function(D,EntrezID,sel.nbc){
   ## Verify the number of rows of D and EntrezIDs have the same length 
   if (nrow(D) != length(EntrezID)){
     stop(sprintf("You need the same number of rows and EntrezID. Right now nrow(D) = %d and length(EntrezID) = %d",nrow(D),length(EntrezID)))
@@ -121,12 +121,12 @@
   
   D <- apply(D,2,as.numeric)
   EntrezID <- as.character(EntrezID)
-  sel.ids.nb <- .get.all.pairs.genes(sel.nbc$all.pairs)
+  sel.ids.nb <- .get.all.pairs.genes_AIMS(sel.nbc$all.pairs)
   sel.gn <- EntrezID %in% sel.ids.nb
   D <- D[sel.gn,,drop=FALSE]
   Entrez <- EntrezID[sel.gn]
   col.D.test <- .removeDuplicatedEntrezPerPatients(D,Entrez)
-  pred.test <- .one.vs.all.tsp(D=col.D.test$dataset,
+  pred.test <- .one.vs.all.tsp_AIMS(D=col.D.test$dataset,
                               GeneName=col.D.test$EntrezID,
                               sel.nbc)
 
@@ -137,7 +137,7 @@
   invisible(pred.test)
 }
 
-applyAIMS <- function(eset,EntrezID){  
+applyAIMS_AIMS <- function(eset,EntrezID){  
   D <- NA
   if (!is(eset,"ExpressionSet") & !is(eset,"matrix")){
     stop("eset argument should be either an ExpressionSet (Biobase) or a numerical matrix")
@@ -151,6 +151,6 @@ applyAIMS <- function(eset,EntrezID){
   }
   
   data("AIMSmodel")
-  .apply.nbc(D,EntrezID,AIMSmodel)
+  .apply.nbc_AIMS(D,EntrezID,AIMSmodel)
 }
 

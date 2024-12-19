@@ -49,7 +49,6 @@ Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping 
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping
@@ -73,7 +72,6 @@ Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature f
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping

@@ -26,7 +26,8 @@ Imports:
     ggplot2 (>= 3.5.1),
     ggrepel (>= 0.9.6),
     shiny (>= 1.9.1),
-    e1071
+    e1071,
+    methods
 Suggests:
     knitr,
     rmarkdown
