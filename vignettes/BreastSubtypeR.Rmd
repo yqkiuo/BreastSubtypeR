@@ -1,7 +1,12 @@
 ---
 title: "Using BreastSubtypeR for Molecular Subtyping"
-author: "Qiao Yang"
-output: rmarkdown::html_vignette
+author: "Qiao Yang & Emmanouil G. Sifakis"
+output:
+  rmarkdown::html_document:
+    theme: cosmo
+    highlight: zenburn
+    number_sections: true
+    toc: true
 vignette: >
   %\VignetteIndexEntry{BreastSubtypeR}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,7 +23,7 @@ vignette: >
 
 **BreastSubtypeR** is an R package designed to unify and streamline intrinsic molecular subtyping methods for breast cancer (BC). It integrates both nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with an innovative "AUTO" mode feature (described below). The package utilizes standardized input and output formats, providing a cohesive framework that is fully compatible with other R packages in the gene expression profiling field. Additionally, its core functions are accessible through an **interactive Shiny app**, making it user-friendly for researchers and clinicians with limited R programming experience. 
 
-## Features
+### Features
 - **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods.
 - **AUTO Mode Feature**: The "AUTO" mode streamlines subtyping by analyzing the distribution of ER and HER2 status and selecting methods that align with the test cohort's characteristics. It ensures that only methods with assumptions compatible with the data are applied, enhancing the accuracy and reliability of the results.
 - **Optimized Gene Mapping**: Provides gene mapping through Entrez IDs to maximize the number of genes included in each method.
@@ -27,8 +32,8 @@ vignette: >
 
 ## Methods included
 
-| Methods | Group | Citation | Usage |
-|-----------------|-----------------|-----------------|-----------------|
+| Methods | Group | Citation |
+|-----------------|-----------------|-----------------|
 | parker.orginal   | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)   | BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
 | genefu (scale and robust)  | NC-based   |  [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr" ,...) |
 | cIHC-based iterative ER subset (cIHC.itr)    | NC-based    | [Curtis  et al., 2012](https://doi.org/10.1038/nature10983)  | BS_cIHC.itr(...) |
@@ -59,13 +64,14 @@ Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping 
 ```R
 library(BreastSubtypeR)
 
-# Example data input: gene expression and clinical data
+# Example data input: gene signatures, gene expression and clinical data
 data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
-## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+# do mapping before subtyping
+data = OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
 result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
@@ -83,13 +89,14 @@ Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature f
 ```R
 library(BreastSubtypeR)
 
-# Example data input: gene expression and clinical data
+# Load required datasets
 data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+
 # Run the subtyping with AUTO mode
 result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
 
@@ -104,8 +111,10 @@ plot(plot)
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method. 
 ```R
-
+# Load required datasets
 data("OSLO2EMIT0obj")
+
+# Perform subtyping
 res = BS_parker(
   gene_expression_matrix = data_input$x_NC.log,
   phenodata = NA,
@@ -116,6 +125,7 @@ res = BS_parker(
 )
 
 ```
+
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method. 
 ```R
@@ -139,6 +149,21 @@ res = BS_AIMS(
 
 ```
 
+### Method usage
+
+| Methods | Usage |
+|-----------------|-----------------|
+| parker.orginal   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
+| genefu (scale and robust)  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...); BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| cIHC-based iterative ER subset (cIHC.itr)    |  BS_cIHC.itr(...) |
+| conventional IHC (cIHC) | BS_cIHC(...) |
+| PCA-PAM50   |  BS_PCAPAM50(...) |
+| ssBC    |  BS_ssBC(s = "ER", ...) |
+| ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
+| AIMS   | BS_AIMS(...) |
+| sspbc | BS_Multi(...) |
+
+
 ## Shiny App
 For users unfamiliar with R, we provide an easy-to-use Shiny app that allows you to perform molecular subtyping interactively.
 
@@ -156,6 +181,6 @@ The Shiny app allows you to:
 
 
 ## Contributing
-We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue or submit a pull request.
+We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
 
 ## Citation
