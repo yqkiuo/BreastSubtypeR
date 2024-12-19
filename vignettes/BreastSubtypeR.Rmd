@@ -68,7 +68,7 @@ library(BreastSubtypeR)
 
 # Example data input: gene signatures, gene expression and clinical data
 data("BreastSubtypeRobj")
-data("OSLO2MEITOobj")
+data("OSLO2MEIT0obj")
 
 # do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
@@ -88,14 +88,15 @@ plot(plot)
 ```
 
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:    
+
 ```{r}
 
 library(BreastSubtypeR)
 
 # Load required datasets
 data("BreastSubtypeRobj")
-data("OSLO2MEITOobj")
+data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
@@ -160,9 +161,9 @@ res = BS_AIMS(
 
 | Approach | Usage |
 |-----------------|-----------------|
-| parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
-| genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...) |
-| genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" , ...) |
+| genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" , ...) |
+| genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr", ...) |
 | cIHC | BS_cIHC(...) |
 | cIHC.itr    |  BS_cIHC.itr(...) |
 | PCAPAM50   |  BS_PCAPAM50(...) |
@@ -170,7 +171,7 @@ res = BS_AIMS(
 | ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
 | AIMS   | BS_AIMS(...) |
 | sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
+| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...) |
 | Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
 
 
@@ -185,13 +186,18 @@ iBreastSubtypeR()
 ```
 
 The Shiny app allows you to:
-- Upload gene expression, clinical, and annotation data.   
+- Upload gene expression, clinical, and annotation data.    
 - Perform subtyping using a preferred method.   
-- Visualize the results in real-time.   
+- Visualize the results in real-time.    
 - Download results directly to your local machine.   
 
 
 ## Contributing
 We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
 
-## Citation
+
+## Session Information
+
+```{r sessionInfo}
+sessionInfo()
+
