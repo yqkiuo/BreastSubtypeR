@@ -452,10 +452,6 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
-  if (!requireNamespace("AIMS", quietly = TRUE)) {
-    stop("The AIMS package is required but not installed.")
-  }
-
   data("AIMSmodel", package = "AIMS")
   
   arguments = rlang::dots_list(
