@@ -48,7 +48,7 @@ vignette: >
 
 ## Installation
 
-You can install **BreastSubtypeR** from GitHub:
+You can install **BreastSubtypeR** from GitHub:  
 
 ```R
 # Install devtools package if you haven't already
@@ -109,7 +109,7 @@ plot(plot)
 
 ```
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method. 
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.   
 ```R
 # Load required datasets
 data("OSLO2EMIT0obj")
@@ -123,11 +123,11 @@ res = BS_parker(
   Subtype = FALSE,
   hasClinical = FALSE
 )
-
 ```
 
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method. 
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.   
+
 ```R
 
 # Load required datasets
@@ -167,7 +167,8 @@ res = BS_AIMS(
 ## Shiny App
 For users unfamiliar with R, we provide an easy-to-use Shiny app that allows you to perform molecular subtyping interactively.
 
-### Launch the Shiny App:
+### Launch the Shiny App:  
+
 ```R
 library(BreastSubtypeR)
 iBreastSubtypeR()
