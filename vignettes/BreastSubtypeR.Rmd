@@ -52,7 +52,7 @@ vignette: >
 
 You can install **BreastSubtypeR** from GitHub:  
 
-```R
+```{r, eval = FALSE}
 # Install devtools package if you haven't already
 install.packages("devtools")
 
@@ -62,8 +62,8 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here's an example of using **BreastSubtypeR**'s **Multi-Method** subtyping functionality for breast cancer subtyping:
-```R
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
+```{r}
 library(BreastSubtypeR)
 
 # Example data input: gene signatures, gene expression and clinical data
@@ -87,8 +87,10 @@ plot(plot)
 
 ```
 
-Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **Multi-Method** subtyping functionality and **AUTO Mode** enabled. The AUTO Mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
-```R
+
+Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+```{r}
+
 library(BreastSubtypeR)
 
 # Load required datasets
@@ -111,8 +113,10 @@ plot(plot)
 
 ```
 
-Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **parker.original** method:  
-```R
+
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.   
+```{r}
+
 # Load required datasets
 data("OSLO2EMIT0obj")
 
@@ -128,8 +132,10 @@ res = BS_parker(
 ```
 
 
-Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **AIMS** method:   
-```R
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.   
+
+```{r}
+
 
 # Load required datasets
 data("BreastSubtypeRobj")
@@ -173,16 +179,16 @@ For users new to R, we offer an intuitive Shiny app for interactive molecular su
 
 ### Launch the Shiny App:  
 
-```R
+```{r}
 library(BreastSubtypeR)
 iBreastSubtypeR()
 ```
 
 The Shiny app allows you to:
-- Upload gene expression, clinical, and annotation data.
-- Perform subtyping using a preferred method.
-- Visualize the results in real-time.
-- Download results directly to your local machine.
+- Upload gene expression, clinical, and annotation data.   
+- Perform subtyping using a preferred method.   
+- Visualize the results in real-time.   
+- Download results directly to your local machine.   
 
 
 ## Contributing

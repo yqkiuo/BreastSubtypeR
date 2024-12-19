@@ -294,7 +294,7 @@ BS_PCAPAM50 = function(gene_expression_matrix, phenodata, Subtype = FALSE, hasCl
   if ( "ER"  %in% colnames(phenodata) ) {
     
     ## create IHC column for PCAPAM50
-    phenodata$IHC = case_when(
+    phenodata$IHC = dplyr::case_when(
       phenodata$ER == "ER+" ~ "Luminal",
       phenodata$ER == "ER-" ~ "non-Luminal",
       .default = NA
@@ -422,7 +422,7 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #' @description
 #' This function predicts breast cancer intrinsic subtypes using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 #'
-#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. Note: The data must be **unlogged** before using this function.
 #' @param EntrezID A vector of Entrez gene IDs corresponding to the genes in the gene expression matrix.
 #'
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the AIMS method.
@@ -432,8 +432,8 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 #'
 #' @examples
 #' # Load required datasets
-#' data("BreastSubtypeRobj")
 #' data("OSLO2EMIT0obj")
+#' data("BreastSubtypeRobj")
 #' 
 #' # Extract AIMS-specific genes
 #' genes = as.character(
@@ -452,14 +452,16 @@ BS_ssBC = function(gene_expression_matrix, phenodata, s , Subtype = FALSE, hasCl
 
 BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
   
-  data("AIMSmodel", package = "AIMS")
+  ## loading datasets
+  data("AIMSmodel")
+  data("BreastSubtypeRobj")
   
   arguments = rlang::dots_list(
     eset =as.matrix(gene_expression_matrix),
     EntrezID = EntrezID 
   )
   
-  call = rlang::call2(applyAIMS, !!!arguments)
+  call = rlang::call2(applyAIMS_AIMS, !!!arguments)
   
   res_AIMS = eval(call)
 
@@ -472,11 +474,8 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' @description
 #' This function predicts breast cancer intrinsic subtypes using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is based on a refined version of AIMS' original methodology, using a large, uniformly accrued population-based cohort (SCAN-B) for training.
 #' Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.  
-#' The `sspbc` package is required for `BreastSubtypeR` but is not available on CRAN or Bioconductor.   
-#' To install `sspbc`, use the following commands in the example.   
-#' 
 #'
-#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.
+#' @param gene_expression_matrix A gene expression matrix with genes in rows and samples in columns. Note: The data must be **unlogged** before using this function.
 #' @param ssp.name Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).
 #'
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPBC method.
@@ -485,10 +484,7 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 #' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.* NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
-#' # install `sspbc` package 
-#' sspbc_path = system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
-#' install.packages(sspbc_path, repos = NULL, type = "source")
-#' 
+#'
 #' # Load required dataset
 #' data("OSLO2EMIT0obj")
 #'
@@ -502,14 +498,8 @@ BS_AIMS = function(gene_expression_matrix, EntrezID, ...){
 
 BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
   
-  ## check dependencies
-  if (!requireNamespace("sspbc", quietly = TRUE)) {
-    stop("Package 'sspbc' is required but not installed. 
-          Please install it manually from the provided source tarball.")
-  }
-  
-  data("sspbc.models", package = "sspbc")
-  data("sspbc.models.fullname", package = "sspbc")
+  data("sspbc.models")
+  data("sspbc.models.fullname")
   
   arguments = rlang::dots_list(
     gex = gene_expression_matrix,
@@ -518,7 +508,7 @@ BS_sspbc = function(gene_expression_matrix, ssp.name= "ssp.pam50" ,...){
     ssp.name= ssp.name, ..., .homonyms = "last"
   )
   
-  call = rlang::call2(sspbc::applySSP, !!!arguments)
+  call = rlang::call2(applySSP, !!!arguments)
   res_sspbc = eval(call)
 
 }

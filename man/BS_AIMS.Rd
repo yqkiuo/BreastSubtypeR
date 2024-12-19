@@ -7,7 +7,7 @@
 BS_AIMS(gene_expression_matrix, EntrezID, ...)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. Note: The data must be \strong{unlogged} before using this function.}
 
 \item{EntrezID}{A vector of Entrez gene IDs corresponding to the genes in the gene expression matrix.}
 }
@@ -19,8 +19,8 @@ This function predicts breast cancer intrinsic subtypes using the AIMS (Absolute
 }
 \examples{
 # Load required datasets
-data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
+data("BreastSubtypeRobj")
 
 # Extract AIMS-specific genes
 genes = as.character(
