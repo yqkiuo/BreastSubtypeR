@@ -111,7 +111,7 @@ plot(plot)
 
 ```
 
-Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **parker.original** method.   
+Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **parker.original** method:  
 ```R
 # Load required datasets
 data("OSLO2EMIT0obj")
@@ -128,7 +128,7 @@ res = BS_parker(
 ```
 
 
-Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **AIMS** method.   
+Here's an example of using **BreastSubtypeR** for breast cancer subtyping with the **AIMS** method:   
 ```R
 
 # Load required datasets
@@ -164,7 +164,7 @@ res = BS_AIMS(
 | ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
 | AIMS   | BS_AIMS(...) |
 | sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "cIHC", "ssBC.v2", "sspbc",...), ...) |
+| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
 | Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
 
 
