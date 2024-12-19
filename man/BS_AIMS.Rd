@@ -15,17 +15,17 @@ BS_AIMS(gene_expression_matrix, EntrezID, ...)
 A vector of intrinsic subtypes assigned to the samples, as estimated by the AIMS method.
 }
 \description{
-Performs intrinsic subtyping of breast cancer using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method. This method provides a robust assignment of breast cancer molecular subtypes based on Entrez gene IDs.
+This function predicts breast cancer intrinsic subtypes using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 }
 \examples{
 # Load required datasets
-data("BreastSubtypeR")
+data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Extract AIMS-specific genes
 genes = as.character(
-  BreastSubtypeR$genes.signature$EntrezGene.ID[
-    which(BreastSubtypeR$genes.signature$AIMS == "Yes")
+  BreastSubtypeRobj$genes.signature$EntrezGene.ID[
+    which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
   ]
 )
 

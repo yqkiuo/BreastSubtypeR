@@ -32,7 +32,7 @@ BS_PCAPAM50(
 A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.
 }
 \description{
-Performs intrinsic subtyping of breast cancer using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
+This function predicts breast cancer intrinsic subtypes using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
 }
 \examples{
 data("OSLO2EMIT0obj")

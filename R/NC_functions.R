@@ -490,7 +490,7 @@ RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
 
 makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,external=NA, medians = NA,Subtype = FALSE, hasClinical =FALSE  ){
 
-  fl.mdn = BreastSubtypeR$medians
+  fl.mdn = BreastSubtypeRobj$medians
   
   
   if(calibration == "External" & external == "Given.mdns" ) {
@@ -523,7 +523,7 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
   # normalization
   mat = docalibration( mat, df.al, calibration, internal=internal, external=external)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeRobj$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   
   if (Subtype) {
@@ -570,7 +570,7 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   if( dim(ERN.ihc)[1] > dim(ERP.ihc)[1] ) {  temp = ERP.ihc; ERP.ihc = ERN.ihc; ERN.ihc = temp }
   # set.seed(seed); i = sample(dim(ERP.ihc)[1],dim(ERN.ihc)[1]) # take equal number of ER+ and ER- samples
   withr::with_seed(seed, {
-    i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+    i = sample(dim(ERP.ihc)[1],dim(ERN.ihc)[1]) # take equal number of ER+ and ER- samples
   })
   
   length(ERP.ihc$PatientID[i]) # ER positive samples
@@ -591,14 +591,14 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
   colnames(df.mdns) = c("X",surffix)
   
   ## merge mdns
-  fl.mdn = BreastSubtypeR$medians
+  fl.mdn = BreastSubtypeRobj$medians
   
   df.al = merge(fl.mdn, df.mdns , by = "X")
   rownames(df.al) = df.al$X
   df.al = df.al[,-1]
   
   ## centroids
-  centroids = BreastSubtypeR$centroid #pam50_centroids.txt
+  centroids = BreastSubtypeRobj$centroid #pam50_centroids.txt
   
   ## normalization
   mat = docalibration( mat, df.al, calibration, internal)
@@ -640,7 +640,7 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
 makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , Subtype = FALSE, hasClinical = FALSE, seed=118){
   
   # load the published centroids for classifcation
-  centroids = BreastSubtypeR$centroid #pam50_centroids.txt
+  centroids = BreastSubtypeRobj$centroid #pam50_centroids.txt
   
   ## preprocess the input matrix
   ### get ER- samples
@@ -687,7 +687,7 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
     colnames(df.mdns) = c("X",surffix)
     
     ## integrate ihc.mdns
-    fl.mdn = BreastSubtypeR$medians
+    fl.mdn = BreastSubtypeRobj$medians
     
     df.al = merge(fl.mdn, df.mdns , by = "X")
     rownames(df.al) = df.al$X
@@ -817,7 +817,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   
   # set.seed(seed);i = sample(dim(ERP.pc1ihc)[1],dim(ERN.pc1ihc)[1]) # take equal number of ER+ and ER- samples
   withr::with_seed(seed, {
-    i = sample(dim(ERP.pam)[1],dim(ERN.pam)[1]) # take equal number of ER+ and ER- samples
+    i = sample(dim(ERP.pc1ihc)[1],dim(ERN.pc1ihc)[1]) # take equal number of ER+ and ER- samples
   })
   length(ERP.pc1ihc$PatientID[i]) # ER positive samples
   length(ERN.pc1ihc$PatientID)    # ER negative samples
@@ -837,7 +837,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   colnames(df.mdns) = c("X",surffix)
   
   ## medians
-  fl.mdn = BreastSubtypeR$medians 
+  fl.mdn = BreastSubtypeRobj$medians 
   
   df.al = merge(fl.mdn, df.mdns, by = "X")
   rownames(df.al) = df.al$X
@@ -847,7 +847,7 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
   # normalization
   mat = docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeRobj$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   if(Subtype) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
@@ -909,7 +909,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   colnames(df.mdns) = c("X",surffix)
 
   ## median
-  fl.mdn = BreastSubtypeR$medians
+  fl.mdn = BreastSubtypeRobj$medians
   
   df.al = merge(fl.mdn, df.mdns, by = "X")
   rownames(df.al) = df.al$X
@@ -919,7 +919,7 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
   ## normalization
   mat= docalibration( mat, df.al, calibration, internal)
   
-  out = sspPredict(BreastSubtypeR$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
+  out = sspPredict(BreastSubtypeRobj$centroid, mat, std=FALSE, distm="spearman", Subtype = Subtype)
   
   if(Subtype) {
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype, row.names = NULL )
@@ -953,7 +953,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
     stop("Please input equal number of patient clinical information to the number of patient in gene expression matrix.")
   }
     
-  gene.sigma = BreastSubtypeR$ssBC.subgroupQuantile
+  gene.sigma = BreastSubtypeRobj$ssBC.subgroupQuantile
 
   if( s == "ER") { ## use ER selected strategy
     
@@ -1002,7 +1002,7 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
     x.m = sweep(x.m, 1, x.sigma) 
     ## it has been calibrated by selected quantile 
 
-    out = sspPredict(BreastSubtypeR$centroid, x.m , std=FALSE, distm="spearman", Subtype = Subtype)
+    out = sspPredict(BreastSubtypeRobj$centroid, x.m , std=FALSE, distm="spearman", Subtype = Subtype)
     
     
   }, names(samples_selected), SIMPLIFY = FALSE, USE.NAMES = TRUE )
@@ -1062,10 +1062,10 @@ makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  
   
   
   if(Subtype){
-    out = list(predictions=predictions,predictions.Subtype = predictions.Subtype ,testData=testData,distances=distances, distances.Subtype = distances.Subtype, centroids= BreastSubtypeR$centroid)
+    out = list(predictions=predictions,predictions.Subtype = predictions.Subtype ,testData=testData,distances=distances, distances.Subtype = distances.Subtype, centroids= BreastSubtypeRobj$centroid)
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, BS.Subtype = out$predictions.Subtype , row.names = NULL )
   } else {
-    out= list(predictions=predictions, testData=testData,distances=distances,  distances.Subtype = distances.Subtype, centroids=BreastSubtypeR$centroid)
+    out= list(predictions=predictions, testData=testData,distances=distances,  distances.Subtype = distances.Subtype, centroids=BreastSubtypeRobj$centroid)
     Int.sbs = data.frame(PatientID = names(out$predictions), BS = out$predictions, row.names = NULL )
   }
   out$distances.Subtype =  -1 * out$distances.Subtype

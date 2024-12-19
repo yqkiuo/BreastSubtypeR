@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_Multi}
 \alias{BS_Multi}
-\title{Consensus Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
+\title{Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
 \usage{
 BS_Multi(
   data_input,
@@ -47,7 +47,7 @@ If "AUTO" is selected, it must be the sole value in the vector. Otherwise, speci
 A list of intrinsic subtypes estimated by the selected methods.
 }
 \description{
-Performs consensus intrinsic subtyping of breast cancer using multiple approaches Users can specify subtyping approaches or automatically select them based on the ER/HER2 distribution of the test cohort.
+This function predicts breast cancer intrinsic subtypes using multiple methods, allowing users to either specify the subtyping approaches directly or enable automatic selection based on the ER/HER2 distribution of the test cohort.
 }
 \examples{
 # Load required dataset
