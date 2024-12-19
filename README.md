@@ -49,7 +49,7 @@ Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping 
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEITOobj")
+data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
@@ -72,7 +72,7 @@ Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature f
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEITOobj")
+data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset

@@ -1,21 +1,21 @@
 # Define UI for iBreastSubtypeR
 
-ui = page_fluid(
+ui = bslib::page_fluid(
 
   titlePanel("iBreastSubtypeR: Interactive Breast Cancer Intrinsic Subtyping"),
 
-  card(
+  bslib::card(
     tags$div(
       style = "display: flex; align-items: center;",  # Flexbox container
       tags$div(
         style = "flex: 1; text-align: left; margin-right: 20px;",  # Left-aligned logo
-        card_image("logo.svg", height = "180px")
+        bslib::card_image("logo.svg", height = "180px")
       ),
       tags$div(
         style = "flex: 3; text-align: center;",  # Right-aligned text
         tags$div(
           style = "margin-bottom: 10px;",
-          card_header("Welcome to iBreastSubtypeR!")
+          bslib::card_header("Welcome to iBreastSubtypeR!")
         ),
         "This tool integrates intrinsic molecular subtyping methods for breast cancer, 
       including nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches. 
@@ -23,7 +23,7 @@ ui = page_fluid(
       providing a unified framework that is highly compatible with other R packages in the gene expression profiling field.",
         tags$div(
           style = "margin-top: 10px;",
-          card_footer("Enjoy your subtyping journey!")
+          bslib::card_footer("Enjoy your subtyping journey!")
         )
       )
     )
@@ -34,12 +34,12 @@ ui = page_fluid(
   h3("Step 1: Please enter your data"),  # Add a title here
 
   ## main page, input gene expression etc.
-  layout_column_wrap(
+  bslib::layout_column_wrap(
 
     col_width = 3,
     ## gene expression
-    card(
-      card_header("Input 1: Gene expression table"),
+    bslib::card(
+      bslib::card_header("Input 1: Gene expression table"),
       fileInput("GEX", "choose file",
                 accept = c(
                   "text/csv",
@@ -51,8 +51,8 @@ ui = page_fluid(
     ),
     
     ## clinic information
-    card(
-      card_header("Input 2: Clinical table"),
+    bslib::card(
+      bslib::card_header("Input 2: Clinical table"),
       fileInput("clinic", "choose file",
                 accept = c(
                   "text/csv",
@@ -63,8 +63,8 @@ ui = page_fluid(
     ),
     
     ## feature information
-    card(
-      card_header("Input 3: Feature table"),
+    bslib::card(
+      bslib::card_header("Input 3: Feature table"),
       fileInput("anno", "choose file",
                 accept = c(
                   "text/csv",
@@ -76,7 +76,7 @@ ui = page_fluid(
   ),
   
   #### Map button ####
-  card(
+  bslib::card(
     actionButton("map", "Map Now", icon = icon("map"))
   )
   , ## layout 3
@@ -87,7 +87,7 @@ ui = page_fluid(
   h3("Step 2: Please select method & parameters for subtyping"),  # Add a title here
   
   ## options
-  card(
+  bslib::card(
 
     selectInput(
       "BSmethod",
@@ -106,7 +106,7 @@ ui = page_fluid(
     conditionalPanel(
       condition = "input.BSmethod == 'PAM50.parker' ", ## parker
 
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         selectInput(
           "hasClinical",
           "Has Clinical", choices =  list( "FALSE" = "FALSE", "TRUE" = "TRUE" ),
@@ -119,10 +119,10 @@ ui = page_fluid(
       ),
       
       
-      card(
+      bslib::card(
         conditionalPanel(
           condition = "input.calibration == 'External'",
-          layout_column_wrap(
+          bslib::layout_column_wrap(
             selectInput(
               "external",
               "External",
@@ -155,7 +155,7 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC'",
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         selectInput(
           "hasClinical",
           "Has Clinical",
@@ -167,7 +167,7 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC.itr'",
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         numericInput("iteration", label = "Iteration", value = 100),
         numericInput("ratio", label = "Ratio", value = 54/64),
         selectInput(
@@ -181,7 +181,7 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'PCAPAM50'",
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         selectInput(
           "hasClinical",
           "Has Clinical",
@@ -193,7 +193,7 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'ssBC'",
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         selectInput(
           "s",
           "Subgroup",
@@ -215,17 +215,17 @@ ui = page_fluid(
 
     conditionalPanel(
       condition = "input.BSmethod == 'sspbc'",
-      layout_column_wrap(
+      bslib::layout_column_wrap(
         selectInput(
           "Subtype",
-          "Subtype method (4-subtypes)",
+          "Subtype method (TRUE: 4-subtypes; FALSE: 5-subtypes)",
           choices = list("FALSE" = "FALSE", "TRUE" = "TRUE"),
           selected = "FALSE"
         )
       )
     ),
 
-    card(
+    bslib::card(
     actionButton("run", "Subtype Now", icon = icon("cog"))
     )
 

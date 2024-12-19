@@ -12,9 +12,9 @@ server = function(input, output) {
   #### upload data ####
 
   # Reactive values to store uploaded data and results
-  reactive_files = reactiveValues(GEX = NULL, clinic = NULL, anno = NULL, data_input = NULL, output_res = NULL )
+  reactive_files = shiny::reactiveValues(GEX = NULL, clinic = NULL, anno = NULL, data_input = NULL, output_res = NULL )
 
-  observeEvent( input$map, {
+  shiny::observeEvent( input$map, {
     
     req(input$GEX, input$clinic, input$anno) # Ensure files are uploaded
     
@@ -91,7 +91,7 @@ server = function(input, output) {
   
   #### perform analysis ####
 
-   observeEvent( input$run, {
+  shiny::observeEvent( input$run, {
      
      # Check if data has been mapped
      req(reactive_files$data_input)
@@ -168,9 +168,7 @@ server = function(input, output) {
     
          incProgress(0.5, detail = "Running ssBC method...")
          res = BreastSubtypeR::BS_ssBC(gene_expression_matrix = reactive_files$data_input$x_NC.log, phenodata= reactive_files$clinic, s = input$s, hasClinical = input$hasClinical)
-    
-        # res = BreastSubtypeR::BS_ssBC(gene_expression_matrix = data_input$x_NC.log, phenodata= clinic.oslo, s = "ER", hasClinical = "FALSE")
-    
+
          output_res = res$score.ROR
          
        }
@@ -178,8 +176,10 @@ server = function(input, output) {
        if ( input$BSmethod == "AIMS") {
          
          incProgress(0.5, detail = "Running AIMS method...")
-         data("BreastSubtypeR")
-         genes = as.character( BreastSubtypeR$genes.signature$EntrezGene.ID[which( BreastSubtypeR$genes.signature$AIMS == "Yes" )])
+         
+         data("BreastSubtypeRobj", package = "BreastSubtypeR")
+         
+         genes = as.character( BreastSubtypeRobj$genes.signature$EntrezGene.ID[which( BreastSubtypeRobj$genes.signature$AIMS == "Yes" )])
          
          data.aims = reactive_files$data_input$x_SSP[ rownames(reactive_files$data_input$x_SSP) %in% genes,]
          res = BreastSubtypeR::BS_AIMS(gene_expression_matrix = data.aims, EntrezID = rownames(data.aims))
@@ -193,6 +193,7 @@ server = function(input, output) {
        if (input$BSmethod == "sspbc"){
     
          incProgress(0.5, detail = "Running sspbc method...")
+
          res_sspbc = BreastSubtypeR::BS_sspbc( as.matrix(reactive_files$data_input$x_SSP), ssp.name = "ssp.pam50")
     
          BS.all = data.frame( PatientID = rownames(res_sspbc),BS = res_sspbc[,1],row.names = rownames(res_sspbc))
@@ -227,7 +228,7 @@ server = function(input, output) {
                          } else {
                            res$BS.all$BS
                          })
-       output$pie1 <- renderPlot(BreastSubtypeR::Vis_pie(out))
+       output$pie1 = renderPlot(BreastSubtypeR::Vis_pie(out))
        
        matrix = if (input$BSmethod == "sspbc" || input$BSmethod == "AIMS") {
          log2(reactive_files$data_input$x_SSP + 1)
@@ -239,17 +240,17 @@ server = function(input, output) {
          rownames(matrix) = NULL
        }
        
-       output$heat2 <- renderPlot(BreastSubtypeR::Vis_heatmap(matrix, out = out))
+       output$heat2 = renderPlot(BreastSubtypeR::Vis_heatmap(matrix, out = out))
        
        output$plotSection = renderUI({
         
         req(input$run)  # Wait until the run button is clicked
         
         # Once 'Run' is clicked, show the plot layout
-        layout_columns(
+         bslib::layout_columns(
           col_width = 2,
-          card(plotOutput("pie1")),
-          card(plotOutput("heat2"))
+          bslib::card(plotOutput("pie1")),
+          bslib::card(plotOutput("heat2"))
         )
       })
       
