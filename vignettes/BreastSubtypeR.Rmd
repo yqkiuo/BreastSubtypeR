@@ -50,7 +50,7 @@ vignette: >
 
 You can install **BreastSubtypeR** from GitHub:  
 
-```R
+```{r, eval = FALSE}
 # Install devtools package if you haven't already
 install.packages("devtools")
 
@@ -61,7 +61,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 ## Getting Started
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
-```R
+```{r}
 library(BreastSubtypeR)
 
 # Example data input: gene signatures, gene expression and clinical data
@@ -86,7 +86,7 @@ plot(plot)
 ```
 
 Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
-```R
+```{r}
 library(BreastSubtypeR)
 
 # Load required datasets
@@ -110,7 +110,7 @@ plot(plot)
 ```
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.   
-```R
+```{r}
 # Load required datasets
 data("OSLO2EMIT0obj")
 
@@ -128,7 +128,7 @@ res = BS_parker(
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.   
 
-```R
+```{r}
 
 # Load required datasets
 data("BreastSubtypeRobj")
@@ -169,7 +169,7 @@ For users unfamiliar with R, we provide an easy-to-use Shiny app that allows you
 
 ### Launch the Shiny App:  
 
-```R
+```{r}
 library(BreastSubtypeR)
 iBreastSubtypeR()
 ```

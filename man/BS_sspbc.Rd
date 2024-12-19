@@ -7,7 +7,7 @@
 BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data must be log-transformed.}
+\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. Note: The data must be \strong{unlogged} before using this function.}
 
 \item{ssp.name}{Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).}
 }
@@ -17,13 +17,8 @@ A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPB
 \description{
 This function predicts breast cancer intrinsic subtypes using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is based on a refined version of AIMS' original methodology, using a large, uniformly accrued population-based cohort (SCAN-B) for training.
 Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
-The \code{sspbc} package is required for \code{BreastSubtypeR} but is not available on CRAN or Bioconductor.
-To install \code{sspbc}, use the following commands in the example.
 }
 \examples{
-# install `sspbc` package 
-sspbc_path = system.file("extdata", "sspbc", "sspbc_1.0.tar.gz", package = "BreastSubtypeR", mustWork = TRUE)
-install.packages(sspbc_path, repos = NULL, type = "source")
 
 # Load required dataset
 data("OSLO2EMIT0obj")

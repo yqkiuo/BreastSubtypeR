@@ -45,10 +45,6 @@ NULL
 
 Mapping = function(gene_expression_matrix ,featuredata = NA, method = "max", impute = TRUE, verbose = TRUE ){
 
-  # ## test
-  # gene_expression_matrix = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-  # featuredata = anno_feature
-
   data("BreastSubtypeRobj")
   
   x = gene_expression_matrix

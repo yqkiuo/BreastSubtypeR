@@ -490,6 +490,9 @@ RORgroup = function(out, df.cln, Subtype = FALSE, hasClinical = FALSE ){
 
 makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,external=NA, medians = NA,Subtype = FALSE, hasClinical =FALSE  ){
 
+  ## loading dataset
+  data("BreastSubtypeRobj")
+  
   fl.mdn = BreastSubtypeRobj$medians
   
   
@@ -559,7 +562,9 @@ makeCalls.parker = function(mat, df.cln, calibration = "None", internal = NA,ext
 #' @noRd
 
 makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.mdns", external=NA, medians = NA , Subtype = FALSE , hasClinical = FALSE, seed=118){
-
+  ## loading dataset
+  data("BreastSubtypeRobj")
+  
   ERN.ihc = df.cln[which(df.cln$ER == "ER-"),] ### get ER- samples data.frame
   dim(ERN.ihc)	#[1] 153   9
   
@@ -638,6 +643,9 @@ makeCalls.ihc = function(mat, df.cln, calibration = "Internal", internal = "IHC.
 #' @noRd
 
 makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64, calibration = "Internal", internal = "ER.mdns", external=NA, medians = NA , Subtype = FALSE, hasClinical = FALSE, seed=118){
+  
+  ## loading dataset
+  data("BreastSubtypeRobj")
   
   # load the published centroids for classifcation
   centroids = BreastSubtypeRobj$centroid #pam50_centroids.txt
@@ -753,6 +761,8 @@ makeCalls.ihc.iterative = function( mat, df.cln, iteration = 100, ratio = 54/64,
 #' @noRd
 
 makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC1ihc.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE, seed=118){
+  ## loading dataset
+  data("BreastSubtypeRobj")
   
   # Initial checks for 'df.cln' and 'mat'
   if (is.null(df.cln) || !'PatientID' %in% colnames(df.cln) || !'IHC' %in% colnames(df.cln)) {
@@ -880,7 +890,9 @@ makeCalls.PC1ihc = function(mat, df.cln, calibration = "Internal", internal ="PC
 
 makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1PAM.mdns", external=NA, medians = NA ,Subtype =FALSE, hasClinical = FALSE,seed=118 ){
   
-
+  ## loading dataset
+  data("BreastSubtypeRobj")
+  
   ERN.pam = df.pam[which(df.pam$PAM50 %in% c("Basal")),] ### get ER- samples data.frame
   dim(ERN.pam)
   
@@ -948,6 +960,9 @@ makeCalls.v1PAM = function(mat, df.pam, calibration = "Internal", internal ="v1P
 #' 
 
 makeCalls.ssBC = function(mat, df.cln, s, Subtype = FALSE , hasClinical =FALSE  ){
+  
+  ## loading dataset
+  data("BreastSubtypeRobj")
   
   if( !(dim(mat)[2] == dim(df.cln)[1]) ){
     stop("Please input equal number of patient clinical information to the number of patient in gene expression matrix.")
