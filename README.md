@@ -53,8 +53,8 @@ data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
 result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
@@ -77,8 +77,8 @@ data("BreastSubtypeRobj")
 data("OSLO2MEITOobj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg[,clinic.oslo$PatientID]
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
 # Run the subtyping with AUTO mode
 result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
 
@@ -104,9 +104,6 @@ plot(plot)
 | ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
 | AIMS   | BS_AIMS(...) |
 | sspbc | BS_Multi(...) |
-
-
-
 
 
 ## Shiny App
