@@ -32,7 +32,7 @@ vignette: >
 - **User-Friendly Shiny App Interface**: Features a web-based GUI that runs entirely locally, ensuring data privacy with no online sharing, ideal for users who prefer a visual interface over R scripting.
 
 
-## Approaches included
+## Single-Methods included
 
 | Approach | Description    | Group   | Citation    |
 |-----------------|-----------------|-----------------|-----------------|
@@ -62,7 +62,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using Multiple Methods (Multi-Method Subtyping Functionality). By default, the user manually selects the methods to be used:
 ```{r}
 library(BreastSubtypeR)
 
@@ -88,7 +88,7 @@ plot(plot)
 ```
 
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using Multiple Methods with **AUTO** mode feature enabled. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
 ```{r}
 
 library(BreastSubtypeR)
@@ -114,7 +114,7 @@ plot(plot)
 ```
 
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.   
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.original method:   
 ```{r}
 
 # Load required datasets
@@ -132,7 +132,7 @@ res = BS_parker(
 ```
 
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.   
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method:   
 
 ```{r}
 
@@ -160,18 +160,18 @@ res = BS_AIMS(
 
 | Approach | Usage |
 |-----------------|-----------------|
-| parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
-| genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...) |
-| genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr",...) |
-| cIHC | BS_cIHC(...) |
-| cIHC.itr    |  BS_cIHC.itr(...) |
-| PCAPAM50   |  BS_PCAPAM50(...) |
-| ssBC    |  BS_ssBC(s = "ER", ...) |
-| ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
-| AIMS   | BS_AIMS(...) |
-| sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
-| Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
+| Multi-Method subtyping: User-Selected Methods | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
+| Multi-Method subtyping: AUTO mode enabled | BS_Multi(methods = "AUTO", ...) |
+| Single-Method subtyping: parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" ,...) |
+| Single-Method subtyping: genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" ,...) |
+| Single-Method subtyping: genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr",...) |
+| Single-Method subtyping: cIHC | BS_cIHC(...) |
+| Single-Method subtyping: cIHC.itr    |  BS_cIHC.itr(...) |
+| Single-Method subtyping: PCAPAM50   |  BS_PCAPAM50(...) |
+| Single-Method subtyping: ssBC    |  BS_ssBC(s = "ER", ...) |
+| Single-Method subtyping: ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
+| Single-Method subtyping: AIMS   | BS_AIMS(...) |
+| Single-Method subtyping: sspbc | BS_sspbc(...) |
 
 
 ## Shiny App
