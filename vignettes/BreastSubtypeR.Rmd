@@ -71,26 +71,34 @@ data("BreastSubtypeRobj")
 data("OSLO2MEIT0obj")
 
 # do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data <- OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input <- Mapping(
+    gene_expr = data,
+    featuredata = anno_feature.subset,
+    impute = TRUE,
+    verbose = TRUE
+)
 
 # Run the subtyping
-methods = c("parker.median", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
+methods <- c("parker.median", "PCAPAM50", "sspbc")
+result <- BS_Multi(
+    data_input = data_input,
+    pheno = clinic.oslo,
+    methods = methods,
+    Subtype = TRUE
+)
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot <- Vis_Multi(res$res_subtypes)
 plot(plot)
-
 ```
 
 Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
 
 ```{r}
-
 library(BreastSubtypeR)
 
 # Load required datasets
@@ -98,61 +106,62 @@ data("BreastSubtypeRobj")
 data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data <- OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input <- Mapping(
+    gene_expr = data,
+    featuredata = anno_feature.subset,
+    impute = TRUE,
+    verbose = TRUE
+)
 
 # Run the subtyping with AUTO mode
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
+result <- BS_Multi(
+    data_input = data_input,
+    pheno = clinic.oslo,
+    methods = "AUTO"
+)
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot <- Vis_Multi(res$res_subtypes)
 plot(plot)
-
 ```
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.
 
 ```{r}
-
 # Load required datasets
 data("OSLO2EMIT0obj")
 
 # Perform subtyping
-res = BS_parker(
-  gene_expression_matrix = data_input$x_NC.log,
-  phenodata = NA,
-  calibration = "Internal",
-  internal = "medianCtr",
-  Subtype = FALSE,
-  hasClinical = FALSE
+res <- BS_parker(
+    gene_expr = data_input$x_NC.log,
+    pheno = NA,
+    calibration = "Internal",
+    internal = "medianCtr",
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 ```
 
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.
 
 ```{r}
-
-
 # Load required datasets
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Extract AIMS-specific genes
-genes = as.character(
-  BreastSubtypeR$genes.signature$EntrezGene.ID[
-    which(BreastSubtypeR$genes.signature$AIMS == "Yes")
-  ]
-)
+genes.s <- BreastSubtypeRobj$genes.signature
+genes <- genes.s$EntrezGene.ID[which(genes.s$AIMS == "Yes")] %>% as.character()
 
 # Perform subtyping
-res = BS_AIMS(
-  gene_expression_matrix = data_input$x_SSP[genes, ],
-  EntrezID = rownames(data_input$x_SSP[genes, ])
+res <- BS_AIMS(
+    gene_expr = data_input$x_SSP[genes, ],
+    EntrezID = rownames(data_input$x_SSP[genes, ])
 )
-
 ```
 
 ### Usage
@@ -169,8 +178,8 @@ res = BS_AIMS(
 | ssBC.v2 | BS_ssBC(s = "ER.v2", ...) |
 | AIMS | BS_AIMS(...) |
 | sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...) |
-| Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
+| Multi-Method Subtyping Functionality | BS_Multi( methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
+| Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi( methods = "AUTO", ...) |
 
 ## Shiny App
 
@@ -191,8 +200,12 @@ The Shiny app allows you to:\
 
 ## Contributing
 
-We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
+We welcome contributions to the package. If you find any bugs or have feature 
+requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
 
 ## Session Information
 
-\`\`\`{r sessionInfo} sessionInfo()
+```{r sessionInfo}
+library(BreastSubtypeR)
+sessionInfo()
+```

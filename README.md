@@ -5,15 +5,35 @@
 
 ## Overview
 
-**BreastSubtypeR** is an R package designed to unify and streamline intrinsic molecular subtyping methods for breast cancer (BC). It integrates both nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, along with an innovative "AUTO" mode feature (described below). The package utilizes standardized input and output formats, providing a cohesive framework that is fully compatible with other R packages in the gene expression profiling field. Additionally, its core functions are accessible through an **interactive Shiny app**, making it user-friendly for researchers and clinicians with limited R programming experience. 
+**BreastSubtypeR** is an R package designed to unify and streamline intrinsic 
+molecular subtyping methods for breast cancer (BC). It integrates both 
+nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, 
+along with an innovative "AUTO" mode feature (described below). The package 
+utilizes standardized input and output formats, providing a cohesive framework 
+that is fully compatible with other R packages in the gene expression profiling 
+field. Additionally, its core functions are accessible through an 
+**interactive Shiny app**, making it user-friendly for researchers and 
+clinicians with limited R programming experience. 
 
 ## Features
-- **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
-- **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
-- **AUTO Mode Feature**: Evaluates the distribution of ER and HER2 status in the test cohort to automatically select subtyping methods that align with the cohort's characteristics, ensuring compatibility with method-specific assumptions for greater accuracy and reliability.
-- **Optimized Gene Mapping**: Optimizes gene mapping using Entrez IDs to maximize the inclusion of genes across subtyping methods.
-- **Streamlined Input and Output**: Provides standardized input/output formats to ensure smooth integration with other gene expression analysis tools.
-- **User-Friendly Shiny App Interface**: Features a web-based GUI that runs entirely locally, ensuring data privacy with no online sharing, ideal for users who prefer a visual interface over R scripting.  
+- **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple 
+published intrinsic subtyping methods, including NC-based approaches like the 
+original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like 
+AIMS (Paquet et al., J Natl Cancer Inst, 2015).
+- **Multi-Method Subtyping Functionality**: Simultaneously predicts breast 
+cancer intrinsic subtypes using a variety of validated methods 
+for comparative analysis.
+- **AUTO Mode Feature**: Evaluates the distribution of ER and HER2 status in 
+the test cohort to automatically select subtyping methods that align with the 
+cohort's characteristics, ensuring compatibility with method-specific 
+assumptions for greater accuracy and reliability.
+- **Optimized Gene Mapping**: Optimizes gene mapping using Entrez IDs to 
+maximize the inclusion of genes across subtyping methods.
+- **Streamlined Input and Output**: Provides standardized input/output 
+formats to ensure smooth integration with other gene expression analysis tools.
+- **User-Friendly Shiny App Interface**: Features a web-based GUI that runs 
+entirely locally, ensuring data privacy with no online sharing, ideal for users 
+who prefer a visual interface over R scripting.  
 
 
 
@@ -47,7 +67,8 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping
+using multiple methods:
 ```R
 library(BreastSubtypeR)
 
@@ -56,10 +77,18 @@ data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data_input = Mapping(
+gene_expr = data, 
+featuredata = anno_feature.subset, 
+impute = TRUE, 
+verbose = TRUE )
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
+result = BS_Multi(
+data_input = data_input, 
+pheno = clinic.oslo, 
+methods = methods, 
+Subtype = TRUE)
 
 # View the results
 head(result$res_subtypes)
@@ -70,7 +99,9 @@ plot(plot)
 
 ```
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature
+for breast cancer subtyping. AUTO mode automatically selects methods based on
+the ER/HER2 distribution of the test cohort:
 ```R
 library(BreastSubtypeR)
 
@@ -79,9 +110,16 @@ data("OSLO2MEIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data_input = Mapping(
+gene_expr = data, 
+featuredata = anno_feature.subset, 
+impute = TRUE, 
+verbose = TRUE )
 # Run the subtyping with AUTO mode
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
+result = BS_Multi(
+data_input = data_input, 
+pheno = clinic.oslo, 
+methods = "AUTO")
 
 # View the results
 head(result$res_subtypes)

@@ -4,21 +4,17 @@
 \alias{BS_Multi}
 \title{Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
 \usage{
-BS_Multi(
-  data_input,
-  phenodata,
-  methods = NA,
-  Subtype = FALSE,
-  hasClinical = FALSE,
-  ...
-)
+BS_Multi(data_input, pheno, methods = NA, Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
-\item{data_input}{The output from the \code{Mapping()} function, containing processed gene expression data prepared for subtyping analysis.}
+\item{data_input}{The output from the \code{Mapping()} function, containing
+processed gene expression data prepared for subtyping analysis.}
 
-\item{phenodata}{A clinical information table. The first column must be named "PatientID".}
+\item{pheno}{A clinical information table. The first column must be named
+"PatientID".}
 
-\item{methods}{A character vector specifying the subtyping methods to be used. Options include:
+\item{methods}{A character vector specifying the subtyping methods to be
+used. Options include:
 \itemize{
 \item "parker.original"
 \item "genefu.scale"
@@ -33,36 +29,45 @@ BS_Multi(
 \item "AUTO" (Automatically selects methods based on the ER/HER2 distribution of the test cohort).
 }
 
-If "AUTO" is selected, it must be the sole value in the vector. Otherwise, specify at least two other methods for subtyping. An error will occur if fewer than two methods (excluding "AUTO") are provided.}
+If "AUTO" is selected, it must be the sole value in the vector. Otherwise,
+specify at least two other methods for subtyping. An error will occur if
+fewer than two methods (excluding "AUTO") are provided.}
 
-\item{Subtype}{Logical. If \code{TRUE}, predicts four subtypes by excluding the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, predicts four subtypes by excluding the
+Normal-like subtype.}
 
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
+the \code{pheno} table. Required columns include:
 \itemize{
-\item \code{"T"}: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-\item \code{"NODE"}: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+\item \code{"T"}: Tumor size (0 for
+size <= 2cm or 1 for size > 2cm).
+\item \code{"NODE"}: Lymph node status (0 for Lymph
+node negative or 1 for Lymph node positive).
 }}
 }
 \value{
 A list of intrinsic subtypes estimated by the selected methods.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using multiple methods, allowing users to either specify the subtyping approaches directly or enable automatic selection based on the ER/HER2 distribution of the test cohort.
+This function predicts breast cancer intrinsic subtypes using
+multiple methods, allowing users to either specify the subtyping approaches
+directly or enable automatic selection based on the ER/HER2 distribution of
+the test cohort.
 }
 \examples{
 # Load required dataset
 data("OSLO2EMIT0obj")
 
 # Define methods to use for consensus subtyping
-methods = c("parker.original", "genefu.scale", "genefu.robust")
+methods <- c("parker.original", "genefu.scale", "genefu.robust")
 
 # Perform subtyping
-res.test = BS_Multi(
-  data_input = data_input,
-  phenodata = clinic.oslo,
-  methods = methods,
-  Subtype = FALSE,
-  hasClinical = FALSE
+res.test <- BS_Multi(
+    data_input = data_input,
+    pheno = clinic.oslo,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }

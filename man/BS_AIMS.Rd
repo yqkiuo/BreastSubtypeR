@@ -4,18 +4,23 @@
 \alias{BS_AIMS}
 \title{AIMS Intrinsic Subtyping (BS_AIMS)}
 \usage{
-BS_AIMS(gene_expression_matrix, EntrezID, ...)
+BS_AIMS(gene_expr, EntrezID)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. Note: The data must be \strong{unlogged} before using this function.}
+\item{gene_expr}{A gene expression matrix with genes in rows and
+samples in columns. Note: The data must be \strong{unlogged} before using this
+function.}
 
-\item{EntrezID}{A vector of Entrez gene IDs corresponding to the genes in the gene expression matrix.}
+\item{EntrezID}{A vector of Entrez gene IDs corresponding to the genes in the
+gene expression matrix.}
 }
 \value{
-A vector of intrinsic subtypes assigned to the samples, as estimated by the AIMS method.
+A vector of intrinsic subtypes assigned to the samples, as estimated
+by the AIMS method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
+This function predicts breast cancer intrinsic subtypes using
+the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 }
 \examples{
 # Load required datasets
@@ -23,19 +28,23 @@ data("OSLO2EMIT0obj")
 data("BreastSubtypeRobj")
 
 # Extract AIMS-specific genes
-genes = as.character(
-  BreastSubtypeRobj$genes.signature$EntrezGene.ID[
-    which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
-  ]
+genes <- as.character(
+    BreastSubtypeRobj$genes.signature$EntrezGene.ID[
+        which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
+    ]
 )
 
 # Perform subtyping
-res = BS_AIMS(
-  gene_expression_matrix = data_input$x_SSP[genes, ],
-  EntrezID = rownames(data_input$x_SSP[genes, ])
+res <- BS_AIMS(
+    gene_expr = data_input$x_SSP[genes, ],
+    EntrezID = rownames(data_input$x_SSP[genes, ])
 )
 
 }
 \references{
-Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1). https://doi.org/10.1093/jnci/dju357
+\itemize{
+\item Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer
+intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1).
+https://doi.org/10.1093/jnci/dju357
+}
 }

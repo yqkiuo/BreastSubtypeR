@@ -7,28 +7,35 @@
 Vis_heatmap(x, out)
 }
 \arguments{
-\item{x}{A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.}
+\item{x}{A gene expression matrix, where genes are rows and samples are
+columns. The data should be log2 transformed.}
 
-\item{out}{A data frame containing two columns: \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should contain unique patient identifiers, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
+\item{out}{A data frame containing two columns: \code{"PatientID"} and
+\code{"Subtype"}. The \code{"PatientID"} column should contain unique patient
+identifiers, and the \code{"Subtype"} column should specify the assigned subtype
+for each patient.}
 }
 \value{
-A \code{ggplot} or \code{heatmap} object (depending on implementation) representing the heatmap of gene expression across different subtypes.
+A \code{ggplot} or \code{heatmap} object (depending on implementation)
+representing the heatmap of gene expression across different subtypes.
 }
 \description{
-This function generates a heatmap to visualize gene expression patterns across breast cancer subtypes, based on the provided gene expression matrix and subtype information.
+This function generates a heatmap to visualize gene expression
+patterns across breast cancer subtypes, based on the provided gene expression
+matrix and subtype information.
 }
 \examples{
 data("OSLO2EMIT0obj")
 
 # Prepare data: Gene expression matrix and subtype information
-x = data_input$x_NC.log
-out = data.frame(
-  PatientID = res$results$parker.original$BS.all$PatientID,
-  Subtype = res$results$parker.original$BS.all$BS
+x <- data_input$x_NC.log
+out <- data.frame(
+    PatientID = res$results$parker.original$BS.all$PatientID,
+    Subtype = res$results$parker.original$BS.all$BS
 )
 
 # Generate the heatmap
-p = Vis_heatmap(x, out)
+p <- Vis_heatmap(x, out)
 plot(p)
 
 }
