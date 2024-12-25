@@ -4,58 +4,81 @@
 \alias{BS_ssBC}
 \title{ssBC Intrinsic Subtyping (BS_ssBC)}
 \usage{
-BS_ssBC(
-  gene_expression_matrix,
-  phenodata,
-  s,
-  Subtype = FALSE,
-  hasClinical = FALSE,
-  ...
-)
+BS_ssBC(gene_expr, pheno, s, Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+\item{gene_expr}{A gene expression matrix with genes in rows and
+samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must contain sample or patient names, named \code{"PatientID"}.
+\item{pheno}{A clinical information table. The first column must contain
+sample or patient names, named \code{"PatientID"}.
 \itemize{
-\item When \code{"s"} is set as \code{"ER"}, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.
-\item When \code{"s"} is set as \code{"ER.v2"}, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}, and a \code{"HER2"} column, where human epidermal growth factor receptor 2 (HER2) status is recorded as \code{"HER2+"} or \code{"HER2-"}.
-\item When \code{"s"} is set as \code{"TN"} or \code{"TN.v2"}, the table must include a \code{"TN"} column, recording triple-negative samples as \code{"TN"}.
+\item When \code{"s"} is set as \code{"ER"},
+the table must include an \code{"ER"} column, where estrogen receptor (ER)
+status is recorded as \code{"ER+"} or \code{"ER-"}.
+\item When \code{"s"} is set as \code{"ER.v2"},
+the table must include an \code{"ER"} column, where estrogen receptor (ER)
+status is recorded as \code{"ER+"} or \code{"ER-"}, and a \code{"HER2"} column, where
+human epidermal growth factor receptor 2 (HER2) status is recorded as
+\code{"HER2+"} or \code{"HER2-"}.
+\item When \code{"s"} is set as \code{"TN"} or \code{"TN.v2"}, the table
+must include a \code{"TN"} column, recording triple-negative samples as \code{"TN"}.
 }}
 
-\item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}. These specifies which subgroup-specific quantiles to use:
+\item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}.
+These specifies which subgroup-specific quantiles to use:
 \itemize{
-\item \code{"ER"} and \code{"TN"}: Original subgroup-specific quantiles published in \emph{Breast Cancer Research} (2015).
-\item \code{"ER.v2"} and \code{"TN.v2"}: Updated subgroup-specific quantiles published in \emph{Journal of Clinical Oncology} (2020).
+\item \code{"ER"} and \code{"TN"}: Original subgroup-specific quantiles published in
+\emph{Breast Cancer Research} (2015).
+\item \code{"ER.v2"} and \code{"TN.v2"}: Updated
+subgroup-specific quantiles published in \emph{Journal of Clinical Oncology}
+(2020).
 }}
 
-\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
+excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
+the \code{pheno} table. Required columns include:
 \itemize{
-\item \code{"T"}: Tumor size (0 for size <= 2cm or 1 for size > 2cm).
-\item \code{"NODE"}: Lymph node status (0 for Lymph node negative or 1 for Lymph node positive).
+\item \code{"T"}: Tumor size (0 for
+size <= 2cm or 1 for size > 2cm).
+\item \code{"NODE"}: Lymph node status (0 for Lymph
+node negative or 1 for Lymph node positive).
 }}
 }
 \value{
-A vector of intrinsic subtypes assigned to the samples, as estimated by the ssBC method.
+A vector of intrinsic subtypes assigned to the samples, as estimated
+by the ssBC method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using the subgroup-specific (ssBC) method. This method applies a subgroup-specific gene-centering approach to a test cohort with a skewed distribution of clinicopathological characteristics compared to the original training cohort (e.g., an ER+ selected cohort).
+This function predicts breast cancer intrinsic subtypes using
+the subgroup-specific (ssBC) method. This method applies a
+subgroup-specific gene-centering approach to a test cohort with a skewed
+distribution of clinicopathological characteristics compared to the
+original training cohort (e.g., an ER+ selected cohort).
 }
 \examples{
 ## ssBC.v2
 data("OSLO2EMIT0obj")
-res = BS_ssBC(
-  gene_expression_matrix = data_input$x_NC.log,
-  phenodata = clinic.oslo,
-  s = "ER.v2",
-  Subtype = FALSE,
-  hasClinical = FALSE
+res <- BS_ssBC(
+    gene_expr = data_input$x_NC.log,
+    pheno = clinic.oslo,
+    s = "ER.v2",
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }
 \references{
-Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular subtyping for clinically defined breast cancer subgroups.} Breast Cancer Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al. \emph{Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or without lapatinib in HER2-positive breast cancer.} Journal of Clinical Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+\itemize{
+\item Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular
+subtyping for clinically defined breast cancer subgroups.} Breast Cancer
+Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
+\item Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
+et al. \emph{Survival, pathologic response, and genomics in CALGB 40601
+(Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
+without lapatinib in HER2-positive breast cancer.} Journal of Clinical
+Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+}
 }

@@ -7,19 +7,24 @@
 Vis_Multi(data)
 }
 \arguments{
-\item{out}{A data frame or matrix that includes the subtypes predicted by different methods. The rows should represent individual samples (e.g., \code{PatientID}), and columns should correspond to the subtypes predicted by different methods.}
+\item{out}{A data frame or matrix that includes the subtypes predicted by
+different methods. The rows should represent individual samples (e.g.,
+\code{PatientID}), and columns should correspond to the subtypes predicted by
+different methods.}
 }
 \value{
 A heatmap visualization of multi-method subtype results.
 }
 \description{
-This function generates a heatmap visualization of breast cancer subtypes based on multiple subtyping methods. It allows users to visualize how different methods classify samples into subtypes.
+This function generates a heatmap visualization of breast cancer
+subtypes based on multiple subtyping methods. It allows users to visualize
+how different methods classify samples into subtypes.
 }
 \examples{
 data("OSLO2EMIT0obj")
 
 # Assuming `res$res_subtypes` contains multi-method subtype results
-p = Vis_Multi(res$res_subtypes) 
+p <- Vis_Multi(res$res_subtypes)
 plot(p)
 
 }

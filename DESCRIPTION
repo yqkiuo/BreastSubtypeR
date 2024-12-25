@@ -6,8 +6,7 @@ Encoding: UTF-8
 Version: 0.99.0
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
-    person( given = "Qiao", 
-            family = "Qiao", 
+    person(given = "Qiao", family = "Yang", 
 	    role=c("aut", "cre"), email="yq.kiuo@gmail.com", 
             comment = c(ORCID = "0000-0002-4098-3246")) 
   )
@@ -36,5 +35,5 @@ BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL (>= 3)
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-LazyData: false
+LazyData: FALSE
 RoxygenNote: 7.3.2

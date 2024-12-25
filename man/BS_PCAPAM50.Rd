@@ -4,23 +4,22 @@
 \alias{BS_PCAPAM50}
 \title{PCA-PAM50 Intrinsic Subtyping (BS_PCAPAM50)}
 \usage{
-BS_PCAPAM50(
-  gene_expression_matrix,
-  phenodata,
-  Subtype = FALSE,
-  hasClinical = FALSE,
-  seed = 118,
-  ...
-)
+BS_PCAPAM50(gene_expr, pheno, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+\item{gene_expr}{A gene expression matrix with genes in rows and
+samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must contain sample or patient names and be named \code{"PatientID"}. Additionally, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.}
+\item{pheno}{A clinical information table. The first column must contain
+sample or patient names and be named \code{"PatientID"}. Additionally, the table
+must include an \code{"ER"} column, where estrogen receptor (ER) status is
+recorded as \code{"ER+"} or \code{"ER-"}.}
 
-\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
+excluding the Normal-like subtype.}
 
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
+the \code{pheno} table. Required columns include:
 \itemize{
 \item \code{"TSIZE"}: Tumor size.
 \item \code{"NODE"}: Lymph node status.
@@ -29,21 +28,29 @@ BS_PCAPAM50(
 \item{seed}{An integer value is used to set the random seed.}
 }
 \value{
-A vector of intrinsic subtypes assigned to the samples, as estimated by the PCA-PAM50 method.
+A vector of intrinsic subtypes assigned to the samples, as estimated
+by the PCA-PAM50 method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using the PCA-PAM50 method. This approach integrates Principal Component Analysis (PCA) to enhance the consistency of PAM50-based subtyping.
+This function predicts breast cancer intrinsic subtypes using
+the PCA-PAM50 method. This approach integrates Principal Component Analysis
+(PCA) to enhance the consistency of PAM50-based subtyping.
 }
 \examples{
 data("OSLO2EMIT0obj")
-res = BS_PCAPAM50(
-  gene_expression_matrix = data_input$x_NC.log,
-  phenodata = clinic.oslo,
-  Subtype = FALSE,
-  hasClinical = FALSE
+res <- BS_PCAPAM50(
+    gene_expr = data_input$x_NC.log,
+    pheno = clinic.oslo,
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }
 \references{
-Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al. \emph{PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.} Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
+\itemize{
+\item Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver
+CD, et al. \emph{PCA-PAM50 improves consistency between breast cancer intrinsic
+and clinical subtyping, reclassifying a subset of luminal A tumors as luminal
+B.} Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
+}
 }

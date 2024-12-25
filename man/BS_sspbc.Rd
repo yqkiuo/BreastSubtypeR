@@ -4,19 +4,29 @@
 \alias{BS_sspbc}
 \title{Intrinsic Subtyping using SSPBC (BS_sspbc)}
 \usage{
-BS_sspbc(gene_expression_matrix, ssp.name = "ssp.pam50", ...)
+BS_sspbc(gene_expr, ssp.name = "ssp.pam50")
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. Note: The data must be \strong{unlogged} before using this function.}
+\item{gene_expr}{A gene expression matrix with genes in rows and
+samples in columns. Note: The data must be \strong{unlogged} before using this
+function.}
 
-\item{ssp.name}{Specifies the model to use. Options are "ssp.pam50" (for PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by excluding the Normal-like subtype).}
+\item{ssp.name}{Specifies the model to use. Options are "ssp.pam50" (for
+PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by
+excluding the Normal-like subtype).}
 }
 \value{
-A vector of intrinsic subtypes assigned to the samples, as estimated by the SSPBC method.
+A vector of intrinsic subtypes assigned to the samples, as estimated
+by the SSPBC method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is based on a refined version of AIMS' original methodology, using a large, uniformly accrued population-based cohort (SCAN-B) for training.
-Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor for Breast Cancer) method. This method supports predicting subtypes based on RNA sequencing data and offers flexibility in selecting the prediction model.
+This function predicts breast cancer intrinsic subtypes using
+the SSPBC (Single Sample Predictor for Breast Cancer) method. This method is
+based on a refined version of AIMS' original methodology, using a large,
+uniformly accrued population-based cohort (SCAN-B) for training. Performs
+intrinsic subtyping of breast cancer using the SSPBC (Single Sample Predictor
+for Breast Cancer) method. This method supports predicting subtypes based on
+RNA sequencing data and offers flexibility in selecting the prediction model.
 }
 \examples{
 
@@ -24,12 +34,17 @@ Performs intrinsic subtyping of breast cancer using the SSPBC (Single Sample Pre
 data("OSLO2EMIT0obj")
 
 # Perform subtyping with the SSPBC method
-res = BS_sspbc(
-  gene_expression_matrix = as.matrix(data_input$x_SSP),
-  ssp.name = "ssp.pam50"
+res <- BS_sspbc(
+    gene_expr = as.matrix(data_input$x_SSP),
+    ssp.name = "ssp.pam50"
 )
 
 }
 \references{
-Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.} NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
+\itemize{
+\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
+et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
+risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
+Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
+}
 }
