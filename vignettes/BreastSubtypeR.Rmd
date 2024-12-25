@@ -32,7 +32,7 @@ vignette: >
 -   **Streamlined Input and Output**: Provides standardized input/output formats to ensure smooth integration with other gene expression analysis tools.
 -   **User-Friendly Shiny App Interface**: Features a web-based GUI that runs entirely locally, ensuring data privacy with no online sharing, ideal for users who prefer a visual interface over R scripting.
 
-## Approaches included
+## Single-Methods included
 
 | Approach | Description | Group | Citation |
 |------------------|------------------|------------------|------------------|
@@ -61,7 +61,8 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
+
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using Multiple Methods (Multi-Method Subtyping Functionality). By default, the user manually selects the methods to be used:
 
 ```{r}
 library(BreastSubtypeR)
@@ -96,7 +97,9 @@ plot <- Vis_Multi(res$res_subtypes)
 plot(plot)
 ```
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+
+
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using Multiple Methods with **AUTO** mode feature enabled. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
 
 ```{r}
 library(BreastSubtypeR)
@@ -129,7 +132,8 @@ plot <- Vis_Multi(res$res_subtypes)
 plot(plot)
 ```
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.orginal method.
+
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.original method:   
 
 ```{r}
 # Load required datasets
@@ -146,7 +150,9 @@ res <- BS_parker(
 )
 ```
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method.
+
+
+Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method:   
 
 ```{r}
 # Load required datasets
@@ -180,6 +186,7 @@ res <- BS_AIMS(
 | sspbc | BS_sspbc(...) |
 | Multi-Method Subtyping Functionality | BS_Multi( methods = c("parker.original", "ssBC.v2", "sspbc",...), ...) |
 | Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi( methods = "AUTO", ...) |
+
 
 ## Shiny App
 
