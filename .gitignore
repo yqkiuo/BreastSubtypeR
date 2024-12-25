@@ -6,3 +6,5 @@ inst/doc
 .DS_Store
 inst/.DS_Store
 inst/.DS_Store
+.Rbuildignore
+BreastSubtypeR.Rproj
