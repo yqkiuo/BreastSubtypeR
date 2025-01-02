@@ -54,10 +54,9 @@ renamed as \code{probe}.
 }
 \examples{
 data("OSLO2EMIT0obj")
-data <- OSLO2EMITO.103.genematrix_noNeg.subset
 data_input <- Mapping(
-    gene_expr = data,
-    featuredata = anno_feature.subset,
+    gene_expr = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset,
+    featuredata = OSLO2EMIT0obj$anno_feature.subset,
     method = "max",
     impute = TRUE,
     verbose = TRUE

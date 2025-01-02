@@ -56,8 +56,10 @@
 #' library(BreastSubtypeR)
 #'
 #' # This will open your browser with the BreastSubtypeR shiny web app
+#' \donttest{
 #' iBreastSubtypeR()
-#'
+#' }
+#' 
 #' @export
 iBreastSubtypeR <- function() {
     shinydeps <- c("shiny", "bslib")

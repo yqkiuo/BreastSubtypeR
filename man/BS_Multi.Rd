@@ -63,8 +63,8 @@ methods <- c("parker.original", "genefu.scale", "genefu.robust")
 
 # Perform subtyping
 res.test <- BS_Multi(
-    data_input = data_input,
-    pheno = clinic.oslo,
+    data_input = OSLO2EMIT0obj$data_input,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = methods,
     Subtype = FALSE,
     hasClinical = FALSE

@@ -938,7 +938,7 @@ makeCalls_ihc <- function(mat,
 #' @param Subtype Logic. If `TRUE`, the function predicts four subtypes by
 #'   excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from
-#'   the `phenodata` table. Required columns include:
+#'   the `pheno` table. Required columns include:
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 

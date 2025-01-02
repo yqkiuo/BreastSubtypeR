@@ -199,7 +199,7 @@ Mapping <- function(gene_expr,
 }
 
 
-#' #' Function for consensus subtype
+#' Function for consensus subtype
 #' @noRd
 get_consensus_subtype <- function(patient_row) {
     patient_row <- unlist(patient_row, use.names = FALSE)
@@ -369,6 +369,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
+#' res = OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Subtype information and correlation matrix
 #' out <- data.frame(
@@ -418,9 +419,10 @@ Vis_boxplot <- function(out, correlations) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
+#' res = OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
-#' x <- data_input$x_NC.log
+#' x <- OSLO2EMIT0obj$data_input$x_NC.log
 #' out <- data.frame(
 #'     PatientID = res$results$parker.original$BS.all$PatientID,
 #'     Subtype = res$results$parker.original$BS.all$BS
@@ -509,9 +511,10 @@ Vis_heatmap <- function(x, out) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
+#' res = OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
-#' x <- data_input$x_NC.log
+#' x <- OSLO2EMIT0obj$data_input$x_NC.log
 #' out <- data.frame(
 #'     PatientID = res$results$parker.original$BS.all$PatientID,
 #'     Subtype = res$results$parker.original$BS.all$BS
@@ -623,6 +626,7 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
+#' res = OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Subtype information
 #' out <- data.frame(
@@ -685,7 +689,7 @@ Vis_pie <- function(out) {
 #' subtypes based on multiple subtyping methods. It allows users to visualize
 #' how different methods classify samples into subtypes.
 #'
-#' @param out A data frame or matrix that includes the subtypes predicted by
+#' @param data A data frame or matrix that includes the subtypes predicted by
 #'   different methods. The rows should represent individual samples (e.g.,
 #'   `PatientID`), and columns should correspond to the subtypes predicted by
 #'   different methods.
@@ -695,8 +699,8 @@ Vis_pie <- function(out) {
 #' @examples
 #' data("OSLO2EMIT0obj")
 #'
-#' # Assuming `res$res_subtypes` contains multi-method subtype results
-#' p <- Vis_Multi(res$res_subtypes)
+#' # Assuming `OSLO2EMIT0obj$res$res_subtypes` contains multi-method subtype results
+#' p <- Vis_Multi(OSLO2EMIT0obj$res$res_subtypes)
 #' plot(p)
 #'
 #' @export

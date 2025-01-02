@@ -9,6 +9,7 @@
 #' @docType _PACKAGE
 #'
 #' @import stringr
+#' @import e1071
 #' @importFrom data.table data.table
 #' @importFrom data.table set
 #' @importFrom rlang call2
@@ -50,10 +51,9 @@ NULL
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' data <- OSLO2EMITO.103.genematrix_noNeg.subset
 #' data_input <- Mapping(
-#'     gene_expr = data,
-#'     featuredata = anno_feature.subset,
+#'     gene_expr = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset,
+#'     featuredata = OSLO2EMIT0obj$anno_feature.subset,
 #'     method = "max",
 #'     impute = TRUE,
 #'     verbose = TRUE
@@ -92,7 +92,7 @@ Mapping <- function(gene_expr,
 #' @param gene_expr A gene expression matrix with genes in rows and
 #'   samples in columns. The data should be log-transformed.
 #' @param pheno A clinical information table. The first column must be named
-#'   `"PatientID"`. The default is NA.
+#'   `"PatientID"`. The default is NULL.
 #' @param calibration The calibration method to use. Options include:
 #'   - `"None"`: No calibration is applied.
 #'   - `"Internal"`: Calibration is performed using internal strategies.
@@ -137,8 +137,8 @@ Mapping <- function(gene_expr,
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_parker(
-#'     gene_expr = data_input$x_NC.log,
-#'     pheno = NA,
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     calibration = "Internal",
 #'     internal = "medianCtr",
 #'     Subtype = FALSE,
@@ -148,19 +148,22 @@ Mapping <- function(gene_expr,
 #' @export
 
 BS_parker <- function(gene_expr,
-    pheno = NA,
+    pheno = NULL,
     calibration = "None",
     internal = NA,
     external = NA,
     medians = NA,
     Subtype = FALSE,
     hasClinical = FALSE) {
-    if (!is.null(pheno)) {
-        rownames(pheno) <- pheno$PatientID
-    } else {
-        stop("Please provide pheno table as required.")
+    
+    if (hasClinical) {
+        if (!is.null(pheno) ) {
+            rownames(pheno) <- pheno$PatientID
+        } else {
+            stop("Please provide pheno table as required.")
+        }
     }
-
+    
     arguments <- rlang::dots_list(
         mat = gene_expr,
         df.cln = pheno,
@@ -210,8 +213,8 @@ BS_parker <- function(gene_expr,
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC(
-#'     gene_expr = data_input$x_NC.log,
-#'     pheno = clinic.oslo,
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
@@ -223,12 +226,17 @@ BS_cIHC <- function(gene_expr,
     Subtype = FALSE,
     hasClinical = FALSE,
     seed = 118) {
-    if (!is.null(pheno)) {
-        rownames(pheno) <- pheno$PatientID
-    } else {
-        stop("Please provide pheno table as required.")
-    }
 
+    if (!is.null(pheno)) {
+        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno) ) {
+            rownames(pheno) <- pheno$PatientID
+        } else {
+            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
+        }
+    } else {
+        stop("Please provide the 'pheno' table as required.")
+    }
+    
     arguments <- rlang::dots_list(
         mat = gene_expr,
         df.cln = pheno,
@@ -260,8 +268,8 @@ BS_cIHC <- function(gene_expr,
 #'   sample or patient names and be named `"PatientID"`. Additionally, the table
 #'   must include an `"ER"` column, where estrogen receptor (ER) status is
 #'   recorded as `"ER+"` or `"ER-"`.
-#' @param iterative Integer. Number of iterations for the ER-balanced procedure
-#'   with the specified ratio.
+#' @param iteration Integer. Number of iterations for the ER-balanced procedure
+#'   with the specified ratio. The default is 100.
 #' @param ratio Numeric. Specifies the ER+/ER??? ratio for balancing. Options
 #'   are `1:1` or `54:64` (default). The latter corresponds to the ER+/ER- ratio
 #'   used in the UNC232 training cohort.
@@ -286,8 +294,9 @@ BS_cIHC <- function(gene_expr,
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC.itr(
-#'     gene_expr = data_input$x_NC.log,
-#'     pheno = clinic.oslo,
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     iteration = 10, ## For final analysis, set iteration = 100
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
@@ -301,10 +310,15 @@ BS_cIHC.itr <- function(gene_expr,
     Subtype = FALSE,
     hasClinical = FALSE,
     seed = 118) {
+    
     if (!is.null(pheno)) {
-        rownames(pheno) <- pheno$PatientID
+        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno) ) {
+            rownames(pheno) <- pheno$PatientID
+        } else {
+            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
+        }
     } else {
-        stop("Please provide pheno table as required.")
+        stop("Please provide the 'pheno' table as required.")
     }
 
 
@@ -359,8 +373,8 @@ BS_cIHC.itr <- function(gene_expr,
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_PCAPAM50(
-#'     gene_expr = data_input$x_NC.log,
-#'     pheno = clinic.oslo,
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
@@ -372,6 +386,7 @@ BS_PCAPAM50 <- function(gene_expr,
     Subtype = FALSE,
     hasClinical = FALSE,
     seed = 118) {
+
     if (!is.null(gene_expr)) {
         gene_expr <- as.matrix(gene_expr)
     } else {
@@ -379,11 +394,15 @@ BS_PCAPAM50 <- function(gene_expr,
     }
 
     if (!is.null(pheno)) {
-        rownames(pheno) <- pheno$PatientID
+        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno) ) {
+            rownames(pheno) <- pheno$PatientID
+        } else {
+            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
+        }
     } else {
-        stop("Please provide pheno table as required.")
+        stop("Please provide the 'pheno' table as required.")
     }
-
+    
     samples <- pheno$PatientID
 
     if ("ER" %in% colnames(pheno)) {
@@ -514,8 +533,8 @@ BS_PCAPAM50 <- function(gene_expr,
 #' ## ssBC.v2
 #' data("OSLO2EMIT0obj")
 #' res <- BS_ssBC(
-#'     gene_expr = data_input$x_NC.log,
-#'     pheno = clinic.oslo,
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     s = "ER.v2",
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
@@ -528,12 +547,17 @@ BS_ssBC <- function(gene_expr,
     s,
     Subtype = FALSE,
     hasClinical = FALSE) {
+    
     if (!is.null(pheno)) {
-        rownames(pheno) <- pheno$PatientID
+        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno)) {
+            rownames(pheno) <- pheno$PatientID
+        } else {
+            stop("The 'pheno' table must be a data frame with a 'PatientID' column.")
+        }
     } else {
-        stop("Please provide pheno table as required.")
+        stop("Please provide the 'pheno' table as required.")
     }
-
+    
     arguments <- rlang::dots_list(
         mat = gene_expr,
         df.cln = pheno,
@@ -584,8 +608,8 @@ BS_ssBC <- function(gene_expr,
 #'
 #' # Perform subtyping
 #' res <- BS_AIMS(
-#'     gene_expr = data_input$x_SSP[genes, ],
-#'     EntrezID = rownames(data_input$x_SSP[genes, ])
+#'     gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ],
+#'     EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ])
 #' )
 #'
 #' @export
@@ -640,7 +664,7 @@ BS_AIMS <- function(gene_expr, EntrezID) {
 #'
 #' # Perform subtyping with the SSPBC method
 #' res <- BS_sspbc(
-#'     gene_expr = as.matrix(data_input$x_SSP),
+#'     gene_expr = as.matrix(OSLO2EMIT0obj$data_input$x_SSP),
 #'     ssp.name = "ssp.pam50"
 #' )
 #'
@@ -711,8 +735,8 @@ BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
 #'
 #' # Perform subtyping
 #' res.test <- BS_Multi(
-#'     data_input = data_input,
-#'     pheno = clinic.oslo,
+#'     data_input = OSLO2EMIT0obj$data_input,
+#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     methods = methods,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
@@ -855,8 +879,7 @@ BS_Multi <- function(data_input,
             if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
                 message(
                     "Running methods:
-                    parker.original, genefu.scale, genefu.robust,
-                    ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc"
+                    parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc"
                 )
                 methods <- c(
                     "parker.original",
@@ -872,8 +895,7 @@ BS_Multi <- function(data_input,
                 )
             } else {
                 message(
-                    "The ER+/ER- ratio in the current dataset
-                    differs from that observed in the UNC232 training cohort."
+                    "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
                 )
                 message("Running methods:
                         ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")

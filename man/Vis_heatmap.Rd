@@ -26,9 +26,10 @@ matrix and subtype information.
 }
 \examples{
 data("OSLO2EMIT0obj")
+res = OSLO2EMIT0obj$res
 
 # Prepare data: Gene expression matrix and subtype information
-x <- data_input$x_NC.log
+x <- OSLO2EMIT0obj$data_input$x_NC.log
 out <- data.frame(
     PatientID = res$results$parker.original$BS.all$PatientID,
     Subtype = res$results$parker.original$BS.all$BS
