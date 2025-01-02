@@ -35,7 +35,7 @@ data("OSLO2EMIT0obj")
 
 # Perform subtyping with the SSPBC method
 res <- BS_sspbc(
-    gene_expr = as.matrix(data_input$x_SSP),
+    gene_expr = as.matrix(OSLO2EMIT0obj$data_input$x_SSP),
     ssp.name = "ssp.pam50"
 )
 

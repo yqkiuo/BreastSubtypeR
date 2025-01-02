@@ -62,8 +62,8 @@ original training cohort (e.g., an ER+ selected cohort).
 ## ssBC.v2
 data("OSLO2EMIT0obj")
 res <- BS_ssBC(
-    gene_expr = data_input$x_NC.log,
-    pheno = clinic.oslo,
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     s = "ER.v2",
     Subtype = FALSE,
     hasClinical = FALSE

@@ -73,21 +73,21 @@ using multiple methods:
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expr = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
 
 # Run the subtyping
-methods = c("parker.median", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, pheno = clinic.oslo, methods = methods, Subtype = TRUE)
+methods = c("parker.original", "PCAPAM50", "sspbc")
+result = BS_Multi(data_input = OSLO2EMIT0obj$data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot = Vis_Multi(result$res_subtypes)
 plot(plot)
 
 ```
@@ -99,19 +99,19 @@ the ER/HER2 distribution of the test cohort:
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expr = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
 # Run the subtyping with AUTO mode
-result = BS_Multi(data_input = data_input, pheno = clinic.oslo, methods = "AUTO")
+result = BS_Multi(data_input = OSLO2EMIT0obj$data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot = Vis_Multi(result$res_subtypes)
 plot(plot)
 
 ```

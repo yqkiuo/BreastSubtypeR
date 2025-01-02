@@ -23,6 +23,7 @@ distribution of breast cancer subtypes in a cohort, based on the provided
 }
 \examples{
 data("OSLO2EMIT0obj")
+res = OSLO2EMIT0obj$res
 
 # Prepare data: Subtype information
 out <- data.frame(

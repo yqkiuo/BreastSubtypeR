@@ -1,145 +1,17 @@
 ## adapted from original sspbc codes (Staaf et al., 2022)
 
-#' @title Single-Sample Predictors for Breast Cancer (sspbc)
-#'
-#' @description This function assign classes to breast cancer samples using a
-#'   selection of provided models. It works on raw gene expression data.
-#'   Provided models were developed using gene expression data from mRNAseq
-#'   generated using HiSat/StringTie. For recommended usage see details and
-#'   examples.
-#'
-#' @usage applySSP(tsv, ssp="", plot=FALSE,txt=FALSE, report=FALSE,
-#' add.is.num=TRUE, mylas=1,ssp.name="",gex=NULL, id=NULL, id.type="Gene.ID",
-#' full.out=FALSE, output)
-#'
-#' @param tsv {a character string specifying file path to a gene.tsv file from
-#'   StingTie that must contain column "Gene.ID" and column "FPKM". Gene.ID is
-#'   expected to be GENCODE Human Release 27 gene identifiers.}
-#' @param ssp {a character string specifying file name of a Rdata file equal to
-#'   a ssp model (R object named aims.gs).}
-#' @param plot {logical with default FALSE. Should a pdf file (all.probs.pdf)
-#'   with plot of posterior probabilities be created?}
-#' @param txt {logical with default FALSE. Should txt files (class.txt,
-#'   all.probs.txt) with class and posterior probabilities be created?}
-#' @param report {logical with default FALSE. Should reporting info be printed
-#'   when using function?}
-#' @param add.is.num {logical with default FALSE. Should $isnumeric be set?
-#'   Option to fix a practical issue with $isnumeric variable that was not set
-#'   for original models.}
-#' @param mylas {numeric with default 1. Used in plot of posterior probabilities
-#'   (see plot)}
-#'
-#' @param ssp.name {One of "" (default), "ssp.er", "ssp.pr", "ssp.her2",
-#'   "ssp.her2.ern", "ssp.her2.erp", "ssp.ki67", "ssp.nhg", "ssp.pam50",
-#'   "ssp.subtype", "ssp.ror", "ssp.cc15". Option to specify ssp model by short
-#'   name (ssp models provided as part of package, sspbc.models list with
-#'   models). If argument ssp.name is specified, i.e., not "" (default),
-#'   argument ssp is ignored and sspbc.models list is used to load ssp model.}
-#'
-#' @param gex {NULL (default) or a vector or matrix with numeric gene expression
-#'   data. Option to input gex data as vector or matrix. If gex is a matrix rows
-#'   are expected to be genes and columns are expected to be samples.}
-#'
-#' @param id {NULL (default) or a character vector corresponding to ID for genes
-#'   for gene expression data provided as vector or matrix. Expected default
-#'   type for gene identifiers is Gene.ID (see id.type) If gex is provided,
-#'   i.e., not NULL (default), argument tsv is ignored and argument id must be
-#'   provided. If gex is provided, i.e., not NULL (default), the option to save
-#'   results as txt and plot are disabled. Arguments 'plot', 'txt', and 'mylas'
-#'   are ignored.}
-#'
-#' @param id.type {One of "Gene.ID" (default), "Gene.Name","HGNC","EntrezGene".
-#'   Specify input gene identifier. Used by function translate_id2entrez_v1.2.R
-#'   to translate gene identifiers before classification with provided ssp
-#'   models.}
-#'
-#' @param full.out {logical with default FALSE. Should full classification
-#'   resultslist be returned? Option to get output as resultslist (as by
-#'   applyAIMS in the AIMS package). If full.out=FALSE only class will be
-#'   returned. If full.out=TRUE the complete resultslist from applyAIMS will be
-#'   returned.}
-#'
-#' @param output {a character string specifying file path to an output directory
-#'   for txt files and plot.}
-#'
-#' @details applySSP works by assigning classes by simple gene rules on the the
-#'   form gene A < gene B defined by different models as described by Paquet and
-#'   Hallett (2014) J Natl Cancer Inst 107(1):357. The development of the models
-#'   included with applySSP is described in Staaf J. et al. medRxiv
-#'   2021.12.03.21267116; https://doi.org/10.1101/2021.12.03.21267116
-#'
-#' For most users the recommended way of using applySSP is by providing gene
-#' expression data as a loaded numeric matrix or vector and by specifying ssp
-#' model by short name and by providing gene identifiers as a character vector
-#' (see examples).
-#'
-#' For other users the possibility to provide gene expression data in a gene.tsv
-#' file from StingTie and to specify ssp model by full name from development is
-#' available.
-#'
-#' The included ssp models were developed on gene expression data using gene
-#' definitions from GENCODE Human Release 27 summarized on GENCODE gene and
-#' including all genes annotated with EntrezGene. When providing gene
-#' identifiers as a character vector, applySSP can handle a number of different
-#' types of gene identifiers (see id.type) and will translate these to
-#' EntrezGene as needed.
-#'
-#'
-#' @return \item{cl}{Molecular class identified by a given ssp model.}
-#'
-#' \item{all.probs}{Posterior probability values for all samples and all
-#' subtypes.}
-#'
-#'
-#' @author Johan Staaf (johan.staaf@@med.lu.se), Johan Vallon-Christersson
-#' (johan.vallon-christersson@@med.lu.se)
-#'
-#' @seealso
-#' \code{\link{sspbc.models}
-#' \link{sspbc.models.fullname}
-#' \link{Gene.ID.ann}
-#' \link{testmatrix}
-#' }
-#'
-#' @export
-#'
+#' Function sspbc
 #' @import e1071
 #' @import methods
 #' @import stats
 #' @import grid
+#' @description
+#' This function assign classes to breast cancer samples using a selection of provided models. It works on raw gene expression data.
+#' Provided models were developed using gene expression data from mRNAseq generated using HiSat/StringTie.
+#' For recommended usage see details and examples.
+#' 
 #' @noRd
-#'
-#' @references Staaf J. et al. medRxiv 2021.12.03.21267116
-#' (\href{https://doi.org/10.1101/2021.12.03.21267116}{medRxiv})
-#' (\href{https://github.com/StaafLab/sspbc}{GitHub})
-#'
-#' Paquet and Hallett (2014) J Natl Cancer Inst 107(1):357
-#' (\href{https://www.ncbi.nlm.nih.gov/pubmed/25479802}{PubMed})
-#' (\href{https://github.com/meoyo/AIMS}{GitHub})
-#'
-#' @examples
-#' ## Load the example dataset
-#' data(testmatrix)
-#'
-#' ## Load the sspbc models
-#' data(sspbc.models)
-#' data(sspbc.models.fullname)
-#'
-#' ## Assign status to multiple samples in the testmatrix for the selected ssp model
-#' ## recommended for most users
-#' myresults <- applySSP(
-#'     gex = testmatrix, id = row.names(testmatrix),
-#'     ssp.name = "ssp.pam50"
-#' )
-#'
-#' ## Assign status to multiple samples in the testmatrix for the selected ssp model
-#' ## Recommended for most users
-#' myresults <- applySSP(gex = testmatrix, id = row.names(testmatrix), ssp.name = "ssp.pam50")
-#' myresults <- applySSP(
-#'     gex = testmatrix, id = row.names(testmatrix),
-#'     ssp = "Training_Run19081Genes_noNorm_SSP.subtypeMost.Fcc15_5x5foldCV.num.rules.50_24.selRules.AIMS.GS.RData"
-#' )
-#'
+
 applySSP <- function(tsv,
     ssp = "",
     plot = FALSE,

@@ -6,7 +6,7 @@
 \usage{
 BS_parker(
   gene_expr,
-  pheno = NA,
+  pheno = NULL,
   calibration = "None",
   internal = NA,
   external = NA,
@@ -20,7 +20,7 @@ BS_parker(
 samples in columns. The data should be log-transformed.}
 
 \item{pheno}{A clinical information table. The first column must be named
-\code{"PatientID"}. The default is NA.}
+\code{"PatientID"}. The default is NULL.}
 
 \item{calibration}{The calibration method to use. Options include:
 \itemize{
@@ -71,8 +71,8 @@ original approach.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_parker(
-    gene_expr = data_input$x_NC.log,
-    pheno = NA,
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     calibration = "Internal",
     internal = "medianCtr",
     Subtype = FALSE,

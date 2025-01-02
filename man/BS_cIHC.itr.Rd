@@ -23,6 +23,9 @@ sample or patient names and be named \code{"PatientID"}. Additionally, the table
 must include an \code{"ER"} column, where estrogen receptor (ER) status is
 recorded as \code{"ER+"} or \code{"ER-"}.}
 
+\item{iteration}{Integer. Number of iterations for the ER-balanced procedure
+with the specified ratio. The default is 100.}
+
 \item{ratio}{Numeric. Specifies the ER+/ER??? ratio for balancing. Options
 are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER+/ER- ratio
 used in the UNC232 training cohort.}
@@ -38,9 +41,6 @@ the \code{pheno} table. Required columns include:
 }}
 
 \item{seed}{An integer value is used to set the random seed.}
-
-\item{iterative}{Integer. Number of iterations for the ER-balanced procedure
-with the specified ratio.}
 }
 \value{
 A list containing:
@@ -58,8 +58,9 @@ of the ER+/ER- ratio.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC.itr(
-    gene_expr = data_input$x_NC.log,
-    pheno = clinic.oslo,
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
+    iteration = 10, ## For final analysis, set iteration = 100
     Subtype = FALSE,
     hasClinical = FALSE
 )

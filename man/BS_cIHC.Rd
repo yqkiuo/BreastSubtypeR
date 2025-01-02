@@ -39,8 +39,8 @@ gene centering.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC(
-    gene_expr = data_input$x_NC.log,
-    pheno = clinic.oslo,
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     Subtype = FALSE,
     hasClinical = FALSE
 )

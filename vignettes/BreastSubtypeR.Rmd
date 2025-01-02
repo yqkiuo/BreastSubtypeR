@@ -69,31 +69,30 @@ library(BreastSubtypeR)
 
 # Example data input: gene signatures, gene expression and clinical data
 data("BreastSubtypeRobj")
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 # do mapping before subtyping
-data <- OSLO2EMIT0.103.genematrix_noNeg.subset
 data_input <- Mapping(
-    gene_expr = data,
-    featuredata = anno_feature.subset,
+    gene_expr = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset,
+    featuredata = OSLO2EMIT0obj$anno_feature.subset,
     impute = TRUE,
     verbose = TRUE
 )
 
 # Run the subtyping
-methods <- c("parker.median", "PCAPAM50", "sspbc")
+methods <- c("parker.original", "PCAPAM50", "sspbc")
 result <- BS_Multi(
-    data_input = data_input,
-    pheno = clinic.oslo,
+    data_input = OSLO2EMIT0obj$data_input,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = methods,
-    Subtype = TRUE
+    Subtype = FALSE
 )
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot <- Vis_Multi(res$res_subtypes)
+plot <- Vis_Multi(result$res_subtypes)
 plot(plot)
 ```
 
@@ -106,21 +105,21 @@ library(BreastSubtypeR)
 
 # Load required datasets
 data("BreastSubtypeRobj")
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
-data <- OSLO2EMIT0.103.genematrix_noNeg.subset
+data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
 data_input <- Mapping(
     gene_expr = data,
-    featuredata = anno_feature.subset,
+    featuredata = OSLO2EMIT0obj$anno_feature.subset,
     impute = TRUE,
     verbose = TRUE
 )
 
 # Run the subtyping with AUTO mode
 result <- BS_Multi(
-    data_input = data_input,
-    pheno = clinic.oslo,
+    data_input = OSLO2EMIT0obj$data_input,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = "AUTO"
 )
 
@@ -128,7 +127,7 @@ result <- BS_Multi(
 head(result$res_subtypes)
 
 ## visualization
-plot <- Vis_Multi(res$res_subtypes)
+plot <- Vis_Multi(result$res_subtypes)
 plot(plot)
 ```
 
@@ -136,13 +135,15 @@ plot(plot)
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with parker.original method:   
 
 ```{r}
+library(BreastSubtypeR)
+
 # Load required datasets
 data("OSLO2EMIT0obj")
 
 # Perform subtyping
 res <- BS_parker(
-    gene_expr = data_input$x_NC.log,
-    pheno = NA,
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = NULL,
     calibration = "Internal",
     internal = "medianCtr",
     Subtype = FALSE,
@@ -155,18 +156,21 @@ res <- BS_parker(
 Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping with AIMS method:   
 
 ```{r}
+library(BreastSubtypeR)
+
 # Load required datasets
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Extract AIMS-specific genes
 genes.s <- BreastSubtypeRobj$genes.signature
-genes <- genes.s$EntrezGene.ID[which(genes.s$AIMS == "Yes")] %>% as.character()
+genes <- genes.s$EntrezGene.ID[which(genes.s$AIMS == "Yes")]
+genes <- as.character(genes)
 
 # Perform subtyping
 res <- BS_AIMS(
-    gene_expr = data_input$x_SSP[genes, ],
-    EntrezID = rownames(data_input$x_SSP[genes, ])
+    gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ],
+    EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ])
 )
 ```
 
@@ -194,7 +198,7 @@ For users new to R, we offer an intuitive Shiny app for interactive molecular su
 
 ### Launch the Shiny App:
 
-```{r}
+```{r, eval = FALSE}
 library(BreastSubtypeR)
 iBreastSubtypeR()
 ```

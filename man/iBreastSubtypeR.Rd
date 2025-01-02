@@ -49,7 +49,9 @@ method without needing to repeat Step 1.
 library(BreastSubtypeR)
 
 # This will open your browser with the BreastSubtypeR shiny web app
+\donttest{
 iBreastSubtypeR()
+}
 
 }
 \keyword{BreastSubtypeR}

@@ -7,7 +7,7 @@
 Vis_Multi(data)
 }
 \arguments{
-\item{out}{A data frame or matrix that includes the subtypes predicted by
+\item{data}{A data frame or matrix that includes the subtypes predicted by
 different methods. The rows should represent individual samples (e.g.,
 \code{PatientID}), and columns should correspond to the subtypes predicted by
 different methods.}
@@ -23,8 +23,8 @@ how different methods classify samples into subtypes.
 \examples{
 data("OSLO2EMIT0obj")
 
-# Assuming `res$res_subtypes` contains multi-method subtype results
-p <- Vis_Multi(res$res_subtypes)
+# Assuming `OSLO2EMIT0obj$res$res_subtypes` contains multi-method subtype results
+p <- Vis_Multi(OSLO2EMIT0obj$res$res_subtypes)
 plot(p)
 
 }

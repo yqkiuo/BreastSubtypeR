@@ -36,8 +36,8 @@ genes <- as.character(
 
 # Perform subtyping
 res <- BS_AIMS(
-    gene_expr = data_input$x_SSP[genes, ],
-    EntrezID = rownames(data_input$x_SSP[genes, ])
+    gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ],
+    EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ])
 )
 
 }
