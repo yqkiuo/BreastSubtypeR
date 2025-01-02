@@ -13,8 +13,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-# BreastSubtypeR <a href='https://github.com/yqkiuo/BreastSubtypeR.git'><img src="inst/ShinyBreastSubtypeR/logo.svg" align="right" height="110"/></a>
-
+# BreastSubtypeR 
 <!-- badges: start -->
 
 <!-- badges: end -->
