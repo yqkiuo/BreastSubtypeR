@@ -855,7 +855,7 @@ BS_Multi <- function(data_input,
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
             } else if (n_ERposHER2neg > n_ERHER2) {
                 message("Running methods for ER+/HER2- samples:
-                ssBC.v2, AIMS, & sspbc")
+                ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
             }
         } else if (n_ERpos < n_ER && n_ERneg > n_ER) {
