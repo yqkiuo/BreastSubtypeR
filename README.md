@@ -17,19 +17,20 @@
 
 
 
-## Methods included
+## Single-Methods included
 
-| Methods | Group | Citation |
-|-----------------|-----------------|-----------------|
-| parker.orginal   | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)   | 
-| genefu (scale and robust)  | NC-based   |  [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)  |
-| cIHC-based iterative ER subset (cIHC.itr)    | NC-based    | [Curtis  et al., 2012](https://doi.org/10.1038/nature10983)  |
-| conventional IHC (cIHC)    | NC-based    | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)   | 
-| PCA-PAM50   | NC-based    | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)    |
-| ssBC    | NC-based    | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4) |
-| ssBC.v2   | NC-based    | [Fernandez-Martinez  et al., 2020](https://doi.org/10.1200/JCO.20.01276)    |
-| AIMS   | SSP-based    | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)    |
-| sspbc        | SSP-based    | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)   |
+| Approach | Description | Group | Citation |
+|----|------------------|----|-----------|
+| parker.original | Original PAM50 by Parker et al., 2009 | NC-based | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370) |
+| genefu.scale | PAM50 implementation as in genefu R package (scale) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
+| genefu.robust | PAM50 implementation as in genefu R package (robust) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
+| cIHC | Conventional ER-balancing using IHC-based PAM50 | NC-based | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033) |
+| cIHC.itr | Iterative cIHC | NC-based | [Curtis et al., 2012](https://doi.org/10.1038/nature10983) |
+| PCAPAM50 | Principle Component Analysis-based iterative PAM50 (ER-balancing using ESR1 gene expression) | NC-based | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4) |
+| ssBC | Subgroup-specific gene-centering PAM50 | NC-based | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4) |
+| ssBC.v2 | Subgroup-specific gene-centering PAM50 (updated quantiles) | NC-based | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276) |
+| AIMS | Original Absolute Intrinsic Molecular Subtyping (AIMS) method | SSP-based | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357) |
+| sspbc | Single-Sample Predictors for Breast Cancer (based on AIMS method) | SSP-based | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3) |
 
 
 
@@ -96,7 +97,7 @@ plot(plot)
 ### Usage
 
 | Approach | Usage |
-|-----------------|-----------------|
+|----------|-----------------|
 | parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" , ...) |
 | genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" , ...) |
 | genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr", ...) |
@@ -107,8 +108,8 @@ plot(plot)
 | ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
 | AIMS   | BS_AIMS(...) |
 | sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping Functionality | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...) |
-| Multi-Method Subtyping Functionality with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
+| Multi-Method Subtyping | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...) |
+| Multi-Method Subtyping with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
 
 
 ## Shiny App
