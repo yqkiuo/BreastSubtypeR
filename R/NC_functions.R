@@ -540,7 +540,7 @@ RORgroup <- function(out,
             cmbWprolif.Subtype <- 54.7690 * (
                 -0.0067 * out$dist.Subtype[, 1] + 0.4317 * out$dist.Subtype[, 2] -
                     0.3172 * out$dist.Subtype[, 3] + 0.4894 * out$dist.Subtype[, 4] +
-                    0.1981 * prolifScore.Subtype + 0.1133 * xT + 0.8826
+                    0.1981 * prolifScore_Subtype + 0.1133 * xT + 0.8826
             )
 
 
