@@ -16,22 +16,27 @@
 - **User-Friendly Shiny App Interface**: Features a web-based GUI that runs entirely locally, ensuring data privacy with no online sharing, ideal for users who prefer a visual interface over R scripting.  
 
 
+## Single-Method Subtyping Approaches
 
-## Single-Methods included
+| **Approach**        | **Description**         | **Group**  | **Citation**   |
+|---------------------|-----------------------------------------------------------------------------|----------------|----------------------------------------|
+| `parker.original`   | Original PAM50 by Parker et al., 2009                                                          | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)                                  |
+| `genefu.scale`      | PAM50 implementation as in the genefu R package (scaled version)                                | NC-based   | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)                             |
+| `genefu.robust`     | PAM50 implementation as in the genefu R package (robust version)                                | NC-based   | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)                             |
+| `cIHC`              | Conventional ER-balancing using immunohistochemistry (IHC)                                    | NC-based   | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)                              |
+| `cIHC.itr`          | Iterative cIHC                                                                                 | NC-based   | [Curtis et al., 2012](https://doi.org/10.1038/nature10983)                                       |
+| `PCAPAM50`          | PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression)                            | NC-based   | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)                             |
+| `ssBC`              | Subgroup-specific gene-centering PAM50                                                        | NC-based   | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4)                                   |
+| `ssBC.v2`           | Updated subgroup-specific gene-centering PAM50 (with refined quantiles)                        | NC-based   | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276)                          |
+| `AIMS`              | Absolute Intrinsic Molecular Subtyping (AIMS) method                                           | SSP-based  | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)                                       |
+| `sspbc`             | Single-Sample Predictors for Breast Cancer (an adaptation of the AIMS method)                  | SSP-based  | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)                                 |
 
-| Approach | Description | Group | Citation |
-|----|------------------|----|-----------|
-| parker.original | Original PAM50 by Parker et al., 2009 | NC-based | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370) |
-| genefu.scale | PAM50 implementation as in genefu R package (scale) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
-| genefu.robust | PAM50 implementation as in genefu R package (robust) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
-| cIHC | Conventional ER-balancing using IHC-based PAM50 | NC-based | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033) |
-| cIHC.itr | Iterative cIHC | NC-based | [Curtis et al., 2012](https://doi.org/10.1038/nature10983) |
-| PCAPAM50 | Principle Component Analysis-based iterative PAM50 (ER-balancing using ESR1 gene expression) | NC-based | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4) |
-| ssBC | Subgroup-specific gene-centering PAM50 | NC-based | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4) |
-| ssBC.v2 | Subgroup-specific gene-centering PAM50 (updated quantiles) | NC-based | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276) |
-| AIMS | Original Absolute Intrinsic Molecular Subtyping (AIMS) method | SSP-based | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357) |
-| sspbc | Single-Sample Predictors for Breast Cancer (based on AIMS method) | SSP-based | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3) |
+## Multi-Method Subtyping Functionality
 
+| **Approach**                       | **Description**                                                                                              |
+|------------------------------------|------------------------------------------------------------------------------------------------------------|
+| **User-defined Multi-Method**      | Intrinsic subtyping that integrates multiple user-selected approaches                                        |
+| **AUTO Mode Multi-Method**         | Intrinsic subtyping with methods automatically selected based on the ER/HER2 distribution of the test cohort |
 
 
 ## Installation
@@ -48,7 +53,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 ## Getting Started
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping using multiple methods:
+**Example: User-defined Multi-Method Subtyping**
 ```R
 library(BreastSubtypeR)
 
@@ -71,7 +76,7 @@ plot(plot)
 
 ```
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature for breast cancer subtyping. AUTO mode automatically selects methods based on the ER/HER2 distribution of the test cohort:
+**Example: AUTO Mode Multi-Method Subtyping**
 ```R
 library(BreastSubtypeR)
 
@@ -93,44 +98,54 @@ plot(plot)
 
 ```
 
-
 ### Usage
 
-| Approach | Usage |
-|----------|-----------------|
-| parker.original   |  BS_parker(calibration = "Internal", internal = "medianCtr" , ...) |
-| genefu.scale  | BS_parker(calibration = "Internal", internal = "meanCtr" , ...) |
-| genefu.robust  | BS_parker(calibration = "Internal", internal = "qCtr", ...) |
-| cIHC | BS_cIHC(...) |
-| cIHC.itr    |  BS_cIHC.itr(...) |
-| PCAPAM50   |  BS_PCAPAM50(...) |
-| ssBC    |  BS_ssBC(s = "ER", ...) |
-| ssBC.v2   | BS_ssBC(s = "ER.v2", ...) |
-| AIMS   | BS_AIMS(...) |
-| sspbc | BS_sspbc(...) |
-| Multi-Method Subtyping | BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...) |
-| Multi-Method Subtyping with AUTO Mode enabled | BS_Multi(methods = "AUTO", ...) |
+#### Single-Method Subtyping
+
+| **Approach**       | **Usage**                                                               |
+|---------------------|-------------------------------------------------------------------------|
+| `parker.original`   | `BS_parker(calibration = "Internal", internal = "medianCtr", ...)`     |
+| `genefu.scale`      | `BS_parker(calibration = "Internal", internal = "meanCtr", ...)`       |
+| `genefu.robust`     | `BS_parker(calibration = "Internal", internal = "qCtr", ...)`          |
+| `cIHC`              | `BS_cIHC(...)`                                                        |
+| `cIHC.itr`          | `BS_cIHC.itr(...)`                                                    |
+| `PCAPAM50`          | `BS_PCAPAM50(...)`                                                    |
+| `ssBC`              | `BS_ssBC(s = "ER", ...)`                                              |
+| `ssBC.v2`           | `BS_ssBC(s = "ER.v2", ...)`                                           |
+| `AIMS`              | `BS_AIMS(...)`                                                        |
+| `sspbc`             | `BS_sspbc(...)`                                                       |
+
+#### Multi-Method Subtyping
+
+| **Mode**                         | **Usage**                                                               |
+|---------------------|-------------------------------------------------------------------------|
+| User-defined                     | `BS_Multi(methods = c("parker.original", "ssBC.v2", "sspbc", ...), ...)`|
+| AUTO Mode                        | `BS_Multi(methods = "AUTO", ...)`                                       |
 
 
 ## Shiny App
-For users new to R, we offer an intuitive Shiny app for interactive molecular subtyping.
+For users who prefer a graphical interface, **BreastSubtypeR** provides a Shiny app for interactive subtyping.
 
-### Launch the Shiny App:
+### Launch the Shiny App
 ```R
 library(BreastSubtypeR)
 iBreastSubtypeR()
 ```
 
 The Shiny app allows you to:
+
 - Upload gene expression, clinical, and annotation data.    
 - Perform subtyping using a preferred method.   
-- Visualize the results in real-time.    
+- Visualize results in real-time.    
 - Download results directly to your local machine.   
 
 
 ## Contributing
-We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
+We welcome contributions! If you encounter bugs or have feature suggestions, please open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
 
 ## Citation
+If you use **BreastSubtypeR** in your work, please cite:
 
+- Yang, Q. [aut] & Sifakis, E. G. [cre], *BreastSubtypeR: Streamlining Molecular Intrinsic Subtyping for Breast Cancer*. Available at: [https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR](https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR).
+- Additional relevant citations based on the methods you use (refer to the specific methods section for details).
 
