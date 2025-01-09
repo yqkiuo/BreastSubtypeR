@@ -25,7 +25,7 @@ NULL
 #'   `ENTREZID`.
 #' @param method Method for deduplicating probes in microarray or RNA-seq data.
 #'   Choose one of the following options:
-#'   - `"IQR"` for Affymetrix arrays,
+#'   - `"iqr"` for Affymetrix arrays,
 #'   - `"mean"` for Agilent/Illumina arrays,
 #'   - `"max"` for RNA-seq data.
 #' @param impute Logical. Specify whether to perform K-Nearest Neighbors (KNN)
