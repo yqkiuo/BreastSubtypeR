@@ -819,7 +819,7 @@ BS_Multi <- function(data_input,
 
             if (n_ERposHER2pos < n_ERHER2 && n_ERnegHER2pos < n_ERHER2) {
                 message("A small HER2+ cohort has been detected.")
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
+                message("Running methods: ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("AIMS", "sspbc")
             } else if (n_ERposHER2pos >= n_ERHER2) {
                 message("A ER+/HER2+ cohort has been detected.")
