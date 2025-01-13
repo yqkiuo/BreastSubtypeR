@@ -59,7 +59,7 @@
 #' \donttest{
 #' iBreastSubtypeR()
 #' }
-#' 
+#'
 #' @export
 iBreastSubtypeR <- function() {
     shinydeps <- c("shiny", "bslib")

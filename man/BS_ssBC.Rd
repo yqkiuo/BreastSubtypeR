@@ -41,7 +41,7 @@ excluding the Normal-like subtype.}
 \item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
 the \code{pheno} table. Required columns include:
 \itemize{
-\item \code{"T"}: Tumor size (0 for
+\item \code{"TSIZE"}: Tumor size (0 for
 size <= 2cm or 1 for size > 2cm).
 \item \code{"NODE"}: Lymph node status (0 for Lymph
 node negative or 1 for Lymph node positive).

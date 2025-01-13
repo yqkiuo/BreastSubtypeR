@@ -53,11 +53,12 @@ NULL
 #'
 #' @noRd
 
-Mapping <- function(gene_expr,
-    featuredata = NA,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
+Mapping <- function(
+        gene_expr,
+        featuredata = NA,
+        method = "max",
+        impute = TRUE,
+        verbose = TRUE) {
     data("BreastSubtypeRobj")
 
     x <- gene_expr
@@ -369,7 +370,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' res = OSLO2EMIT0obj$res
+#' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Subtype information and correlation matrix
 #' out <- data.frame(
@@ -419,7 +420,7 @@ Vis_boxplot <- function(out, correlations) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' res = OSLO2EMIT0obj$res
+#' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
 #' x <- OSLO2EMIT0obj$data_input$x_NC.log
@@ -511,7 +512,7 @@ Vis_heatmap <- function(x, out) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' res = OSLO2EMIT0obj$res
+#' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
 #' x <- OSLO2EMIT0obj$data_input$x_NC.log
@@ -626,7 +627,7 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' res = OSLO2EMIT0obj$res
+#' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Subtype information
 #' out <- data.frame(
