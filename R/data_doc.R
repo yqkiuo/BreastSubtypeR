@@ -1,14 +1,14 @@
 #' @title OSLO2EMIT0obj: Example Dataset for the OSLO2EMIT0 Cohort
-#' 
+#'
 #' @description
 #' This example dataset is based on the OSLO2EMIT0 cohort described in Staaf et
 #' al., 2022. It contains subsetted data for gene expression, clinical
 #' information, feature annotations, and example outputs from the `Mapping` and
 #' `BS_Multi` functions.
-#' 
+#'
 #' @docType data
 #' @usage data("OSLO2EMIT0obj")
-#' 
+#'
 #' @format A list containing the following elements:
 #' \describe{
 #'   \item{\code{OSLO2EMIT0.103.genematrix_noNeg.subset}}{A subsetted gene expression matrix for the OSLO2EMIT0 cohort.}
@@ -17,33 +17,33 @@
 #'   \item{\code{data_input}}{Example output from the \code{Mapping} function.}
 #'   \item{\code{res}}{Example output from the \code{BS_Multi} function.}
 #' }
-#' 
-#' 
+#'
+#'
 #' @references
 #' - Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
 #' et al. *RNA sequencing-based single sample predictors of molecular subtype and
 #' risk of recurrence for clinical assessment of early-stage breast cancer*. NPJ
 #' Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
 #'
-#' 
-#' @examples 
+#'
+#' @examples
 #' library(BreastSubtypeR)
 #' data("OSLO2EMIT0obj")
-#' 
+#'
 "OSLO2EMIT0obj"
 
 
 #' @title BreastSubtypeRobj: Data for NC-based Methods
-#' 
+#'
 #' @description
 #' A list object containing the data required for nearest-centroid (NC)-based
 #' molecular subtyping methods. This includes platform medians, centroids, gene
 #' signatures, and subgroup quantiles, as well as information from the UNC232
 #' training cohort.
-#' 
+#'
 #' @docType data
 #' @usage data("BreastSubtypeRobj")
-#' 
+#'
 #' @format A list with the following elements:
 #' \describe{
 #'   \item{\code{medians}}{A matrix of medians prepared for nine sequencing platforms.}
@@ -54,8 +54,8 @@
 #'   \item{\code{UNC232}}{Data from the UNC232 training cohort.}
 #'   \item{\code{platform.UNC232}}{The sequencing platform used for the UNC232 training cohort.}
 #' }
-#' 
-#' 
+#'
+#'
 #' @references
 #' - Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
 #' *Supervised risk predictor of breast cancer based on intrinsic subtypes*.
@@ -74,25 +74,24 @@
 #' RNA-Seq and digital multiplexed gene expression technologies in a triple
 #' negative breast cancer series. BMC Genomics. 2019;20(1).
 #' https://doi.org/10.1186/s12864-019-5849-0
-#' 
-#' 
-#' @examples 
+#'
+#'
+#' @examples
 #' library(BreastSubtypeR)
 #' data("BreastSubtypeRobj")
-#' 
-#' 
+#'
 "BreastSubtypeRobj"
 
 
 #' @title The AIMS model
-#' 
+#'
 #' @description
 #' This is the model definition for AIMS. It contains the
 #' naive bayes classifier composed of the 100 rules described in Paquet et al.
 #' "Absolute assignment of breast cancer intrinsic molecular subtype" (under
 #' review at JNCI).
-#' 
-#' 
+#'
+#'
 #' @details This is the AIMS model define using 100 simple rules of the form
 #' gene A < gene B and combine within a naive bayes classifier within e1071.
 #' (Paquet et al. under review JNCI).
@@ -118,18 +117,17 @@
 #' \item{k}{The selected number of optimal rules. For AIMS we have shown it is 20}
 #' \item{one.vs.all.tsp}{The Naive bayes classifier used in combination with the 100 rules}
 #' \item{selected.pairs.list}{The list of rules sorted from the best discriminating rule to the least discriminating rules subdivided by subtype}
-#' 
-#' 
+#'
+#'
 #' @references
 #' - Paquet ER, Hallett MT. *Absolute assignment of breast cancer
 #' intrinsic molecular subtype.* J Natl Cancer Inst. 2015;107(1).
 #' https://doi.org/10.1093/jnci/dju357
 #'
-#' @examples 
+#' @examples
 #' library(BreastSubtypeR)
 #' data("AIMSmodel")
-#' 
-#' 
+#'
 "AIMSmodel"
 
 
@@ -150,7 +148,7 @@
 #'
 #'
 #'
-#'#' @references
+#' #' @references
 #' - Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
 #' et al. *RNA sequencing-based single sample predictors of molecular subtype and
 #' risk of recurrence for clinical assessment of early-stage breast cancer*. NPJ
@@ -160,7 +158,6 @@
 #' library(BreastSubtypeR)
 #' ## Load the sspbc.models
 #' data("sspbc.models")
-#'
 #'
 "sspbc.models"
 
@@ -193,7 +190,6 @@
 #' ## Load the sspbc.models
 #' data(sspbc.models.fullname)
 #'
-#'
 "sspbc.models.fullname"
 
 
@@ -203,8 +199,8 @@
 #' (Gene.ID) included in the StringTie target when summarizing gene expression.
 #' The annotation are from from GENCODE Human Release 27 metadata files and
 #' include HGNC, EntrezGene and RefSeq.
-#' 
-#' 
+#'
+#'
 #' @docType data
 #' @usage data("Gene.ID.ann")
 #'
@@ -227,5 +223,4 @@
 #' ## Load the Gene.ID.ann
 #' data(Gene.ID.ann)
 #'
-#' 
 "Gene.ID.ann"
