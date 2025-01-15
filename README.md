@@ -58,7 +58,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
@@ -81,7 +81,7 @@ plot(plot)
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
 data = OSLO2EMIT0.103.genematrix_noNeg.subset
