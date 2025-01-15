@@ -58,14 +58,14 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
 # Run the subtyping
 methods = c("parker.median", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = methods, Subtype = TRUE)
+result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
 
 # View the results
 head(result$res_subtypes)
@@ -81,13 +81,13 @@ plot(plot)
 library(BreastSubtypeR)
 
 # Example data input: gene expression and clinical data
-data("OSLO2MEIT0obj")
+data("OSLO2EMIT0obj")
 
 ## do mapping before subtyping
-data = OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expression_matrix = data, featuredata = anno_feature.subset, impute = TRUE, verbose = TRUE )
+data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
 # Run the subtyping with AUTO mode
-result = BS_Multi(data_input = data_input, phenodata = clinic.oslo, methods = "AUTO")
+result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
 
 # View the results
 head(result$res_subtypes)
