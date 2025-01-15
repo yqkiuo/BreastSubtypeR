@@ -71,7 +71,7 @@ result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, me
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot = Vis_Multi(result$res_subtypes)
 plot(plot)
 
 ```
@@ -93,7 +93,7 @@ result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, me
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(res$res_subtypes)
+plot = Vis_Multi(result$res_subtypes)
 plot(plot)
 
 ```
