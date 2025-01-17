@@ -79,8 +79,8 @@ data("OSLO2EMIT0obj")
 
 # do mapping before subtyping
 
-data <- OSLO2MEIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input <- Mapping(gene_expr = data, featuredata = OSLO2MEIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
+data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
+data_input <- Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
 
 # Run the subtyping
 
