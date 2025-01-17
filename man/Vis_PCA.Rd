@@ -7,34 +7,44 @@
 Vis_PCA(x, out, Eigen = FALSE)
 }
 \arguments{
-\item{x}{A gene expression matrix, where genes are rows and samples are columns. The data should be log2 transformed.}
+\item{x}{A gene expression matrix, where genes are rows and samples are
+columns. The data should be log2 transformed.}
 
-\item{out}{A data frame containing two columns: \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should contain unique patient identifiers, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
+\item{out}{A data frame containing two columns: \code{"PatientID"} and
+\code{"Subtype"}. The \code{"PatientID"} column should contain unique patient
+identifiers, and the \code{"Subtype"} column should specify the assigned subtype
+for each patient.}
 
-\item{Eigen}{Logical. If \code{TRUE}, the function will display a scree plot showing the eigenvalues of the principal components.}
+\item{Eigen}{Logical. If \code{TRUE}, the function will display a scree plot
+showing the eigenvalues of the principal components.}
 }
 \value{
-A \code{ggplot} object representing the PCA plot, colored by subtype. If \code{Eigen} is set to \code{TRUE}, a scree plot of the eigenvalues is also included.
+A \code{ggplot} object representing the PCA plot, colored by subtype. If
+\code{Eigen} is set to \code{TRUE}, a scree plot of the eigenvalues is also included.
 }
 \description{
-This function generates a PCA plot to visualize the principal components of gene expression data, colored by the assigned subtypes. Optionally, it can display a scree plot of eigenvalues to evaluate the explained variance.
+This function generates a PCA plot to visualize the principal
+components of gene expression data, colored by the assigned subtypes.
+Optionally, it can display a scree plot of eigenvalues to evaluate the
+explained variance.
 }
 \examples{
 data("OSLO2EMIT0obj")
+res = OSLO2EMIT0obj$res
 
 # Prepare data: Gene expression matrix and subtype information
-x = data_input$x_NC.log
-out = data.frame(
-  PatientID = res$results$parker.original$BS.all$PatientID,
-  Subtype = res$results$parker.original$BS.all$BS
+x <- OSLO2EMIT0obj$data_input$x_NC.log
+out <- data.frame(
+    PatientID = res$results$parker.original$BS.all$PatientID,
+    Subtype = res$results$parker.original$BS.all$BS
 )
 
 # Generate the PCA plot
-p = Vis_PCA(x = x, out = out)
+p <- Vis_PCA(x = x, out = out)
 plot(p)
 
 # Generate PCA plot with scree plot of eigenvalues
-p_with_eigen = Vis_PCA(x = x, out = out, Eigen = TRUE)
+p_with_eigen <- Vis_PCA(x = x, out = out, Eigen = TRUE)
 plot(p_with_eigen)
 
 }

@@ -5,56 +5,72 @@
 \title{Iterative conventional IHC Intrinsic Subtyping (BS_cIHC.itr)}
 \usage{
 BS_cIHC.itr(
-  gene_expression_matrix,
-  phenodata,
+  gene_expr,
+  pheno,
   iteration = 100,
   ratio = 54/64,
   Subtype = FALSE,
   hasClinical = FALSE,
-  seed = 118,
-  ...
+  seed = 118
 )
 }
 \arguments{
-\item{gene_expression_matrix}{A gene expression matrix with genes in rows and samples in columns. The data should be log-transformed.}
+\item{gene_expr}{A gene expression matrix with genes in rows and
+samples in columns. The data should be log-transformed.}
 
-\item{phenodata}{A clinical information table. The first column must contain sample or patient names and be named \code{"PatientID"}. Additionally, the table must include an \code{"ER"} column, where estrogen receptor (ER) status is recorded as \code{"ER+"} or \code{"ER-"}.}
+\item{pheno}{A clinical information table. The first column must contain
+sample or patient names and be named \code{"PatientID"}. Additionally, the table
+must include an \code{"ER"} column, where estrogen receptor (ER) status is
+recorded as \code{"ER+"} or \code{"ER-"}.}
 
-\item{ratio}{Numeric. Specifies the ER+/ER− ratio for balancing. Options are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER+/ER- ratio used in the UNC232 training cohort.}
+\item{iteration}{Integer. Number of iterations for the ER-balanced procedure
+with the specified ratio. The default is 100.}
 
-\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by excluding the Normal-like subtype.}
+\item{ratio}{Numeric. Specifies the ER+/ER??? ratio for balancing. Options
+are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER+/ER- ratio
+used in the UNC232 training cohort.}
 
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from the \code{phenodata} table. Required columns include:
+\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
+excluding the Normal-like subtype.}
+
+\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
+the \code{pheno} table. Required columns include:
 \itemize{
 \item \code{"TSIZE"}: Tumor size.
 \item \code{"NODE"}: Lymph node status.
 }}
 
 \item{seed}{An integer value is used to set the random seed.}
-
-\item{iterative}{Integer. Number of iterations for the ER-balanced procedure with the specified ratio.}
 }
 \value{
 A list containing:
 \itemize{
 \item Intrinsic subtype predictions.
 \item Confidence levels for each subtype.
-\item Percentages of ER+ and ER− subsets across iterations.
+\item Percentages of ER+ and ER??? subsets across iterations.
 }
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using an iterative ER-balanced procedure for gene centering. It supports customization of the ER+/ER- ratio.
+This function predicts breast cancer intrinsic subtypes using an
+iterative ER-balanced procedure for gene centering. It supports customization
+of the ER+/ER- ratio.
 }
 \examples{
 data("OSLO2EMIT0obj")
-res = BS_cIHC.itr(
-  gene_expression_matrix = data_input$x_NC.log,
-  phenodata = clinic.oslo,
-  Subtype = FALSE,
-  hasClinical = FALSE
+res <- BS_cIHC.itr(
+    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
+    pheno = OSLO2EMIT0obj$clinic.oslo,
+    iteration = 10, ## For final analysis, set iteration = 100
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }
 \references{
-Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al. \emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups}. Nature. 2012;486(7403). https://doi.org/10.1038/nature10983
+\itemize{
+\item Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ,
+et al. \emph{The genomic and transcriptomic architecture of 2,000 breast tumours
+reveals novel subgroups}. Nature. 2012;486(7403).
+https://doi.org/10.1038/nature10983
+}
 }

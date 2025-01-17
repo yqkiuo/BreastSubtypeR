@@ -7,28 +7,36 @@
 Vis_boxplot(out, correlations)
 }
 \arguments{
-\item{out}{A data frame containing the columns \code{"PatientID"} and \code{"Subtype"}. The \code{"PatientID"} column should have unique identifiers for each patient, and the \code{"Subtype"} column should specify the assigned subtype for each patient.}
+\item{out}{A data frame containing the columns \code{"PatientID"} and \code{"Subtype"}.
+The \code{"PatientID"} column should have unique identifiers for each patient,
+and the \code{"Subtype"} column should specify the assigned subtype for each
+patient.}
 
-\item{correlations}{A data frame or matrix containing the correlation values computed from NC-based methods.}
+\item{correlations}{A data frame or matrix containing the correlation values
+computed from NC-based methods.}
 }
 \value{
-A \code{ggplot} object representing the boxplot visualization of the correlation distributions across the different subtypes.
+A \code{ggplot} object representing the boxplot visualization of the
+correlation distributions across the different subtypes.
 }
 \description{
-This function generates a boxplot to visualize the correlation distribution between different subtypes of breast cancer, based on the provided correlation table and subtype information.
+This function generates a boxplot to visualize the correlation
+distribution between different subtypes of breast cancer, based on the
+provided correlation table and subtype information.
 }
 \examples{
 data("OSLO2EMIT0obj")
+res = OSLO2EMIT0obj$res
 
 # Prepare data: Subtype information and correlation matrix
-out = data.frame(
-  PatientID = res$results$parker.original$BS.all$PatientID,
-  Subtype = res$results$parker.original$BS.all$BS
+out <- data.frame(
+    PatientID = res$results$parker.original$BS.all$PatientID,
+    Subtype = res$results$parker.original$BS.all$BS
 )
-correlations = res$results$parker.original$outList$distances
+correlations <- res$results$parker.original$outList$distances
 
 # Generate the boxplot
-p = Vis_boxplot(out, correlations)
+p <- Vis_boxplot(out, correlations)
 plot(p)
 
 }
