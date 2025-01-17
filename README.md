@@ -92,7 +92,7 @@ data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.
 
 # Run the subtyping
 methods = c("parker.original", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = OSLO2EMIT0obj$data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
+result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
 
 
 # View the results
@@ -120,10 +120,9 @@ data("OSLO2EMIT0obj")
 ## do mapping before subtyping
 data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
 data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
+
 # Run the subtyping with AUTO mode
-
 result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
-
 
 # View the results
 head(result$res_subtypes)
