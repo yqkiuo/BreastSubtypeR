@@ -81,7 +81,7 @@ data_input <- Mapping(
 # Run the subtyping
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 result <- BS_Multi(
-    data_input = OSLO2EMIT0obj$data_input,
+    data_input = data_input,
     pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = methods,
     Subtype = FALSE
@@ -117,7 +117,7 @@ data_input <- Mapping(
 
 # Run the subtyping with AUTO mode
 result <- BS_Multi(
-    data_input = OSLO2EMIT0obj$data_input,
+    data_input = data_input,
     pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = "AUTO"
 )
