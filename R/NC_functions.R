@@ -712,7 +712,7 @@ makeCalls.parker <- function(mat,
 
 
     if (calibration == "External" & external == "Given.mdns") {
-        if (length(medians) == 1 || is.na(medians)) {
+        if (length(medians) == 1 | all(is.na(medians))) {
             stop(
                 "Please input prepared medians as requires. "
             )
