@@ -31,9 +31,7 @@ assumptions for greater accuracy and reliability.
 maximize the inclusion of genes across subtyping methods.
 - **Streamlined Input and Output**: Provides standardized input/output 
 formats to ensure smooth integration with other gene expression analysis tools.
-- **User-Friendly Shiny App Interface**: Features a web-based GUI that runs 
-entirely locally, ensuring data privacy with no online sharing, ideal for users 
-who prefer a visual interface over R scripting.  
+- **User-Friendly Shiny App Interface**: Features a web-based graphical user interface (GUI) for performing single-method subtyping entirely on the local system, ensuring data privacy with no online sharing. This feature is ideal for users who prefer an intuitive, visual interface over R scripting.  
 
 
 ## Single-Method Subtyping Approaches
