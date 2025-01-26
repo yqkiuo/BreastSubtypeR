@@ -57,16 +57,20 @@ server <- function(input, output) {
 
             ## Run Mapping function
             samples <- intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID)
-
+            probeID <- intersect(rownames(reactive_files$GEX), reactive_files$anno$probe)
+            rownames(reactive_files$anno) = reactive_files$anno$probe
+            
             incProgress(0.8, detail = "Running Mapping function...")
             tryCatch(
                 {
                     # Redirect console output to a variable
+                    se_obj = SummarizedExperiment::SummarizedExperiment(assays = list(counts = reactive_files$GEX[probeID, samples]),
+                                                  rowData = reactive_files$anno[probeID,],
+                                                  colData = reactive_files$clinic[samples,]
+                                                  )
+                    
                     output_text <- capture.output({
-                        data_input <- Mapping(
-                            gene_expr = reactive_files$GEX[, samples],
-                            featuredata = reactive_files$anno, impute = TRUE, verbose = TRUE
-                        )
+                        data_input <- Mapping(se_obj = se_obj, impute = TRUE, verbose = TRUE)
 
                         cat("Step 1 is complete.", sep = "\n")
                         cat("You may now proceed to Step 2.", sep = "\n")
@@ -74,7 +78,6 @@ server <- function(input, output) {
 
                     # Store results
                     reactive_files$data_input <- data_input
-
 
                     # Display output text as notification
                     showNotification(HTML(paste(output_text, collapse = "<br>")), type = "message", duration = NULL)
@@ -99,9 +102,9 @@ server <- function(input, output) {
 
             # Execute the selected method
             if (input$BSmethod == "PAM50.parker") {
+
                 args <- list(
-                    gene_expr = reactive_files$data_input$x_NC.log,
-                    pheno = reactive_files$clinic,
+                    se_obj = reactive_files$data_input$se_NC,
                     calibration = input$calibration,
                     hasClinical = input$hasClinical
                 )
@@ -138,28 +141,28 @@ server <- function(input, output) {
 
             if (input$BSmethod == "cIHC") {
                 incProgress(0.5, detail = "Running cIHC method...")
-                res <- BreastSubtypeR::BS_cIHC(gene_expr = reactive_files$data_input$x_NC.log, pheno = reactive_files$clinic, hasClinical = input$hasClinical)
+                res <- BreastSubtypeR::BS_cIHC(se_obj = reactive_files$data_input$se_NC, hasClinical = input$hasClinical)
 
                 output_res <- res$score.ROR
             }
 
             if (input$BSmethod == "cIHC.itr") {
                 incProgress(0.5, detail = "Running cIHC.itr method...")
-                res <- BreastSubtypeR::BS_cIHC.itr(gene_expr = reactive_files$data_input$x_NC.log, pheno = reactive_files$clinic, iteration = input$iteration, ratio = input$ratio, hasClinical = input$hasClinical)
+                res <- BreastSubtypeR::BS_cIHC.itr(se_obj = reactive_files$data_input$se_NC, iteration = input$iteration, ratio = input$ratio, hasClinical = input$hasClinical)
 
                 output_res <- res$score.ROR
             }
 
             if (input$BSmethod == "PCAPAM50") {
                 incProgress(0.5, detail = "Running PCAPAM50 method...")
-                res <- BreastSubtypeR::BS_PCAPAM50(gene_expr = reactive_files$data_input$x_NC.log, pheno = reactive_files$clinic, hasClinical = input$hasClinical)
+                res <- BreastSubtypeR::BS_PCAPAM50(se_obj = reactive_files$data_input$se_NC, hasClinical = input$hasClinical)
 
                 output_res <- res$score.ROR
             }
 
             if (input$BSmethod == "ssBC") {
                 incProgress(0.5, detail = "Running ssBC method...")
-                res <- BreastSubtypeR::BS_ssBC(gene_expr = reactive_files$data_input$x_NC.log, pheno = reactive_files$clinic, s = input$s, hasClinical = input$hasClinical)
+                res <- BreastSubtypeR::BS_ssBC(se_obj = reactive_files$data_input$se_NC, s = input$s, hasClinical = input$hasClinical)
 
                 output_res <- res$score.ROR
             }
@@ -168,11 +171,7 @@ server <- function(input, output) {
                 incProgress(0.5, detail = "Running AIMS method...")
 
                 data("BreastSubtypeRobj", package = "BreastSubtypeR")
-
-                genes <- as.character(BreastSubtypeRobj$genes.signature$EntrezGene.ID[which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")])
-
-                data.aims <- reactive_files$data_input$x_SSP[rownames(reactive_files$data_input$x_SSP) %in% genes, ]
-                res <- BreastSubtypeR::BS_AIMS(gene_expr = data.aims, EntrezID = rownames(data.aims))
+                res <- BreastSubtypeR::BS_AIMS(se_obj = reactive_files$data_input$se_SSP)
 
                 res$BS.all <- data.frame(
                     PatientID = rownames(res$cl),
@@ -185,12 +184,12 @@ server <- function(input, output) {
             if (input$BSmethod == "sspbc") {
                 incProgress(0.5, detail = "Running sspbc method...")
 
-                res_sspbc <- BreastSubtypeR::BS_sspbc(as.matrix(reactive_files$data_input$x_SSP), ssp.name = "ssp.pam50")
+                res_sspbc <- BreastSubtypeR::BS_sspbc(reactive_files$data_input$se_SSP, ssp.name = "ssp.pam50")
 
                 BS.all <- data.frame(PatientID = rownames(res_sspbc), BS = res_sspbc[, 1], row.names = rownames(res_sspbc))
 
                 if (input$Subtype == "TRUE") {
-                    res_sspbc.Subtype <- BreastSubtypeR::BS_sspbc(gene_expr = as.matrix(reactive_files$data_input$x_SSP), ssp.name = "ssp.subtype")
+                    res_sspbc.Subtype <- BreastSubtypeR::BS_sspbc(reactive_files$data_input$se_SSP, ssp.name = "ssp.subtype")
 
                     BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
                 }
@@ -224,9 +223,9 @@ server <- function(input, output) {
             output$pie1 <- renderPlot(BreastSubtypeR::Vis_pie(out))
 
             matrix <- if (input$BSmethod == "sspbc" || input$BSmethod == "AIMS") {
-                log2(reactive_files$data_input$x_SSP + 1)
+                log2(SummarizedExperiment::assay(reactive_files$data_input$se_SSP) + 1) %>% as.matrix()
             } else {
-                reactive_files$data_input$x_NC.log
+                SummarizedExperiment::assay(reactive_files$data_input$se_NC) %>% as.matrix()
             }
 
             if (input$BSmethod == "sspbc" || input$BSmethod == "AIMS") {

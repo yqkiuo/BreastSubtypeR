@@ -4,21 +4,21 @@
 \alias{Mapping}
 \title{Gene ID Mapping}
 \usage{
-Mapping(
-  gene_expr,
-  featuredata = NA,
-  method = "max",
-  impute = TRUE,
-  verbose = TRUE
-)
+Mapping(se_obj, method = "max", impute = TRUE, verbose = TRUE)
 }
 \arguments{
-\item{gene_expr}{Gene expression matrix with probes in rows and
-samples in columns.}
-
-\item{featuredata}{Feature data provided by the user. The table must contain
-at least three columns: \code{probe} (ProbeID or TranscriptID), \code{SYMBOL}, and
-\code{ENTREZID}.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+and columns represent samples. This should be stored in the \code{assay()} slot.
+\item \strong{Row metadata}: A data frame with annotations for probes, including at least the following columns:
+\itemize{
+\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID or TranscriptID).
+\item \code{"SYMBOL"}: Gene symbols corresponding to the probes.
+\item \code{"ENTREZID"}: Entrez gene IDs corresponding to the probes.
+}
+\item \strong{Column metadata} (optional): Sample metadata stored in the \code{colData()} slot.
+}}
 
 \item{method}{Method for deduplicating probes in microarray or RNA-seq data.
 Choose one of the following options:
@@ -35,12 +35,14 @@ imputation on missing data (\code{NA} values).}
 execution.}
 }
 \value{
-A list containing three gene expression matrices:
+A list containing three preprocessed gene expression matrices:
 \itemize{
-\item \code{"x_NC.log"}:
-Preprocessed matrix for input into nearest-centroid (NC)-based methods.
-\item \code{"x_SSP"}: Preprocessed matrix for input into single-sample predictor
-(SSP)-based methods.
+\item \code{"x_NC"}: The processed gene expression matrix
+for nearest-centroid (NC)-based methods.
+\item \code{"x_NC.log"}: The log-transformed version
+of \code{"x_NC"} for NC-based methods.
+\item \code{"x_SSP"}: The processed gene expression matrix
+for single-sample predictor (SSP)-based methods.
 }
 }
 \description{
@@ -55,8 +57,7 @@ renamed as \code{probe}.
 \examples{
 data("OSLO2EMIT0obj")
 data_input <- Mapping(
-    gene_expr = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset,
-    featuredata = OSLO2EMIT0obj$anno_feature.subset,
+    se_obj = OSLO2EMIT0obj$se_obj,
     method = "max",
     impute = TRUE,
     verbose = TRUE

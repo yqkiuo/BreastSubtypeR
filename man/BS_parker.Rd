@@ -5,8 +5,7 @@
 \title{Original Parker Intrinsic Subtyping (BS_parker)}
 \usage{
 BS_parker(
-  gene_expr,
-  pheno = NULL,
+  se_obj,
   calibration = "None",
   internal = NA,
   external = NA,
@@ -16,11 +15,12 @@ BS_parker(
 )
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. The data should be log-transformed.}
-
-\item{pheno}{A clinical information table. The first column must be named
-\code{"PatientID"}. The default is NULL.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix with genes (Gene Symbol) in rows
+and samples in columns. This matrix should be log-transformed.
+\item \strong{Column metadata} (\code{colData}): Optional clinical information.
+}}
 
 \item{calibration}{The calibration method to use. Options include:
 \itemize{
@@ -71,8 +71,7 @@ original approach.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_parker(
-    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-    pheno = OSLO2EMIT0obj$clinic.oslo,
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
     calibration = "Internal",
     internal = "medianCtr",
     Subtype = FALSE,

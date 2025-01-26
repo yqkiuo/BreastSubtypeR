@@ -4,12 +4,14 @@
 \alias{BS_sspbc}
 \title{Intrinsic Subtyping using SSPBC (BS_sspbc)}
 \usage{
-BS_sspbc(gene_expr, ssp.name = "ssp.pam50")
+BS_sspbc(se_obj, ssp.name = "ssp.pam50")
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. Note: The data must be \strong{unlogged} before using this
-function.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) and samples (columns).
+Note: The data must be \strong{unlogged} before using this function.
+}}
 
 \item{ssp.name}{Specifies the model to use. Options are "ssp.pam50" (for
 PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by
@@ -35,7 +37,7 @@ data("OSLO2EMIT0obj")
 
 # Perform subtyping with the SSPBC method
 res <- BS_sspbc(
-    gene_expr = as.matrix(OSLO2EMIT0obj$data_input$x_SSP),
+    se_obj = OSLO2EMIT0obj$data_input$se_SSP,
     ssp.name = "ssp.pam50"
 )
 
