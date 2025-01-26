@@ -82,24 +82,29 @@ using multiple methods:
 ```R
 library(BreastSubtypeR)
 
-# Example data input: gene expression and clinical data
+# Example data input: gene signatures, gene expression and clinical data
+data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-## do mapping before subtyping
-data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
-
+# do mapping before subtyping
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
 # Run the subtyping
-methods = c("parker.original", "PCAPAM50", "sspbc")
-result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
 
+methods <- c("parker.original", "PCAPAM50", "sspbc")
+result <- BS_Multi(
+    data_input = data_input,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE)
 
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(result$res_subtypes)
+
+plot <- Vis_Multi(result$res_subtypes)
+
 plot(plot)
 
 ```
@@ -114,21 +119,25 @@ the ER/HER2 distribution of the test cohort:
 ```R
 library(BreastSubtypeR)
 
-# Example data input: gene expression and clinical data
+# Load required datasets
+data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-## do mapping before subtyping
-data = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input = Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE )
+# do mapping before subtyping
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
 # Run the subtyping with AUTO mode
-result = BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
-
+result <- BS_Multi(
+  data_input = data_input,
+  methods = "AUTO",
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 # View the results
 head(result$res_subtypes)
 
 ## visualization
-plot = Vis_Multi(result$res_subtypes)
+plot <- Vis_Multi(result$res_subtypes)
 plot(plot)
 
 ```

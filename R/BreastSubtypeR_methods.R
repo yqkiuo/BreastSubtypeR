@@ -10,6 +10,10 @@
 #'
 #' @import stringr
 #' @import e1071
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment colData
+#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment assay
 #' @importFrom data.table data.table
 #' @importFrom data.table set
 #' @importFrom rlang call2
@@ -24,11 +28,15 @@ NULL
 #' @description A function to map gene IDs and preprocess gene expression data
 #' for subsequent analyses.
 #'
-#' @param gene_expr Gene expression matrix with probes in rows and
-#'   samples in columns.
-#' @param featuredata Feature data provided by the user. The table must contain
-#'   at least three columns: `probe` (ProbeID or TranscriptID), `SYMBOL`, and
-#'   `ENTREZID`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+#'     and columns represent samples. This should be stored in the `assay()` slot.
+#'   - **Row metadata**: A data frame with annotations for probes, including at least the following columns:
+#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID or TranscriptID).
+#'     - `"SYMBOL"`: Gene symbols corresponding to the probes.
+#'     - `"ENTREZID"`: Entrez gene IDs corresponding to the probes.
+#'   - **Column metadata** (optional): Sample metadata stored in the `colData()` slot.
+#'
 #' @param method Method for deduplicating probes in microarray or RNA-seq data.
 #'   Choose one of the following options:
 #'   - `"IQR"` for Affymetrix arrays,
@@ -39,11 +47,14 @@ NULL
 #' @param verbose Logical. If `TRUE`, progress messages will be displayed during
 #'   execution.
 #'
-#' @return A list containing three gene expression matrices:
-#'   - `"x_NC.log"`:
-#'   Preprocessed matrix for input into nearest-centroid (NC)-based methods.
-#'   - `"x_SSP"`: Preprocessed matrix for input into single-sample predictor
-#'   (SSP)-based methods.
+#' @return A list containing three preprocessed gene expression matrices:
+#'   - `"x_NC"`: The processed gene expression matrix
+#'   for nearest-centroid (NC)-based methods.
+#'   - `"x_NC.log"`: The log-transformed version
+#'   of `"x_NC"` for NC-based methods.
+#'   - `"x_SSP"`: The processed gene expression matrix
+#'   for single-sample predictor (SSP)-based methods.
+#'
 #'
 #' @details If the rows of the gene expression matrix/table represent gene
 #' symbols, an additional `SYMBOL` column must be added to the feature table and
@@ -52,8 +63,7 @@ NULL
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' data_input <- Mapping(
-#'     gene_expr = OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset,
-#'     featuredata = OSLO2EMIT0obj$anno_feature.subset,
+#'     se_obj = OSLO2EMIT0obj$se_obj,
 #'     method = "max",
 #'     impute = TRUE,
 #'     verbose = TRUE
@@ -61,15 +71,12 @@ NULL
 #'
 #' @export
 
-Mapping <- function(
-        gene_expr,
-        featuredata,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
+Mapping <- function(se_obj,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     arguments <- rlang::dots_list(
-        x = gene_expr,
-        y = featuredata,
+        se_obj = se_obj,
         method = method,
         impute = impute,
         verbose = verbose,
@@ -79,7 +86,20 @@ Mapping <- function(
     call <- rlang::call2(domapping, !!!arguments)
     res <- eval(call)
 
-    return(res)
+    # Extract results for NC-based and SSP-based methods
+    x_NC <- res$x_NC
+    x_NC.log <- res$x_NC.log
+    x_SSP <- res$x_SSP
+
+    ## create se_obj for NC_based methods
+    se_NC <- SummarizedExperiment(
+        assays = list(counts = x_NC.log),
+        colData = colData(se_obj)
+    )
+    ## create se_obj for SSP_based methods
+    se_SSP <- SummarizedExperiment(assays = list(counts = x_SSP))
+    # Return both objects as a list
+    return(list(se_NC = se_NC, se_SSP = se_SSP))
 }
 
 
@@ -90,10 +110,10 @@ Mapping <- function(
 #'   the original Parker et al., 2019 method, as well as some variations of the
 #'   original approach.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. The data should be log-transformed.
-#' @param pheno A clinical information table. The first column must be named
-#'   `"PatientID"`. The default is NULL.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (Gene Symbol) in rows
+#'     and samples in columns. This matrix should be log-transformed.
+#'   - **Column metadata** (`colData`): Optional clinical information.
 #' @param calibration The calibration method to use. Options include:
 #'   - `"None"`: No calibration is applied.
 #'   - `"Internal"`: Calibration is performed using internal strategies.
@@ -138,8 +158,7 @@ Mapping <- function(
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_parker(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     calibration = "Internal",
 #'     internal = "medianCtr",
 #'     Subtype = FALSE,
@@ -148,21 +167,30 @@ Mapping <- function(
 #'
 #' @export
 
-BS_parker <- function(
-        gene_expr,
-        pheno = NULL,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
-    if (hasClinical) {
-        if (!is.null(pheno)) {
-            rownames(pheno) <- pheno$PatientID
-        } else {
-            stop("Please provide pheno table as required.")
+BS_parker <- function(se_obj,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
+    # Check if input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
+    }
+
+    ## Extract data from SummarizedExperiment
+    gene_expr <- assay(se_obj)
+    pheno <- colData(se_obj) %>% data.frame()
+
+    # Handle clinical metadata if required
+    if (ncol(pheno) == 0) {
+        pheno <- NULL
+    } else {
+        if (!"PatientID" %in% colnames(pheno)) {
+            stop("The `colData` of `se_obj` must include a `PatientID` column when `hasClinical = TRUE`.")
         }
+        rownames(pheno) <- pheno$PatientID
     }
 
     arguments <- rlang::dots_list(
@@ -190,12 +218,14 @@ BS_parker <- function(
 #' the conventional IHC (cIHC) method, which employs ER-balanced subsets for
 #' gene centering.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. The data should be log-transformed.
-#' @param pheno A clinical information table. The first column must contain
-#'   sample or patient names and be named `"PatientID"`. Additionally, the table
-#'   must include an `"ER"` column, where estrogen receptor (ER) status is
-#'   recorded as `"ER+"` or `"ER-"`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (Gene Symbol)
+#'   in rows and samples in columns. This matrix should be log-transformed.
+#'   - **Column metadata** (`colData`): Clinical information table.
+#    The column metadata must include:
+#'     - `"PatientID"`: Unique sample or patient identifiers.
+#'     - `"ER"`: Estrogen receptor (ER) status recorded as `"ER+"` or `"ER-"`.
+#'
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by
 #'   excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from
@@ -214,29 +244,31 @@ BS_parker <- function(
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_cIHC <- function(
-        gene_expr,
-        pheno,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
-    if (!is.null(pheno)) {
-        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno)) {
-            rownames(pheno) <- pheno$PatientID
-        } else {
-            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
-        }
-    } else {
-        stop("Please provide the 'pheno' table as required.")
+BS_cIHC <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
+    # Check if input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
     }
+
+    ## Extract data from SummarizedExperiment
+    gene_expr <- assay(se_obj)
+    # Extract clinical metadata if required
+    pheno <- colData(se_obj) %>% data.frame()
+
+    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+    }
+    rownames(pheno) <- pheno$PatientID
 
     arguments <- rlang::dots_list(
         mat = gene_expr,
@@ -247,10 +279,8 @@ BS_cIHC <- function(
         .homonyms = "last"
     )
 
-
     call <- rlang::call2(makeCalls_ihc, !!!arguments)
     res_IHC <- eval(call)
-
 
     return(res_IHC)
 }
@@ -263,12 +293,14 @@ BS_cIHC <- function(
 #' iterative ER-balanced procedure for gene centering. It supports customization
 #' of the ER+/ER- ratio.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. The data should be log-transformed.
-#' @param pheno A clinical information table. The first column must contain
-#'   sample or patient names and be named `"PatientID"`. Additionally, the table
-#'   must include an `"ER"` column, where estrogen receptor (ER) status is
-#'   recorded as `"ER+"` or `"ER-"`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (Gene Symbol)
+#'   in rows and samples in columns. This matrix should be log-transformed.
+#'   - **Column metadata** (`colData`): Clinical information table.
+#    The column metadata must include:
+#'     - `"PatientID"`: Unique sample or patient identifiers.
+#'     - `"ER"`: Estrogen receptor (ER) status recorded as `"ER+"` or `"ER-"`.
+#'
 #' @param iteration Integer. Number of iterations for the ER-balanced procedure
 #'   with the specified ratio. The default is 100.
 #' @param ratio Numeric. Specifies the ER+/ER??? ratio for balancing. Options
@@ -295,8 +327,7 @@ BS_cIHC <- function(
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC.itr(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     iteration = 10, ## For final analysis, set iteration = 100
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
@@ -304,24 +335,26 @@ BS_cIHC <- function(
 #'
 #' @export
 
-BS_cIHC.itr <- function(
-        gene_expr,
-        pheno,
-        iteration = 100,
-        ratio = 54 / 64,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
-    if (!is.null(pheno)) {
-        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno)) {
-            rownames(pheno) <- pheno$PatientID
-        } else {
-            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
-        }
-    } else {
-        stop("Please provide the 'pheno' table as required.")
+BS_cIHC.itr <- function(se_obj,
+    iteration = 100,
+    ratio = 54 / 64,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
+    # Check if input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
     }
 
+    ## Extract data from SummarizedExperiment
+    gene_expr <- assay(se_obj)
+    # Extract clinical metadata if required
+    pheno <- colData(se_obj) %>% data.frame()
+
+    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+    }
+    rownames(pheno) <- pheno$PatientID
 
     arguments <- rlang::dots_list(
         mat = gene_expr,
@@ -333,7 +366,6 @@ BS_cIHC.itr <- function(
         seed = seed,
         .homonyms = "last"
     )
-
 
     call <- rlang::call2(makeCalls_ihc.iterative, !!!arguments)
     res_IHC.itr <- eval(call)
@@ -349,12 +381,14 @@ BS_cIHC.itr <- function(
 #' the PCA-PAM50 method. This approach integrates Principal Component Analysis
 #' (PCA) to enhance the consistency of PAM50-based subtyping.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. The data should be log-transformed.
-#' @param pheno A clinical information table. The first column must contain
-#'   sample or patient names and be named `"PatientID"`. Additionally, the table
-#'   must include an `"ER"` column, where estrogen receptor (ER) status is
-#'   recorded as `"ER+"` or `"ER-"`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (Gene Symbol)
+#'   in rows and samples in columns. This matrix should be log-transformed.
+#'   - **Column metadata** (`colData`): Clinical information table.
+#    The column metadata must include:
+#'     - `"PatientID"`: Unique sample or patient identifiers.
+#'     - `"ER"`: Estrogen receptor (ER) status recorded as `"ER+"` or `"ER-"`.
+#'
 #' @param Subtype Logical. If `TRUE`, the function predicts four subtypes by
 #'   excluding the Normal-like subtype.
 #' @param hasClinical Logical. If `TRUE`, the function uses clinical data from
@@ -374,35 +408,31 @@ BS_cIHC.itr <- function(
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_PCAPAM50(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_PCAPAM50 <- function(
-        gene_expr,
-        pheno,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
-    if (!is.null(gene_expr)) {
-        gene_expr <- as.matrix(gene_expr)
-    } else {
-        stop("Please provide pheno table as required.")
+BS_PCAPAM50 <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
+    # Check if input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
     }
 
-    if (!is.null(pheno)) {
-        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno) && "ER" %in% colnames(pheno)) {
-            rownames(pheno) <- pheno$PatientID
-        } else {
-            stop("The 'pheno' table must be a data frame with a 'PatientID' and a 'ER' column.")
-        }
-    } else {
-        stop("Please provide the 'pheno' table as required.")
+    ## Extract data from SummarizedExperiment
+    gene_expr <- assay(se_obj)
+    # Extract clinical metadata if required
+    pheno <- colData(se_obj) %>% data.frame()
+
+    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
     }
+    rownames(pheno) <- pheno$PatientID
 
     samples <- pheno$PatientID
 
@@ -418,10 +448,7 @@ BS_PCAPAM50 <- function(
         pheno$ER_status[which(pheno$ER == "ER+")] <- "pos"
         pheno$ER_status[which(pheno$ER == "ER-")] <- "neg"
         pheno <- pheno[order(pheno$ER_status, decreasing = TRUE), ]
-    } else {
-        stop("Please prepare ER status in clinical table")
     }
-
 
     gene_expr <- as.matrix(gene_expr[, pheno$PatientID])
 
@@ -437,7 +464,6 @@ BS_PCAPAM50 <- function(
 
     call <- rlang::call2(makeCalls.PC1ihc, !!!arguments)
     res_PC1IHC <- eval(call)
-
 
     ## second step
     if (hasClinical) {
@@ -455,7 +481,6 @@ BS_PCAPAM50 <- function(
             stringsAsFactors = FALSE
         )
     }
-
 
     arguments2 <- rlang::dots_list(
         mat = gene_expr,
@@ -477,7 +502,6 @@ BS_PCAPAM50 <- function(
 }
 
 
-
 #' ssBC Intrinsic Subtyping (BS_ssBC)
 #'
 #' @name BS_ssBC
@@ -487,20 +511,16 @@ BS_PCAPAM50 <- function(
 #'   distribution of clinicopathological characteristics compared to the
 #'   original training cohort (e.g., an ER+ selected cohort).
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. The data should be log-transformed.
-#' @param pheno A clinical information table. The first column must contain
-#'   sample or patient names, named `"PatientID"`.
-#'   - When `"s"` is set as `"ER"`,
-#'   the table must include an `"ER"` column, where estrogen receptor (ER)
-#'   status is recorded as `"ER+"` or `"ER-"`.
-#'   - When `"s"` is set as `"ER.v2"`,
-#'   the table must include an `"ER"` column, where estrogen receptor (ER)
-#'   status is recorded as `"ER+"` or `"ER-"`, and a `"HER2"` column, where
-#'   human epidermal growth factor receptor 2 (HER2) status is recorded as
-#'   `"HER2+"` or `"HER2-"`.
-#'   - When `"s"` is set as `"TN"` or `"TN.v2"`, the table
-#'   must include a `"TN"` column, recording triple-negative samples as `"TN"`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (rows) and samples (columns).
+#'     Data should be log-transformed.
+#'   - **Column metadata** (`colData`): A clinical information table. If `hasClinical = TRUE`,
+#'     the table must include:
+#'     - `"PatientID"`: Unique identifiers for patients or samples.
+#'     - Additional columns based on the `s` parameter:
+#'       - `"ER"` for estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.
+#'       - `"HER2"` for HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.
+#'       - `"TN"` for triple-negative status (`"TN"`) if `s = "TN"` or `s = "TN.v2"`.
 #' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TN.v2"`.
 #'   These specifies which subgroup-specific quantiles to use:
 #'   - `"ER"` and `"TN"`: Original subgroup-specific quantiles published in
@@ -534,8 +554,7 @@ BS_PCAPAM50 <- function(
 #' ## ssBC.v2
 #' data("OSLO2EMIT0obj")
 #' res <- BS_ssBC(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     s = "ER.v2",
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
@@ -543,20 +562,37 @@ BS_PCAPAM50 <- function(
 #'
 #' @export
 
-BS_ssBC <- function(
-        gene_expr,
-        pheno,
-        s,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
-    if (!is.null(pheno)) {
-        if (is.data.frame(pheno) && "PatientID" %in% colnames(pheno)) {
-            rownames(pheno) <- pheno$PatientID
-        } else {
-            stop("The 'pheno' table must be a data frame with a 'PatientID' column.")
-        }
-    } else {
-        stop("Please provide the 'pheno' table as required.")
+BS_ssBC <- function(se_obj,
+    s,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
+    # Check that input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
+    }
+
+    # Extract gene expression matrix
+    gene_expr <- assay(se_obj)
+
+    # Extract clinical metadata if hasClinical is TRUE
+    pheno <- colData(se_obj) %>% data.frame()
+    if (!"PatientID" %in% colnames(pheno)) {
+        stop("The 'colData' of 'se_obj' must include a 'PatientID' column when 'hasClinical = TRUE'.")
+    }
+    rownames(pheno) <- pheno$PatientID
+
+    # Additional checks based on `s`
+    required_columns <- switch(s,
+        "ER" = c("ER"),
+        "ER.v2" = c("ER", "HER2"),
+        "TN" = c("TN"),
+        "TN.v2" = c("TN"),
+        stop("Invalid value for 's'. Must be one of 'ER', 'ER.v2', 'TN', or 'TN.v2'.")
+    )
+
+    missing_columns <- setdiff(required_columns, colnames(pheno))
+    if (length(missing_columns) > 0) {
+        stop(paste("The following required columns are missing from 'colData':", paste(missing_columns, collapse = ", ")))
     }
 
     arguments <- rlang::dots_list(
@@ -581,11 +617,9 @@ BS_ssBC <- function(
 #' @description This function predicts breast cancer intrinsic subtypes using
 #' the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. Note: The data must be **unlogged** before using this
-#'   function.
-#' @param EntrezID A vector of Entrez gene IDs corresponding to the genes in the
-#'   gene expression matrix.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (EntrezID) and samples (columns).
+#'     Note: The data must be **unlogged** before using this function.
 #'
 #' @return A vector of intrinsic subtypes assigned to the samples, as estimated
 #'   by the AIMS method.
@@ -598,31 +632,39 @@ BS_ssBC <- function(
 #' @examples
 #' # Load required datasets
 #' data("OSLO2EMIT0obj")
-#' data("BreastSubtypeRobj")
 #'
-#' # Extract AIMS-specific genes
-#' genes <- as.character(
-#'     BreastSubtypeRobj$genes.signature$EntrezGene.ID[
-#'         which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
-#'     ]
-#' )
 #'
 #' # Perform subtyping
 #' res <- BS_AIMS(
-#'     gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ],
-#'     EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ])
+#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP
 #' )
 #'
 #' @export
 
-BS_AIMS <- function(gene_expr, EntrezID) {
+BS_AIMS <- function(se_obj) {
     ## loading datasets
     data("AIMSmodel")
     data("BreastSubtypeRobj")
 
+    # Check that input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
+    }
+
+    # Extract gene expression matrix
+    gene_expr <- assay(se_obj)
+
+    # Extract AIMS-specific genes
+    genes <- as.character(
+        BreastSubtypeRobj$genes.signature$EntrezGene.ID[
+            which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
+        ]
+    )
+    gene_expr <- gene_expr[rownames(gene_expr) %in% genes, ]
+
     arguments <- rlang::dots_list(
         eset = as.matrix(gene_expr),
-        EntrezID = EntrezID
+        EntrezID = rownames(gene_expr)
     )
 
     call <- rlang::call2(applyAIMS_AIMS, !!!arguments)
@@ -642,9 +684,10 @@ BS_AIMS <- function(gene_expr, EntrezID) {
 #' for Breast Cancer) method. This method supports predicting subtypes based on
 #' RNA sequencing data and offers flexibility in selecting the prediction model.
 #'
-#' @param gene_expr A gene expression matrix with genes in rows and
-#'   samples in columns. Note: The data must be **unlogged** before using this
-#'   function.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix with genes (EntrezID) and samples (columns).
+#'     Note: The data must be **unlogged** before using this function.
+#'
 #' @param ssp.name Specifies the model to use. Options are "ssp.pam50" (for
 #'   PAM50-based predictions) or "ssp.subtype" (for predicting four subtypes by
 #'   excluding the Normal-like subtype).
@@ -665,15 +708,23 @@ BS_AIMS <- function(gene_expr, EntrezID) {
 #'
 #' # Perform subtyping with the SSPBC method
 #' res <- BS_sspbc(
-#'     gene_expr = as.matrix(OSLO2EMIT0obj$data_input$x_SSP),
+#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP,
 #'     ssp.name = "ssp.pam50"
 #' )
 #'
 #' @export
 
-BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
+BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
     data("sspbc.models")
     data("sspbc.models.fullname")
+
+    # Check that input is a SummarizedExperiment object
+    if (!inherits(se_obj, "SummarizedExperiment")) {
+        stop("Input must be a SummarizedExperiment object.")
+    }
+
+    # Extract gene expression matrix
+    gene_expr <- assay(se_obj)
 
     arguments <- rlang::dots_list(
         gex = gene_expr,
@@ -697,8 +748,6 @@ BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
 #'
 #' @param data_input The output from the `Mapping()` function, containing
 #'   processed gene expression data prepared for subtyping analysis.
-#' @param pheno A clinical information table. The first column must be named
-#'   "PatientID".
 #' @param methods A character vector specifying the subtyping methods to be
 #'   used. Options include:
 #'   - "parker.original"
@@ -737,7 +786,6 @@ BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
 #' # Perform subtyping
 #' res.test <- BS_Multi(
 #'     data_input = OSLO2EMIT0obj$data_input,
-#'     pheno = OSLO2EMIT0obj$clinic.oslo,
 #'     methods = methods,
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
@@ -745,14 +793,10 @@ BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(
-        data_input,
-        pheno,
-        methods = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
-    if (!is.data.frame(pheno)) stop("The 'pheno' argument must be a data frame.")
-
+BS_Multi <- function(data_input,
+    methods = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -770,6 +814,10 @@ BS_Multi <- function(
     } else if (length(methods) < 2) {
         stop("Select at least two methods or set method to 'AUTO'.")
     }
+
+    ## extract pheno table
+    pheno <- colData(data_input$se_NC) %>% data.frame()
+    rownames(pheno) <- pheno$PatientID
 
     # Check ER and HER2 columns in pheno
     if (!("ER" %in% colnames(pheno)) && any(methods %in% c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
@@ -974,8 +1022,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_parker(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     calibration = "Internal",
                     internal = "medianCtr",
                     Subtype = Subtype,
@@ -987,8 +1034,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_parker(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     calibration = "Internal",
                     internal = "meanCtr",
                     Subtype = Subtype,
@@ -1000,8 +1046,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_parker(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     calibration = "Internal",
                     internal = "qCtr",
                     Subtype = Subtype,
@@ -1014,8 +1059,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_cIHC(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
@@ -1027,8 +1071,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_cIHC.itr(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
@@ -1039,8 +1082,7 @@ BS_Multi <- function(
             message(method, " is running!")
             return(
                 BS_PCAPAM50(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
@@ -1052,16 +1094,14 @@ BS_Multi <- function(
 
             if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
                 res_ssBC <- BS_ssBC(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     s = "TN",
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
             } else {
                 res_ssBC <- BS_ssBC(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     s = "ER",
                     Subtype = Subtype,
                     hasClinical = hasClinical
@@ -1084,16 +1124,14 @@ BS_Multi <- function(
 
             if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
                 res_ssBC.v2 <- BS_ssBC(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     s = "TN.v2",
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
             } else {
                 res_ssBC.v2 <- BS_ssBC(
-                    data_input$x_NC.log,
-                    pheno,
+                    data_input$se_NC,
                     s = "ER.v2",
                     Subtype = Subtype,
                     hasClinical = hasClinical
@@ -1110,19 +1148,12 @@ BS_Multi <- function(
             return(res_ssBC.v2)
         }
 
-
         if (method == "AIMS") {
             message(method, " is running!")
             data("BreastSubtypeRobj")
-            genes.s <- BreastSubtypeRobj$genes.signature
 
-            ## loading library first or model
-            genes <- genes.s$EntrezGene.ID[genes.s$AIMS == "Yes"] %>%
-                as.character()
-            res_AIMS <- BS_AIMS(
-                data_input$x_SSP[genes, ],
-                rownames(data_input$x_SSP[genes, ])
-            )
+            res_AIMS <- BS_AIMS(data_input$se_SSP)
+
             res_AIMS$BS.all <- data.frame(
                 PatientID = rownames(res_AIMS$cl),
                 BS = res_AIMS$cl[, 1]
@@ -1134,12 +1165,11 @@ BS_Multi <- function(
             return(res_AIMS)
         }
 
-
         if (method == "sspbc") {
             message(method, " is running!")
 
             res_sspbc <- BS_sspbc(
-                gene_expr = as.matrix(data_input$x_SSP),
+                se_obj = data_input$se_SSP,
                 ssp.name = "ssp.pam50"
             )
 
@@ -1151,7 +1181,7 @@ BS_Multi <- function(
 
             if (Subtype) {
                 res_sspbc.Subtype <- BS_sspbc(
-                    gene_expr = as.matrix(data_input$x_SSP),
+                    se_obj = data_input$se_SSP,
                     ssp.name = "ssp.subtype"
                 )
                 BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
@@ -1164,10 +1194,11 @@ BS_Multi <- function(
     })
 
     names(results) <- methods
+    samples <- colnames(assay(data_input$se_NC))
 
-    res_subtypes <- data.table(row_id = colnames(data_input$x_NC))
+    res_subtypes <- data.table(row_id = samples)
     if (Subtype) {
-        res_subtypes.Subtype <- data.table(row_id = colnames(data_input$x_NC))
+        res_subtypes.Subtype <- data.table(row_id = samples)
     }
 
     for (method in methods) {
@@ -1184,7 +1215,7 @@ BS_Multi <- function(
 
     ## entropy index
     res_subtypes <- as.data.frame(res_subtypes)
-    rownames(res_subtypes) <- colnames(data_input$x_NC)
+    rownames(res_subtypes) <- samples
     res_subtypes[, 1] <- NULL
 
     entropy <- apply(res_subtypes, 1, get_entropy)
@@ -1192,7 +1223,7 @@ BS_Multi <- function(
 
     if (Subtype) {
         res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype)
-        rownames(res_subtypes.Subtype) <- colnames(data_input$x_NC)
+        rownames(res_subtypes.Subtype) <- samples
         res_subtypes.Subtype[, 1] <- NULL
 
         entropy <- apply(res_subtypes.Subtype, 1, get_entropy)

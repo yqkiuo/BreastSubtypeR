@@ -7,6 +7,10 @@
 #' @import ggrepel
 #' @import magrittr
 #' @import impute
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment colData
+#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment assay
 #'
 #' @noRd
 NULL
@@ -39,35 +43,27 @@ NULL
 #'   - `"x_SSP"`: Preprocessed matrix for input into single-sample predictor
 #'   (SSP)-based methods.
 #'
-#' @examples
-#' data("OSLO2MEITOobj")
-#'
-#' ## do mapping before subtyping
-#' data <- OSLO2EMIT0.103.genematrix_noNeg.subset
-#' data_input <- Mapping(
-#'     gene_expr = data,
-#'     featuredata = anno_feature.subset,
-#'     impute = TRUE,
-#'     verbose = TRUE
-#' )
-#'
 #' @noRd
 
-Mapping <- function(
-        gene_expr,
-        featuredata = NA,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
+domapping <- function(se_obj,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     data("BreastSubtypeRobj")
 
-    x <- gene_expr
-    y <- featuredata
+    ## Extract data from SummarizedExperiment
+    x <- assay(se_obj)
+    y <- rowData(se_obj)
+
+    if (!is.data.frame(y)) {
+        y <- as.data.frame(y)
+    }
+
     samplenames <- colnames(x)
 
     ## check feature data
     if (length(y) == 0) {
-        stop("Please provide feature annotation to do probe ID mapping ")
+        stop("Please provide feature annotation to do probeID mapping ")
     }
 
     ## loading genes.signature
@@ -423,7 +419,7 @@ Vis_boxplot <- function(out, correlations) {
 #' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
-#' x <- OSLO2EMIT0obj$data_input$x_NC.log
+#' x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 #' out <- data.frame(
 #'     PatientID = res$results$parker.original$BS.all$PatientID,
 #'     Subtype = res$results$parker.original$BS.all$BS
@@ -515,7 +511,7 @@ Vis_heatmap <- function(x, out) {
 #' res <- OSLO2EMIT0obj$res
 #'
 #' # Prepare data: Gene expression matrix and subtype information
-#' x <- OSLO2EMIT0obj$data_input$x_NC.log
+#' x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 #' out <- data.frame(
 #'     PatientID = res$results$parker.original$BS.all$PatientID,
 #'     Subtype = res$results$parker.original$BS.all$BS

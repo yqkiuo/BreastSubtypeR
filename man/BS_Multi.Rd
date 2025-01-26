@@ -4,14 +4,11 @@
 \alias{BS_Multi}
 \title{Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
 \usage{
-BS_Multi(data_input, pheno, methods = NA, Subtype = FALSE, hasClinical = FALSE)
+BS_Multi(data_input, methods = NA, Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
 \item{data_input}{The output from the \code{Mapping()} function, containing
 processed gene expression data prepared for subtyping analysis.}
-
-\item{pheno}{A clinical information table. The first column must be named
-"PatientID".}
 
 \item{methods}{A character vector specifying the subtyping methods to be
 used. Options include:
@@ -64,7 +61,6 @@ methods <- c("parker.original", "genefu.scale", "genefu.robust")
 # Perform subtyping
 res.test <- BS_Multi(
     data_input = OSLO2EMIT0obj$data_input,
-    pheno = OSLO2EMIT0obj$clinic.oslo,
     methods = methods,
     Subtype = FALSE,
     hasClinical = FALSE

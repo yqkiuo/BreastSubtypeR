@@ -29,7 +29,6 @@ training cohort.
 library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 
-
 }
 \references{
 \itemize{
