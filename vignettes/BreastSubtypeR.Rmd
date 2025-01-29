@@ -88,12 +88,16 @@ data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Perform gene mapping before subtyping
-data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input <- Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE)
+data_input <- Mapping(OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE)
 
 # Perform multi-method subtyping
-methods <- c("parker.median", "PCAPAM50", "sspbc")
-result <- BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
+methods <- c("parker.original", "PCAPAM50", "sspbc")
+result <- BS_Multi(
+    data_input = data_input,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE
+)
 
 # View the results
 head(result$res_subtypes)
@@ -113,14 +117,18 @@ library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# Perform gene mapping
-data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input <- Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE)
+# Perform gene mapping before subtyping
+data_input <- Mapping(OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE)
 
 # Run subtyping with AUTO mode
-result <- BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
+result <- BS_Multi(
+    data_input = data_input,
+    methods = "AUTO",
+    Subtype = FALSE,
+    hasClinical = FALSE
+)
 
-# View results
+# View the results
 head(result$res_subtypes)
 
 # Visualize results
@@ -137,8 +145,14 @@ library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# Perform subtyping
-res <- BS_parker(gene_expr = OSLO2EMIT0obj$data_input$x_NC.log, pheno = NULL, calibration = "Internal", internal = "medianCtr", Subtype = FALSE, hasClinical = FALSE)
+# Perform subtyping with the `parker.original` method
+res <- BS_parker(
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
+    calibration = "Internal",
+    internal = "medianCtr",
+    Subtype = FALSE,
+    hasClinical = FALSE
+)
 
 ```
 
@@ -151,12 +165,8 @@ library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# Extract AIMS-specific genes
-genes.s <- BreastSubtypeRobj$genes.signature
-genes <- as.character(genes.s$EntrezGene.ID[genes.s$AIMS == "Yes"])
-
-# Perform subtyping
-res <- BS_AIMS(gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ], EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ]))
+# Perform subtyping with the `AIMS` method
+res <- BS_AIMS(OSLO2EMIT0obj$data_input$se_SSP)
 
 ```
 

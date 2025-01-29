@@ -75,12 +75,15 @@ data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Perform gene mapping before subtyping
-data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input <- Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE)
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
 # Perform multi-method subtyping
-methods <- c("parker.median", "PCAPAM50", "sspbc")
-result <- BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = methods, Subtype = TRUE)
+methods <- c("parker.original", "PCAPAM50", "sspbc")
+result <- BS_Multi(
+    data_input = data_input,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE)
 
 # View the results
 head(result$res_subtypes)
@@ -104,14 +107,18 @@ library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# Perform gene mapping
-data <- OSLO2EMIT0obj$OSLO2EMIT0.103.genematrix_noNeg.subset
-data_input <- Mapping(gene_expr = data, featuredata = OSLO2EMIT0obj$anno_feature.subset, impute = TRUE, verbose = TRUE)
+# Perform gene mapping before subtyping
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
 # Run subtyping with AUTO mode
-result <- BS_Multi(data_input = data_input, pheno = OSLO2EMIT0obj$clinic.oslo, methods = "AUTO")
+result <- BS_Multi(
+  data_input = data_input,
+  methods = "AUTO",
+  Subtype = FALSE,
+  hasClinical = FALSE
+)
 
-# View results
+# View the results
 head(result$res_subtypes)
 
 # Visualize results
