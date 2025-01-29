@@ -171,5 +171,5 @@ We welcome contributions to the package. If you find any bugs or have feature re
 ## Citation
 If you use **BreastSubtypeR** in your work, please cite:
 
-- Yang, Q. [aut] & Sifakis, E. G. [cre], *BreastSubtypeR: Streamlining Molecular Intrinsic Subtyping for Breast Cancer*. Available at: [https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR](https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR).
+- Yang, Q. [aut] & Sifakis, E. G. [cre], *BreastSubtypeR: A Unified R Package for Comprehensive Intrinsic Molecular Subtyping in Breast Cancer Research*. Available at: [https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR](https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR).
 - Additional relevant citations based on the methods you use (refer to the specific methods section for details).
