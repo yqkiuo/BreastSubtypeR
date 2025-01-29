@@ -8,7 +8,7 @@
 **BreastSubtypeR** is an R package designed to unify and streamline intrinsic 
 molecular subtyping methods for breast cancer (BC). It integrates both 
 nearest-centroid (NC-based) and single-sample predictor (SSP-based) approaches, 
-along with an innovative "AUTO" mode feature (described below). The package 
+along with an innovative **AUTO mode** feature (described below). The package 
 utilizes standardized input and output formats, providing a cohesive framework 
 that is fully compatible with other R packages in the gene expression profiling 
 field. Additionally, its core functions are accessible through an 
@@ -16,52 +16,40 @@ field. Additionally, its core functions are accessible through an
 clinicians with limited R programming experience. 
 
 ## Features
-- **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple 
-published intrinsic subtyping methods, including NC-based approaches like the 
-original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like 
-AIMS (Paquet et al., J Natl Cancer Inst, 2015).
-- **Multi-Method Subtyping Functionality**: Simultaneously predicts breast 
-cancer intrinsic subtypes using a variety of validated methods 
-for comparative analysis.
-- **AUTO Mode Feature**: Evaluates the distribution of ER and HER2 status in 
-the test cohort to automatically select subtyping methods that align with the 
-cohort's characteristics, ensuring compatibility with method-specific 
-assumptions for greater accuracy and reliability.
-- **Optimized Gene Mapping**: Optimizes gene mapping using Entrez IDs to 
-maximize the inclusion of genes across subtyping methods.
-- **Streamlined Input and Output**: Provides standardized input/output 
-formats to ensure smooth integration with other gene expression analysis tools.
-- **User-Friendly Shiny App Interface**: Features a web-based GUI that runs 
-entirely locally, ensuring data privacy with no online sharing, ideal for users 
-who prefer a visual interface over R scripting.  
 
+-   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
+-   **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
+-   **AUTO Mode**: Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort, ensuring compatibility with the method-specific assumptions and improving accuracy.
+-   **Optimized Gene Mapping**: Uses Entrez IDs for gene mapping to ensure the maximum inclusion of genes across subtyping methods.
+-   **Streamlined Input/Output**: Standardized input/output formats to ensure smooth integration with other gene expression analysis tools.
+-   **Shiny App Interface**: An intuitive web-based graphical user interface (GUI) for local, single-method subtyping analysis, ensuring privacy and data security.
 
-## Single-Method Subtyping Approaches
+### Single-Method Subtyping Approaches
 
-| **Approach**        | **Description**         | **Group**  | **Citation**   |
-|---------------------|-----------------------------------------------------------------------------|----------------|----------------------------------------|
-| `parker.original`   | Original PAM50 by Parker et al., 2009                                                          | NC-based   | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)                                  |
-| `genefu.scale`      | PAM50 implementation as in the genefu R package (scaled version)                                | NC-based   | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)                             |
-| `genefu.robust`     | PAM50 implementation as in the genefu R package (robust version)                                | NC-based   | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)                             |
-| `cIHC`              | Conventional ER-balancing using immunohistochemistry (IHC)                                    | NC-based   | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)                              |
-| `cIHC.itr`          | Iterative cIHC                                                                                 | NC-based   | [Curtis et al., 2012](https://doi.org/10.1038/nature10983)                                       |
-| `PCAPAM50`          | PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression)                            | NC-based   | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)                             |
-| `ssBC`              | Subgroup-specific gene-centering PAM50                                                        | NC-based   | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4)                                   |
-| `ssBC.v2`           | Updated subgroup-specific gene-centering PAM50 (with refined quantiles)                        | NC-based   | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276)                          |
-| `AIMS`              | Absolute Intrinsic Molecular Subtyping (AIMS) method                                           | SSP-based  | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)                                       |
-| `sspbc`             | Single-Sample Predictors for Breast Cancer (an adaptation of the AIMS method)                  | SSP-based  | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)                                 |
+| **Approach**      | **Description**                                                               | **Group** | **Citation**                                                            |
+|--------------|-------------------------------|--------------|---------------|
+| `parker.original` | Original PAM50 by Parker et al., 2009                                         | NC-based  | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)         |
+| `genefu.scale`    | PAM50 implementation as in the genefu R package (scaled version)              | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
+| `genefu.robust`   | PAM50 implementation as in the genefu R package (robust version)              | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
+| `cIHC`            | Conventional ER-balancing using immunohistochemistry (cIHC)                                 | NC-based  | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)     |
+| `cIHC.itr`        | Iterative version of cIHC	                            | NC-based  | [Curtis et al., 2012](https://doi.org/10.1038/nature10983)              |
+| `PCAPAM50`        | PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression)           | NC-based  | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)    |
+| `ssBC`            | Subgroup-specific gene-centering PAM50                                        | NC-based  | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4)          |
+| `ssBC.v2`         | Updated subgroup-specific gene-centering PAM50 with refined quantiles         | NC-based  | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276) |
+| `AIMS`            | Absolute Intrinsic Molecular Subtyping (AIMS) method                          | SSP-based | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)              |
+| `sspbc`           | Single-Sample Predictors for Breast Cancer (AIMS adaptation) | SSP-based | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)        |
 
-## Multi-Method Subtyping Functionality
+### Multi-Method Subtyping Functionality
 
-| **Approach**                       | **Description**                                                                                              |
-|------------------------------------|------------------------------------------------------------------------------------------------------------|
-| **User-defined Multi-Method**      | Intrinsic subtyping that integrates multiple user-selected approaches                                        |
-| **AUTO Mode Multi-Method**         | Intrinsic subtyping with methods automatically selected based on the ER/HER2 distribution of the test cohort |
+| **Approach**                  | **Description**                                                                                              |
+|-------------------|-----------------------------------------------------|
+| **User-defined Multi-Method** | Allows users to select multiple subtyping methods for comparative analysis.                                     |
+| **AUTO Mode Multi-Method**    | Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort. |
 
 
 ## Installation
 
-You can install **BreastSubtypeR** from GitHub:
+To install **BreastSubtypeR** from GitHub, run:
 
 ```R
 # Install devtools package if you haven't already
@@ -76,21 +64,20 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 **Example: User-defined Multi-Method Subtyping**
 
-Here is an example of how to use **BreastSubtypeR** for breast cancer subtyping
-using multiple methods:
+Here's an example of how to use **BreastSubtypeR** for multi-method breast cancer subtyping. The user manually selects the methods to be used:
+
 
 ```R
 library(BreastSubtypeR)
 
-# Example data input: gene signatures, gene expression and clinical data
+# Load example data
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# do mapping before subtyping
+# Perform gene mapping before subtyping
 data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
-# Run the subtyping
-
+# Perform multi-method subtyping
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 result <- BS_Multi(
     data_input = data_input,
@@ -101,10 +88,8 @@ result <- BS_Multi(
 # View the results
 head(result$res_subtypes)
 
-## visualization
-
+# Visualize results
 plot <- Vis_Multi(result$res_subtypes)
-
 plot(plot)
 
 ```
@@ -112,31 +97,31 @@ plot(plot)
 
 **Example: AUTO Mode Multi-Method Subtyping**
 
-Here is an example of how to use **BreastSubtypeR** with **AUTO** mode feature
-for breast cancer subtyping. AUTO mode automatically selects methods based on
+Here’s how to use **BreastSubtypeR** for multi-method subtyping with **AUTO** mode. AUTO mode automatically selects methods based on
 the ER/HER2 distribution of the test cohort:
 
 ```R
 library(BreastSubtypeR)
 
-# Load required datasets
+# Load example data
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# do mapping before subtyping
+# Perform gene mapping before subtyping
 data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
 
-# Run the subtyping with AUTO mode
+# Run subtyping with AUTO mode
 result <- BS_Multi(
   data_input = data_input,
   methods = "AUTO",
   Subtype = FALSE,
   hasClinical = FALSE
 )
+
 # View the results
 head(result$res_subtypes)
 
-## visualization
+# Visualize results
 plot <- Vis_Multi(result$res_subtypes)
 plot(plot)
 
@@ -168,10 +153,13 @@ plot(plot)
 
 
 ## Shiny App
-For users who prefer a graphical interface, **BreastSubtypeR** provides a Shiny app for interactive subtyping.
+For users new to R, we offer an intuitive Shiny app for interactive molecular subtyping.
 
 ### Launch the Shiny App
+To run iBreastSubtypeR locally with your data, first install and load the package as described above. Afterward, you can interactively access the Shiny app to visualize and analyze your dataset. Here’s an example of how to launch it:
+
 ```R
+# Launch iBreastSubtypeR for interactive analysis
 library(BreastSubtypeR)
 iBreastSubtypeR()
 ```
@@ -185,11 +173,10 @@ The Shiny app allows you to:
 
 
 ## Contributing
-We welcome contributions! If you encounter bugs or have feature suggestions, please open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
+We welcome contributions to the package. If you find any bugs or have feature requests, feel free to open an issue [here](https://github.com/yqkiuo/BreastSubtypeR/issues).
 
 ## Citation
 If you use **BreastSubtypeR** in your work, please cite:
 
-- Yang, Q. [aut] & Sifakis, E. G. [cre], *BreastSubtypeR: Streamlining Molecular Intrinsic Subtyping for Breast Cancer*. Available at: [https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR](https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR).
+- Yang, Q. [aut] & Sifakis, E. G. [cre], *BreastSubtypeR: A Unified R Package for Comprehensive Intrinsic Molecular Subtyping in Breast Cancer Research*. Available at: [https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR](https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR).
 - Additional relevant citations based on the methods you use (refer to the specific methods section for details).
-
