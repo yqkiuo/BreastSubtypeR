@@ -64,7 +64,7 @@ devtools::install_github("yqkiuo/BreastSubtypeR")
 
 **Example: User-defined Multi-Method Subtyping**
 
-Here's an example of how to use **BreastSubtypeR** for multi-method breast cancer subtyping. By default, the user manually selects the methods to be used:
+Here's an example of how to use **BreastSubtypeR** for multi-method breast cancer subtyping. The user manually selects the methods to be used:
 
 
 ```R
