@@ -731,10 +731,10 @@ BS_sspbc <- function(gene_expr, ssp.name = "ssp.pam50") {
 #' # Load required dataset
 #' data("OSLO2EMIT0obj")
 #'
-#' # Define methods to use for consensus subtyping
+#' # Define methods to use for multi-method subtyping
 #' methods <- c("parker.original", "genefu.scale", "genefu.robust")
 #'
-#' # Perform subtyping
+#' # Perform multi-method subtyping
 #' res.test <- BS_Multi(
 #'     data_input = OSLO2EMIT0obj$data_input,
 #'     pheno = OSLO2EMIT0obj$clinic.oslo,
