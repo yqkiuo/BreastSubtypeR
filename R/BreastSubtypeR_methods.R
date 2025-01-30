@@ -32,8 +32,7 @@ NULL
 #'   - **Assay data**: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
 #'     and columns represent samples. This should be stored in the `assay()` slot.
 #'   - **Row metadata**: A data frame with annotations for probes, including at least the following columns:
-#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID or TranscriptID).
-#'     - `"SYMBOL"`: Gene symbols corresponding to the probes.
+#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
 #'     - `"ENTREZID"`: Entrez gene IDs corresponding to the probes.
 #'   - **Column metadata** (optional): Sample metadata stored in the `colData()` slot.
 #'
@@ -794,7 +793,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' @export
 
 BS_Multi <- function(data_input,
-    methods = NA,
+    methods = "AUTO",
     Subtype = FALSE,
     hasClinical = FALSE) {
     valid_methods <- c(
@@ -832,184 +831,188 @@ BS_Multi <- function(data_input,
     samples_ERHER2.icd <- NULL
     cohort.select <- "ERpos"
     if (length(methods) == 1 && methods[1] == "AUTO") {
-        ## first check ER and HER2 status
-        if (!all(c("ER", "HER2") %in% colnames(pheno))) {
-            stop("The 'AUTO' mode requires both 'ER' and 'HER2' columns in the 'pheno' dataframe.")
-        }
-
-        # Calculate sample sizes
-        sample_counts <- with(pheno, table(ER, HER2))
-        n_ERpos <- sum(pheno$ER == "ER+")
-        n_ERneg <- sum(pheno$ER == "ER-")
-
-        n_ERnegHER2pos <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2+")
-        n_ERnegHER2neg <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2-")
-        n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+")
-        n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-")
-
-        # Set thresholds
-        n_ER_threshold <- 10
-        n_ERHER2_threshold <- 5
-        per_ratio <- 0.2
-        upper_ratio <- 54 / 64 + (54 / 64) * per_ratio
-        lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
-
-        ## main panel
-        if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
-            message("A HER2+ cohort has been detected.")
-            cohort.select <- "HER2pos"
-
-            if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
-                message("A small HER2+ cohort has been detected.")
-                message("Running methods: AIMS, & sspbc")
-                methods <- c("AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
-                message("A ER+/HER2+ cohort has been detected.")
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos >= n_ERHER2_threshold) {
-                message("A ER-/HER2+ cohort has been detected.")
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            } else {
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERnegHER2pos == 0 && n_ERposHER2pos == 0 && n_ERposHER2neg == 0) {
-            message("A TNBC cohort has been detected.")
-            cohort.select <- "TNBC"
-
-            if (!("TN" %in% colnames(pheno))) {
-                stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
-            }
-
-            message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
-            methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        } else if (n_ERpos < n_ER_threshold && n_ERneg < n_ER_threshold) {
-            message("A small number of ER-/ER+ samples has been detected.")
-            message("Running methods: AIMS & sspbc")
+        if (ncol(pheno) == 0) {
+            message("The pheno table has not been detected.")
+            message("Running methods: AIMS, & sspbc")
             methods <- c("AIMS", "sspbc")
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg < n_ER_threshold) {
-            if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg < n_ERHER2_threshold) {
-                message("Running methods for ER+/HER2+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER+/HER2- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERpos < n_ER_threshold && n_ERneg >= n_ER_threshold) {
-            if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg < n_ERHER2_threshold) {
-                message("Running methods for ER-/HER2+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos < n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER-/HER2- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
-            ## for other NC-based methods
-            ratio_ER <- n_ERpos / n_ERneg
+        } else if (!all(c("ER", "HER2") %in% colnames(pheno))) {
+            stop("The 'AUTO' mode requires both 'ER' and 'HER2' columns in the 'pheno' dataframe.")
+        } else {
+            # Calculate sample sizes
+            sample_counts <- with(pheno, table(ER, HER2))
+            n_ERpos <- sum(pheno$ER == "ER+")
+            n_ERneg <- sum(pheno$ER == "ER-")
 
-            if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
-                message(
-                    "Running methods:
+            n_ERnegHER2pos <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2+")
+            n_ERnegHER2neg <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2-")
+            n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+")
+            n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-")
+
+            # Set thresholds
+            n_ER_threshold <- 10
+            n_ERHER2_threshold <- 5
+            per_ratio <- 0.2
+            upper_ratio <- 54 / 64 + (54 / 64) * per_ratio
+            lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
+
+            ## main panel
+            if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
+                message("A HER2+ cohort has been detected.")
+                cohort.select <- "HER2pos"
+
+                if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
+                    message("A small HER2+ cohort has been detected.")
+                    message("Running methods: AIMS, & sspbc")
+                    methods <- c("AIMS", "sspbc")
+                } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
+                    message("A ER+/HER2+ cohort has been detected.")
+                    message("Running methods: ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC.v2", "AIMS", "sspbc")
+                } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos >= n_ERHER2_threshold) {
+                    message("A ER-/HER2+ cohort has been detected.")
+                    message("Running methods: ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC.v2", "AIMS", "sspbc")
+                } else {
+                    message("Running methods: ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC.v2", "AIMS", "sspbc")
+                }
+            } else if (n_ERnegHER2pos == 0 && n_ERposHER2pos == 0 && n_ERposHER2neg == 0) {
+                message("A TNBC cohort has been detected.")
+                cohort.select <- "TNBC"
+
+                if (!("TN" %in% colnames(pheno))) {
+                    stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
+                }
+
+                message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
+                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+            } else if (n_ERpos < n_ER_threshold && n_ERneg < n_ER_threshold) {
+                message("A small number of ER-/ER+ samples has been detected.")
+                message("Running methods: AIMS & sspbc")
+                methods <- c("AIMS", "sspbc")
+            } else if (n_ERpos >= n_ER_threshold && n_ERneg < n_ER_threshold) {
+                if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
+                    message("Running methods for ER+ samples:
+                ssBC, ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+                } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg < n_ERHER2_threshold) {
+                    message("Running methods for ER+/HER2+ samples:
+                ssBC, ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+                } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
+                    message("Running methods for ER+/HER2- samples:
+                        ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC.v2", "AIMS", "sspbc")
+                }
+            } else if (n_ERpos < n_ER_threshold && n_ERneg >= n_ER_threshold) {
+                if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
+                    message("Running methods for ER- samples:
+                ssBC, ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+                } else if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg < n_ERHER2_threshold) {
+                    message("Running methods for ER-/HER2+ samples:
+                ssBC, ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+                } else if (n_ERnegHER2pos < n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
+                    message("Running methods for ER-/HER2- samples:
+                ssBC, ssBC.v2, AIMS, & sspbc")
+                    methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+                }
+            } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
+                ## for other NC-based methods
+                ratio_ER <- n_ERpos / n_ERneg
+
+                if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
+                    message(
+                        "Running methods:
                     parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc"
-                )
-                methods <- c(
-                    "parker.original",
-                    "genefu.scale",
-                    "genefu.robust",
-                    "ssBC",
-                    "ssBC.v2",
-                    "cIHC",
-                    "cIHC.itr",
-                    "PCAPAM50",
-                    "AIMS",
-                    "sspbc"
-                )
-            } else {
-                message(
-                    "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
-                )
-                message("Running methods:
+                    )
+                    methods <- c(
+                        "parker.original",
+                        "genefu.scale",
+                        "genefu.robust",
+                        "ssBC",
+                        "ssBC.v2",
+                        "cIHC",
+                        "cIHC.itr",
+                        "PCAPAM50",
+                        "AIMS",
+                        "sspbc"
+                    )
+                } else {
+                    message(
+                        "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
+                    )
+                    message("Running methods:
                         ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
-                methods <- c(
-                    "ssBC",
-                    "ssBC.v2",
-                    "cIHC",
-                    "cIHC.itr",
-                    "PCAPAM50",
-                    "AIMS",
-                    "sspbc"
-                )
-            }
-        }
-
-        if (cohort.select != "TNBC") {
-            ## subsetting samples for ssBC and ssBC.v2
-            # Handle ssBC & ssBC.v2 method for imbalanced subtypes
-            ERHER2_counts <- c(
-                n_ERpos,
-                n_ERneg,
-                n_ERnegHER2pos,
-                n_ERnegHER2neg,
-                n_ERposHER2pos,
-                n_ERposHER2neg
-            )
-            names(ERHER2_counts) <- c(
-                "ERpos",
-                "ERneg",
-                "ERnegHER2pos",
-                "ERnegHER2neg",
-                "ERposHER2pos",
-                "ERposHER2neg"
-            )
-
-            er_idx <- ERHER2_counts[seq(1, 2)] > n_ER_threshold
-            samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
-            erher2_idx <- ERHER2_counts[seq(3, 6)] > n_ERHER2_threshold
-            samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
-
-            if (cohort.select != "HER2pos" && cohort.select != "TNBC") {
-                if (length(samples_ER) > 0) {
-                    message("ssBC for samples: ", paste(samples_ER, collapse = ", "))
-                    samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
-                        subtype <- str_replace_all(subtype, "pos", "+")
-                        subtype <- str_replace_all(subtype, "neg", "-")
-                        ER_status <- subtype
-                        rownames(pheno)[pheno$ER == ER_status]
-                    }))
+                    methods <- c(
+                        "genefu.robust",
+                        "ssBC",
+                        "ssBC.v2",
+                        "cIHC",
+                        "cIHC.itr",
+                        "PCAPAM50",
+                        "AIMS",
+                        "sspbc"
+                    )
                 }
             }
 
             if (cohort.select != "TNBC") {
-                if (length(samples_ERHER2) > 0) {
-                    message(
-                        "ssBC.v2 for samples: ",
-                        paste(samples_ERHER2, collapse = ", ")
-                    )
+                ## subsetting samples for ssBC and ssBC.v2
+                # Handle ssBC & ssBC.v2 method for imbalanced subtypes
+                ERHER2_counts <- c(
+                    n_ERpos,
+                    n_ERneg,
+                    n_ERnegHER2pos,
+                    n_ERnegHER2neg,
+                    n_ERposHER2pos,
+                    n_ERposHER2neg
+                )
+                names(ERHER2_counts) <- c(
+                    "ERpos",
+                    "ERneg",
+                    "ERnegHER2pos",
+                    "ERnegHER2neg",
+                    "ERposHER2pos",
+                    "ERposHER2neg"
+                )
 
-                    samples_ERHER2.icd <- unlist(
-                        lapply(samples_ERHER2, function(subtype) {
-                            subtype <- subtype |>
-                                str_replace_all("pos", "+") |>
-                                str_replace_all("neg", "-")
-                            ER_sts <- substr(subtype, 1, 3)
-                            HER2_sts <- substr(subtype, 4, 8)
-                            rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
-                        })
-                    )
+                er_idx <- ERHER2_counts[seq(1, 2)] > n_ER_threshold
+                samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
+                erher2_idx <- ERHER2_counts[seq(3, 6)] > n_ERHER2_threshold
+                samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
+
+                if (cohort.select != "HER2pos" && cohort.select != "TNBC") {
+                    if (length(samples_ER) > 0) {
+                        message("ssBC for samples: ", paste(samples_ER, collapse = ", "))
+                        samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
+                            subtype <- str_replace_all(subtype, "pos", "+")
+                            subtype <- str_replace_all(subtype, "neg", "-")
+                            ER_status <- subtype
+                            rownames(pheno)[pheno$ER == ER_status]
+                        }))
+                    }
+                }
+
+                if (cohort.select != "TNBC") {
+                    if (length(samples_ERHER2) > 0) {
+                        message(
+                            "ssBC.v2 for samples: ",
+                            paste(samples_ERHER2, collapse = ", ")
+                        )
+
+                        samples_ERHER2.icd <- unlist(
+                            lapply(samples_ERHER2, function(subtype) {
+                                subtype <- subtype |>
+                                    str_replace_all("pos", "+") |>
+                                    str_replace_all("neg", "-")
+                                ER_sts <- substr(subtype, 1, 3)
+                                HER2_sts <- substr(subtype, 4, 8)
+                                rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
+                            })
+                        )
+                    }
                 }
             }
         }
@@ -1226,6 +1229,10 @@ BS_Multi <- function(data_input,
         rownames(res_subtypes.Subtype) <- samples
         res_subtypes.Subtype[, 1] <- NULL
 
+        ## removing Nomal-like in AIMS
+        if ("AIMS" %in% methods) {
+            res_subtypes.Subtype$AIMS[which(res_subtypes.Subtype$AIMS == "Normal")] <- NA
+        }
         entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
         res_subtypes.Subtype$entropy <- entropy
     }

@@ -695,27 +695,28 @@ RORgroup <- function(out,
 #' @noRd
 #'
 
-makeCalls.parker <- function(
-        mat,
-        df.cln,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+makeCalls.parker <- function(mat,
+    df.cln,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NULL,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
     fl.mdn <- BreastSubtypeRobj$medians
 
-
     if (calibration == "External" & external == "Given.mdns") {
-        if (length(medians) == 1 || is.na(medians)) {
+        if (is.null(medians)) {
             stop(
                 "Please input prepared medians as requires. "
             )
         } else {
+            if (!is.data.frame(medians)) {
+                medians <- as.data.frame(medians)
+            }
             colnames(medians) <- c("X", "Given.mdns")
 
             df.al <- merge(fl.mdn, medians, by = "X")
