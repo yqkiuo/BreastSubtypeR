@@ -4,7 +4,7 @@
 \alias{BS_Multi}
 \title{Intrinsic Subtyping with Multiple Approaches (BS_Multi)}
 \usage{
-BS_Multi(data_input, methods = NA, Subtype = FALSE, hasClinical = FALSE)
+BS_Multi(data_input, methods = "AUTO", Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
 \item{data_input}{The output from the \code{Mapping()} function, containing

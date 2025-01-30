@@ -13,8 +13,7 @@ Mapping(se_obj, method = "max", impute = TRUE, verbose = TRUE)
 and columns represent samples. This should be stored in the \code{assay()} slot.
 \item \strong{Row metadata}: A data frame with annotations for probes, including at least the following columns:
 \itemize{
-\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID or TranscriptID).
-\item \code{"SYMBOL"}: Gene symbols corresponding to the probes.
+\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
 \item \code{"ENTREZID"}: Entrez gene IDs corresponding to the probes.
 }
 \item \strong{Column metadata} (optional): Sample metadata stored in the \code{colData()} slot.

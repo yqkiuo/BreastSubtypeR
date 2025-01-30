@@ -21,12 +21,12 @@ NULL
 #' @name Mapping
 #' @description A function to map gene IDs and preprocess gene expression data
 #' for subsequent analyses.
-#'
-#' @param gene_expr Gene expression matrix with probes in rows and
-#'   samples in columns.
-#' @param featuredata Feature data provided by the user. The table must contain
-#'   at least three columns: `probe` (ProbeID or TranscriptID), `SYMBOL`, and
-#'   `ENTREZID`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+#'     and columns represent samples. This should be stored in the `assay()` slot.
+#'   - **Row metadata**: A data frame with annotations for probes, including at least the following columns:
+#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
+#'     - `"ENTREZID"`: Entrez gene IDs corresponding to the probes.
 #' @param method Method for deduplicating probes in microarray or RNA-seq data.
 #'   Choose one of the following options:
 #'   - `"iqr"` for Affymetrix arrays,
