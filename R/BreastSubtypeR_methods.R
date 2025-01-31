@@ -96,7 +96,10 @@ Mapping <- function(se_obj,
         colData = colData(se_obj)
     )
     ## create se_obj for SSP_based methods
-    se_SSP <- SummarizedExperiment(assays = list(counts = x_SSP))
+    se_SSP <- SummarizedExperiment(
+        assays = list(counts = x_SSP),
+        colData = colData(se_obj)
+    )
     # Return both objects as a list
     return(list(se_NC = se_NC, se_SSP = se_SSP))
 }
