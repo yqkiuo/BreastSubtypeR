@@ -7,9 +7,9 @@
 \format{
 A list containing the following elements:
 \describe{
-\item{\code{OSLO2EMIT0.103.genematrix_noNeg.subset}}{A subsetted gene expression matrix for the OSLO2EMIT0 cohort.}
-\item{\code{clinic.oslo}}{Clinical information for the OSLO2EMIT0 cohort.}
-\item{\code{anno_feature.subset}}{Subsetted gene feature annotations.}
+\item{\code{se_obj}}{A SummarizedExperiment object containing a subset of
+the gene expression matrix, clinical information, and gene feature
+annotations for the OSLO2EMIT0 cohort.}
 \item{\code{data_input}}{Example output from the \code{Mapping} function.}
 \item{\code{res}}{Example output from the \code{BS_Multi} function.}
 }
@@ -18,10 +18,10 @@ A list containing the following elements:
 data("OSLO2EMIT0obj")
 }
 \description{
-This example dataset is based on the OSLO2EMIT0 cohort described in Staaf et
-al., 2022. It contains subsetted data for gene expression, clinical
-information, feature annotations, and example outputs from the \code{Mapping} and
-\code{BS_Multi} functions.
+This example dataset is based on the OSLO2EMIT0 cohort
+described in Staaf et al., 2022. It contains subsetted data for gene
+expression, clinical information, feature annotations, and example outputs
+from the \code{Mapping} and \code{BS_Multi} functions.
 }
 \examples{
 library(BreastSubtypeR)

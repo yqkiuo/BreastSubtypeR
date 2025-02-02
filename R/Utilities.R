@@ -415,6 +415,7 @@ Vis_boxplot <- function(out, correlations) {
 #'   representing the heatmap of gene expression across different subtypes.
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data("OSLO2EMIT0obj")
 #' res <- OSLO2EMIT0obj$res
 #'
