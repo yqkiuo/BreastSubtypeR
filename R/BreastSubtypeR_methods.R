@@ -147,7 +147,7 @@ Mapping <- function(se_obj,
 #'   Parker-based method.
 #'
 #' @references
-#' - Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
+#' - Bernard PS, Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
 #' *Supervised risk predictor of breast cancer based on intrinsic subtypes*.
 #' Journal of Clinical Oncology. 2009;27(8).
 #' https://doi.org/10.1200/JCO.2008.18.1370
