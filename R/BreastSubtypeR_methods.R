@@ -895,7 +895,7 @@ BS_Multi <- function(
                     "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
                 )
                 message("Running methods:
-                        ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
+                        genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
                 methods <- c(
                     "ssBC",
                     "ssBC.v2",
