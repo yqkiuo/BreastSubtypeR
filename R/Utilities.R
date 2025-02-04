@@ -704,6 +704,9 @@ Vis_pie <- function(out) {
 #' @export
 
 Vis_Multi <- function(data) {
+    ##order by subtype
+    data <- data[order(data[, ncol(data)-1]), ]
+    ##order by entropy
     data <- data[order(data[, ncol(data)], decreasing = FALSE), ]
     mat <- data[, -ncol(data)]
 
@@ -759,7 +762,6 @@ Vis_Multi <- function(data) {
         Entropy = anno_barplot(data[rownames(data), ncol(data)], bar_width = 1)
     )
 
-    mat <- mat[order(mat[, ncol(mat)]), ]
     Subtype.color <- Subtype.color[names(Subtype.color) %in% Labels]
     p <- ComplexHeatmap::Heatmap(
         t(as.matrix(mat)),
