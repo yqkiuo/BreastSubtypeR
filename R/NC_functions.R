@@ -1341,18 +1341,28 @@ makeCalls.v1PAM <- function(
     data("BreastSubtypeRobj")
 
     ERN.pam <- df.pam[which(df.pam$PAM50 %in% c("Basal")), ]
-    ### get ER- samples data.frame
-
     dim(ERN.pam)
 
     ERP.pam <- df.pam[which(df.pam$PAM50 %in% c("LumA")), ]
     dim(ERP.pam)
 
+    # Determine the smaller size between ER+ and ER-
+    sample_size <- min(dim(ERP.pam)[1], dim(ERN.pam)[1])
+    
     # set.seed(seed)
     # i = sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
     # take equal number of ER+ and ER- samples
     withr::with_seed(seed, {
-        i <- sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
+        # i <- sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
+        if (dim(ERN.pam)[1] <= dim(ERP.pam)[1]) {
+            i <- sample(dim(ERP.pam)[1], sample_size)
+            ERP.pam_sampled <- ERP.pam[i, ]
+            ERN.pam_sampled <- ERN.pam
+        } else {
+            i <- sample(dim(ERN.pam)[1], sample_size)
+            ERN.pam_sampled <- ERN.pam[i, ]
+            ERP.pam_sampled <- ERP.pam
+        }
     })
 
     length(ERP.pam$PatientID[i])
@@ -1360,8 +1370,7 @@ makeCalls.v1PAM <- function(
     length(ERN.pam$PatientID)
     # ER negative samples
 
-    mbal.pam <- mat[, c(ERP.pam$PatientID[i], ERN.pam$PatientID)]
-
+    mbal.pam <- mat[, c(ERP.pam_sampled$PatientID, ERN.pam_sampled$PatientID)]
     dim(mbal.pam)
 
     # Find median
