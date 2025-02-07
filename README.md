@@ -36,7 +36,7 @@ clinicians with limited R programming experience.
 | `PCAPAM50`        | PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression)           | NC-based  | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4)    |
 | `ssBC`            | Subgroup-specific gene-centering PAM50                                        | NC-based  | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4)          |
 | `ssBC.v2`         | Updated subgroup-specific gene-centering PAM50 with refined quantiles         | NC-based  | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276) |
-| `AIMS`            | Absolute Intrinsic Molecular Subtyping (AIMS) method                          | SSP-based | [Paquet et al., 2015](https://doi.org/10.1093/jnci/dju357)              |
+| `AIMS`            | Absolute Intrinsic Molecular Subtyping (AIMS) method                          | SSP-based | [Paquet & Hallett, 2015](https://doi.org/10.1093/jnci/dju357)              |
 | `sspbc`           | Single-Sample Predictors for Breast Cancer (AIMS adaptation) | SSP-based | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3)        |
 
 ### Multi-Method Subtyping Functionality
