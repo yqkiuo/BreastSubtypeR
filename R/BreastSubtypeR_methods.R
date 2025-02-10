@@ -71,37 +71,37 @@ NULL
 #' @export
 
 Mapping <- function(se_obj,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
-    arguments <- rlang::dots_list(
-        se_obj = se_obj,
-        method = method,
-        impute = impute,
-        verbose = verbose,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(domapping, !!!arguments)
-    res <- eval(call)
-
-    # Extract results for NC-based and SSP-based methods
-    x_NC <- res$x_NC
-    x_NC.log <- res$x_NC.log
-    x_SSP <- res$x_SSP
-
-    ## create se_obj for NC_based methods
-    se_NC <- SummarizedExperiment(
-        assays = list(counts = x_NC.log),
-        colData = colData(se_obj)
-    )
-    ## create se_obj for SSP_based methods
-    se_SSP <- SummarizedExperiment(
-        assays = list(counts = x_SSP),
-        colData = colData(se_obj)
-    )
-    # Return both objects as a list
-    return(list(se_NC = se_NC, se_SSP = se_SSP))
+                    method = "max",
+                    impute = TRUE,
+                    verbose = TRUE) {
+  arguments <- rlang::dots_list(
+    se_obj = se_obj,
+    method = method,
+    impute = impute,
+    verbose = verbose,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(domapping, !!!arguments)
+  res <- eval(call)
+  
+  # Extract results for NC-based and SSP-based methods
+  x_NC <- res$x_NC
+  x_NC.log <- res$x_NC.log
+  x_SSP <- res$x_SSP
+  
+  ## create se_obj for NC_based methods
+  se_NC <- SummarizedExperiment(
+    assays = list(counts = x_NC.log),
+    colData = colData(se_obj)
+  )
+  ## create se_obj for SSP_based methods
+  se_SSP <- SummarizedExperiment(
+    assays = list(counts = x_SSP),
+    colData = colData(se_obj)
+  )
+  # Return both objects as a list
+  return(list(se_NC = se_NC, se_SSP = se_SSP))
 }
 
 
@@ -170,47 +170,47 @@ Mapping <- function(se_obj,
 #' @export
 
 BS_parker <- function(se_obj,
-    calibration = "None",
-    internal = NA,
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
-    # Check if input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
+                      calibration = "None",
+                      internal = NA,
+                      external = NA,
+                      medians = NA,
+                      Subtype = FALSE,
+                      hasClinical = FALSE) {
+  # Check if input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  ## Extract data from SummarizedExperiment
+  gene_expr <- assay(se_obj)
+  pheno <- colData(se_obj) %>% data.frame()
+  
+  # Handle clinical metadata if required
+  if (ncol(pheno) == 0) {
+    pheno <- NULL
+  } else {
+    if (!"PatientID" %in% colnames(pheno)) {
+      stop("The `colData` of `se_obj` must include a `PatientID` column when `hasClinical = TRUE`.")
     }
-
-    ## Extract data from SummarizedExperiment
-    gene_expr <- assay(se_obj)
-    pheno <- colData(se_obj) %>% data.frame()
-
-    # Handle clinical metadata if required
-    if (ncol(pheno) == 0) {
-        pheno <- NULL
-    } else {
-        if (!"PatientID" %in% colnames(pheno)) {
-            stop("The `colData` of `se_obj` must include a `PatientID` column when `hasClinical = TRUE`.")
-        }
-        rownames(pheno) <- pheno$PatientID
-    }
-
-    arguments <- rlang::dots_list(
-        mat = gene_expr,
-        df.cln = pheno,
-        calibration = calibration,
-        internal = internal,
-        external = external,
-        medians = medians,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(makeCalls.parker, !!!arguments)
-    res_parker <- eval(call)
-
-    return(res_parker)
+    rownames(pheno) <- pheno$PatientID
+  }
+  
+  arguments <- rlang::dots_list(
+    mat = gene_expr,
+    df.cln = pheno,
+    calibration = calibration,
+    internal = internal,
+    external = external,
+    medians = medians,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls.parker, !!!arguments)
+  res_parker <- eval(call)
+  
+  return(res_parker)
 }
 
 #' Conventional IHC Intrinsic Subtyping (BS_cIHC)
@@ -254,37 +254,37 @@ BS_parker <- function(se_obj,
 #' @export
 
 BS_cIHC <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
-    # Check if input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    ## Extract data from SummarizedExperiment
-    gene_expr <- assay(se_obj)
-    # Extract clinical metadata if required
-    pheno <- colData(se_obj) %>% data.frame()
-
-    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
-    }
-    rownames(pheno) <- pheno$PatientID
-
-    arguments <- rlang::dots_list(
-        mat = gene_expr,
-        df.cln = pheno,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        seed = seed,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(makeCalls_ihc, !!!arguments)
-    res_IHC <- eval(call)
-
-    return(res_IHC)
+                    Subtype = FALSE,
+                    hasClinical = FALSE,
+                    seed = 118) {
+  # Check if input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  ## Extract data from SummarizedExperiment
+  gene_expr <- assay(se_obj)
+  # Extract clinical metadata if required
+  pheno <- colData(se_obj) %>% data.frame()
+  
+  if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+    stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+  }
+  rownames(pheno) <- pheno$PatientID
+  
+  arguments <- rlang::dots_list(
+    mat = gene_expr,
+    df.cln = pheno,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    seed = seed,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls_ihc, !!!arguments)
+  res_IHC <- eval(call)
+  
+  return(res_IHC)
 }
 
 
@@ -338,41 +338,41 @@ BS_cIHC <- function(se_obj,
 #' @export
 
 BS_cIHC.itr <- function(se_obj,
-    iteration = 100,
-    ratio = 54 / 64,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
-    # Check if input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    ## Extract data from SummarizedExperiment
-    gene_expr <- assay(se_obj)
-    # Extract clinical metadata if required
-    pheno <- colData(se_obj) %>% data.frame()
-
-    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
-    }
-    rownames(pheno) <- pheno$PatientID
-
-    arguments <- rlang::dots_list(
-        mat = gene_expr,
-        df.cln = pheno,
-        iteration = iteration,
-        ratio = ratio,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        seed = seed,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(makeCalls_ihc.iterative, !!!arguments)
-    res_IHC.itr <- eval(call)
-
-    return(res_IHC.itr)
+                        iteration = 100,
+                        ratio = 54 / 64,
+                        Subtype = FALSE,
+                        hasClinical = FALSE,
+                        seed = 118) {
+  # Check if input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  ## Extract data from SummarizedExperiment
+  gene_expr <- assay(se_obj)
+  # Extract clinical metadata if required
+  pheno <- colData(se_obj) %>% data.frame()
+  
+  if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+    stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+  }
+  rownames(pheno) <- pheno$PatientID
+  
+  arguments <- rlang::dots_list(
+    mat = gene_expr,
+    df.cln = pheno,
+    iteration = iteration,
+    ratio = ratio,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    seed = seed,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls_ihc.iterative, !!!arguments)
+  res_IHC.itr <- eval(call)
+  
+  return(res_IHC.itr)
 }
 
 
@@ -418,89 +418,89 @@ BS_cIHC.itr <- function(se_obj,
 #' @export
 
 BS_PCAPAM50 <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
-    # Check if input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    ## Extract data from SummarizedExperiment
-    gene_expr <- assay(se_obj)
-    # Extract clinical metadata if required
-    pheno <- colData(se_obj) %>% data.frame()
-
-    if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
-    }
-    rownames(pheno) <- pheno$PatientID
-
-    samples <- pheno$PatientID
-
-    if ("ER" %in% colnames(pheno)) {
-        ## create IHC column for PCAPAM50
-        pheno$IHC <- dplyr::case_when(pheno$ER == "ER+" ~ "Luminal",
-            pheno$ER == "ER-" ~ "non-Luminal",
-            .default = NA
-        )
-
-        pheno$ER_status <- NA
-
-        pheno$ER_status[which(pheno$ER == "ER+")] <- "pos"
-        pheno$ER_status[which(pheno$ER == "ER-")] <- "neg"
-        pheno <- pheno[order(pheno$ER_status, decreasing = TRUE), ]
-    }
-
-    gene_expr <- as.matrix(gene_expr[, pheno$PatientID])
-
-    ## first step
-    arguments <- rlang::dots_list(
-        mat = gene_expr,
-        df.cln = pheno,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        seed = seed,
-        .homonyms = "last"
+                        Subtype = FALSE,
+                        hasClinical = FALSE,
+                        seed = 118) {
+  # Check if input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  ## Extract data from SummarizedExperiment
+  gene_expr <- assay(se_obj)
+  # Extract clinical metadata if required
+  pheno <- colData(se_obj) %>% data.frame()
+  
+  if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
+    stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+  }
+  rownames(pheno) <- pheno$PatientID
+  
+  samples <- pheno$PatientID
+  
+  if ("ER" %in% colnames(pheno)) {
+    ## create IHC column for PCAPAM50
+    pheno$IHC <- dplyr::case_when(pheno$ER == "ER+" ~ "Luminal",
+                                  pheno$ER == "ER-" ~ "non-Luminal",
+                                  .default = NA
     )
-
-    call <- rlang::call2(makeCalls.PC1ihc, !!!arguments)
-    res_PC1IHC <- eval(call)
-
-    ## second step
-    if (hasClinical) {
-        df.pc1pam <- data.frame(
-            PatientID = res_PC1IHC$BS.all$PatientID,
-            PAM50 = res_PC1IHC$BS.all$BS,
-            TSIZE = pheno[res_PC1IHC$BS.all$PatientID, ]$TSIZE,
-            NODE = pheno[res_PC1IHC$BS.all$PatientID, ]$NODE,
-            stringsAsFactors = FALSE
-        )
-    } else {
-        df.pc1pam <- data.frame(
-            PatientID = res_PC1IHC$BS.all$PatientID,
-            PAM50 = res_PC1IHC$BS.all$BS,
-            stringsAsFactors = FALSE
-        )
-    }
-
-    arguments2 <- rlang::dots_list(
-        mat = gene_expr,
-        df.pam = df.pc1pam,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        seed = seed,
-        .homonyms = "last"
+    
+    pheno$ER_status <- NA
+    
+    pheno$ER_status[which(pheno$ER == "ER+")] <- "pos"
+    pheno$ER_status[which(pheno$ER == "ER-")] <- "neg"
+    pheno <- pheno[order(pheno$ER_status, decreasing = TRUE), ]
+  }
+  
+  gene_expr <- as.matrix(gene_expr[, pheno$PatientID])
+  
+  ## first step
+  arguments <- rlang::dots_list(
+    mat = gene_expr,
+    df.cln = pheno,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    seed = seed,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls.PC1ihc, !!!arguments)
+  res_PC1IHC <- eval(call)
+  
+  ## second step
+  if (hasClinical) {
+    df.pc1pam <- data.frame(
+      PatientID = res_PC1IHC$BS.all$PatientID,
+      PAM50 = res_PC1IHC$BS.all$BS,
+      TSIZE = pheno[res_PC1IHC$BS.all$PatientID, ]$TSIZE,
+      NODE = pheno[res_PC1IHC$BS.all$PatientID, ]$NODE,
+      stringsAsFactors = FALSE
     )
-
-    call <- rlang::call2(makeCalls.v1PAM, !!!arguments2)
-    res_PCAPAM50 <- eval(call)
-
-    ## reorder
-    idx <- na.omit(match(samples, res_PCAPAM50$BS.all$PatientID))
-    res_PCAPAM50$BS.all <- res_PCAPAM50$BS.all[idx, ]
-
-    return(res_PCAPAM50)
+  } else {
+    df.pc1pam <- data.frame(
+      PatientID = res_PC1IHC$BS.all$PatientID,
+      PAM50 = res_PC1IHC$BS.all$BS,
+      stringsAsFactors = FALSE
+    )
+  }
+  
+  arguments2 <- rlang::dots_list(
+    mat = gene_expr,
+    df.pam = df.pc1pam,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    seed = seed,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls.v1PAM, !!!arguments2)
+  res_PCAPAM50 <- eval(call)
+  
+  ## reorder
+  idx <- na.omit(match(samples, res_PCAPAM50$BS.all$PatientID))
+  res_PCAPAM50$BS.all <- res_PCAPAM50$BS.all[idx, ]
+  
+  return(res_PCAPAM50)
 }
 
 
@@ -565,51 +565,51 @@ BS_PCAPAM50 <- function(se_obj,
 #' @export
 
 BS_ssBC <- function(se_obj,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
-    # Check that input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    # Extract gene expression matrix
-    gene_expr <- assay(se_obj)
-
-    # Extract clinical metadata if hasClinical is TRUE
-    pheno <- colData(se_obj) %>% data.frame()
-    if (!"PatientID" %in% colnames(pheno)) {
-        stop("The 'colData' of 'se_obj' must include a 'PatientID' column when 'hasClinical = TRUE'.")
-    }
-    rownames(pheno) <- pheno$PatientID
-
-    # Additional checks based on `s`
-    required_columns <- switch(s,
-        "ER" = c("ER"),
-        "ER.v2" = c("ER", "HER2"),
-        "TN" = c("TN"),
-        "TN.v2" = c("TN"),
-        stop("Invalid value for 's'. Must be one of 'ER', 'ER.v2', 'TN', or 'TN.v2'.")
-    )
-
-    missing_columns <- setdiff(required_columns, colnames(pheno))
-    if (length(missing_columns) > 0) {
-        stop(paste("The following required columns are missing from 'colData':", paste(missing_columns, collapse = ", ")))
-    }
-
-    arguments <- rlang::dots_list(
-        mat = gene_expr,
-        df.cln = pheno,
-        s = s,
-        Subtype = Subtype,
-        hasClinical = hasClinical,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(makeCalls.ssBC, !!!arguments)
-    res_ssBC <- eval(call)
-
-    return(res_ssBC)
+                    s,
+                    Subtype = FALSE,
+                    hasClinical = FALSE) {
+  # Check that input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  # Extract gene expression matrix
+  gene_expr <- assay(se_obj)
+  
+  # Extract clinical metadata if hasClinical is TRUE
+  pheno <- colData(se_obj) %>% data.frame()
+  if (!"PatientID" %in% colnames(pheno)) {
+    stop("The 'colData' of 'se_obj' must include a 'PatientID' column when 'hasClinical = TRUE'.")
+  }
+  rownames(pheno) <- pheno$PatientID
+  
+  # Additional checks based on `s`
+  required_columns <- switch(s,
+                             "ER" = c("ER"),
+                             "ER.v2" = c("ER", "HER2"),
+                             "TN" = c("TN"),
+                             "TN.v2" = c("TN"),
+                             stop("Invalid value for 's'. Must be one of 'ER', 'ER.v2', 'TN', or 'TN.v2'.")
+  )
+  
+  missing_columns <- setdiff(required_columns, colnames(pheno))
+  if (length(missing_columns) > 0) {
+    stop(paste("The following required columns are missing from 'colData':", paste(missing_columns, collapse = ", ")))
+  }
+  
+  arguments <- rlang::dots_list(
+    mat = gene_expr,
+    df.cln = pheno,
+    s = s,
+    Subtype = Subtype,
+    hasClinical = hasClinical,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(makeCalls.ssBC, !!!arguments)
+  res_ssBC <- eval(call)
+  
+  return(res_ssBC)
 }
 
 
@@ -644,34 +644,34 @@ BS_ssBC <- function(se_obj,
 #' @export
 
 BS_AIMS <- function(se_obj) {
-    ## loading datasets
-    data("AIMSmodel")
-    data("BreastSubtypeRobj")
-
-    # Check that input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    # Extract gene expression matrix
-    gene_expr <- assay(se_obj)
-
-    # Extract AIMS-specific genes
-    genes <- as.character(
-        BreastSubtypeRobj$genes.signature$EntrezGene.ID[
-            which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
-        ]
-    )
-    gene_expr <- gene_expr[rownames(gene_expr) %in% genes, ]
-
-    arguments <- rlang::dots_list(
-        eset = as.matrix(gene_expr),
-        EntrezID = rownames(gene_expr)
-    )
-
-    call <- rlang::call2(applyAIMS_AIMS, !!!arguments)
-
-    res_AIMS <- eval(call)
+  ## loading datasets
+  data("AIMSmodel")
+  data("BreastSubtypeRobj")
+  
+  # Check that input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  # Extract gene expression matrix
+  gene_expr <- assay(se_obj)
+  
+  # Extract AIMS-specific genes
+  genes <- as.character(
+    BreastSubtypeRobj$genes.signature$EntrezGene.ID[
+      which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
+    ]
+  )
+  gene_expr <- gene_expr[rownames(gene_expr) %in% genes, ]
+  
+  arguments <- rlang::dots_list(
+    eset = as.matrix(gene_expr),
+    EntrezID = rownames(gene_expr)
+  )
+  
+  call <- rlang::call2(applyAIMS_AIMS, !!!arguments)
+  
+  res_AIMS <- eval(call)
 }
 
 
@@ -717,27 +717,27 @@ BS_AIMS <- function(se_obj) {
 #' @export
 
 BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
-    data("sspbc.models")
-    data("sspbc.models.fullname")
-
-    # Check that input is a SummarizedExperiment object
-    if (!inherits(se_obj, "SummarizedExperiment")) {
-        stop("Input must be a SummarizedExperiment object.")
-    }
-
-    # Extract gene expression matrix
-    gene_expr <- assay(se_obj)
-
-    arguments <- rlang::dots_list(
-        gex = gene_expr,
-        id = rownames(gene_expr),
-        id.type = "EntrezGene",
-        ssp.name = ssp.name,
-        .homonyms = "last"
-    )
-
-    call <- rlang::call2(applySSP, !!!arguments)
-    res_sspbc <- eval(call)
+  data("sspbc.models")
+  data("sspbc.models.fullname")
+  
+  # Check that input is a SummarizedExperiment object
+  if (!inherits(se_obj, "SummarizedExperiment")) {
+    stop("Input must be a SummarizedExperiment object.")
+  }
+  
+  # Extract gene expression matrix
+  gene_expr <- assay(se_obj)
+  
+  arguments <- rlang::dots_list(
+    gex = gene_expr,
+    id = rownames(gene_expr),
+    id.type = "EntrezGene",
+    ssp.name = ssp.name,
+    .homonyms = "last"
+  )
+  
+  call <- rlang::call2(applySSP, !!!arguments)
+  res_sspbc <- eval(call)
 }
 
 #' Intrinsic Subtyping with Multiple Approaches (BS_Multi)
@@ -782,10 +782,10 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' # Load required dataset
 #' data("OSLO2EMIT0obj")
 #'
-#' # Define methods to use for multi-method subtyping
+#' # Define methods to use for consensus subtyping
 #' methods <- c("parker.original", "genefu.scale", "genefu.robust")
 #'
-#' # Perform multi-method subtyping
+#' # Perform subtyping
 #' res.test <- BS_Multi(
 #'     data_input = OSLO2EMIT0obj$data_input,
 #'     methods = methods,
@@ -796,455 +796,275 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' @export
 
 BS_Multi <- function(data_input,
-    methods = "AUTO",
-    Subtype = FALSE,
-    hasClinical = FALSE) {
-    valid_methods <- c(
-        "parker.original", "genefu.scale", "genefu.robust",
-        "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
-        "AIMS", "sspbc", "AUTO"
-    )
-
-    invalid_methods <- methods[!methods %in% valid_methods]
-
-    if (length(invalid_methods) > 0) {
-        stop("Invalid method(s) specified: ", paste(invalid_methods, collapse = ", "))
-    }
-
-    if (length(methods) == 1 && methods[1] == "AUTO") {
-        message("Running AUTO mode for subtyping.")
-    } else if (length(methods) < 2) {
-        stop("Select at least two methods or set method to 'AUTO'.")
-    }
-
-    ## extract pheno table
-    pheno <- colData(data_input$se_NC) %>% data.frame()
-    rownames(pheno) <- pheno$PatientID
-
-    # Check ER and HER2 columns in pheno
-    if (!("ER" %in% colnames(pheno)) && any(methods %in% c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
-        stop("The 'ER' column is required for selected methods.")
-    }
-    if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
-        stop("The 'HER2' column is required for the 'ssBC.v2' method.")
-    }
-
-    ## AUTO mode
-    # methods = "AUTO"
-    if (length(methods) == 1 && methods[1] == "AUTO") {
-        ## first check ER and HER2 status
-        if (!all(c("ER", "HER2") %in% colnames(pheno))) {
-            stop("The 'AUTO' mode requires both 'ER' and 'HER2' columns in the 'pheno' dataframe.")
-        }
-
-        # Calculate sample sizes
-        sample_counts <- with(pheno, table(ER, HER2))
-        n_ERpos <- sum(pheno$ER == "ER+")
-        n_ERneg <- sum(pheno$ER == "ER-")
-
-        n_ERnegHER2pos <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2+")
-        n_ERnegHER2neg <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2-")
-        n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+")
-        n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-")
-
-        # Set thresholds
-        n_ER_threshold <- 10
-        n_ERHER2_threshold <- 5
-        per_ratio <- 0.2
-        upper_ratio <- 54 / 64 + (54 / 64) * per_ratio
-        lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
-
-        ## main panel
-        if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
-            message("A HER2+ cohort has been detected.")
-            cohort.select <- "HER2pos"
-
-            if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
-                message("A small HER2+ cohort has been detected.")
-                message("Running methods: AIMS, & sspbc")
-                methods <- c("AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
-                message("A ER+/HER2+ cohort has been detected.")
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos >= n_ERHER2_threshold) {
-                message("A ER-/HER2+ cohort has been detected.")
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            } else {
-                message("Running methods: ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERnegHER2pos == 0 && n_ERposHER2pos == 0 && n_ERposHER2neg == 0) {
-            message("A TNBC cohort has been detected.")
-            cohort.select <- "TNBC"
-
-            if (!("TN" %in% colnames(pheno))) {
-                stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
-            }
-
-            message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
-            methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-        } else if (n_ERpos < n_ER_threshold && n_ERneg < n_ER_threshold) {
-            message("A small number of ER-/ER+ samples has been detected.")
-            message("Running methods: AIMS & sspbc")
-            methods <- c("AIMS", "sspbc")
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg < n_ER_threshold) {
-            if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg < n_ERHER2_threshold) {
-                message("Running methods for ER+/HER2+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER+/HER2- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERpos < n_ER_threshold && n_ERneg >= n_ER_threshold) {
-            if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg < n_ERHER2_threshold) {
-                message("Running methods for ER-/HER2+ samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos < n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
-                message("Running methods for ER-/HER2- samples:
-                ssBC, ssBC.v2, AIMS, & sspbc")
-                methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            }
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
-            ## for other NC-based methods
-            ratio_ER <- n_ERpos / n_ERneg
-
-            if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
-                message(
-                    "Running methods:
-                    parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc"
-                )
-                methods <- c(
-                    "parker.original",
-                    "genefu.scale",
-                    "genefu.robust",
-                    "ssBC",
-                    "ssBC.v2",
-                    "cIHC",
-                    "cIHC.itr",
-                    "PCAPAM50",
-                    "AIMS",
-                    "sspbc"
-                )
-            } else {
-                message(
-                    "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
-                )
-                message("Running methods:
-                        genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
-                methods <- c(
-                    "ssBC",
-                    "ssBC.v2",
-                    "cIHC",
-                    "cIHC.itr",
-                    "PCAPAM50",
-                    "AIMS",
-                    "sspbc"
-                )
-            }
-        }
-
-        if (cohort.select != "TNBC") {
-            ## subsetting samples for ssBC and ssBC.v2
-            # Handle ssBC & ssBC.v2 method for imbalanced subtypes
-            ERHER2_counts <- c(
-                n_ERpos,
-                n_ERneg,
-                n_ERnegHER2pos,
-                n_ERnegHER2neg,
-                n_ERposHER2pos,
-                n_ERposHER2neg
-            )
-            names(ERHER2_counts) <- c(
-                "ERpos",
-                "ERneg",
-                "ERnegHER2pos",
-                "ERnegHER2neg",
-                "ERposHER2pos",
-                "ERposHER2neg"
-            )
-
-            er_idx <- ERHER2_counts[seq(1, 2)] > n_ER_threshold
-            samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
-            erher2_idx <- ERHER2_counts[seq(3, 6)] > n_ERHER2_threshold
-            samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
-
-            if (cohort.select != "HER2pos" && cohort.select != "TNBC") {
-                if (length(samples_ER) > 0) {
-                    message("ssBC for samples: ", paste(samples_ER, collapse = ", "))
-                    samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
-                        subtype <- str_replace_all(subtype, "pos", "+")
-                        subtype <- str_replace_all(subtype, "neg", "-")
-                        ER_status <- subtype
-                        rownames(pheno)[pheno$ER == ER_status]
-                    }))
-                }
-            }
-
-            if (cohort.select != "TNBC") {
-                if (length(samples_ERHER2) > 0) {
-                    message(
-                        "ssBC.v2 for samples: ",
-                        paste(samples_ERHER2, collapse = ", ")
-                    )
-
-                    samples_ERHER2.icd <- unlist(
-                        lapply(samples_ERHER2, function(subtype) {
-                            subtype <- subtype |>
-                                str_replace_all("pos", "+") |>
-                                str_replace_all("neg", "-")
-                            ER_sts <- substr(subtype, 1, 3)
-                            HER2_sts <- substr(subtype, 4, 8)
-                            rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
-                        })
-                    )
-                }
-            }
-        }
-    }
-    samples_ER.icd = AUTO.output$samples_ER.icd
-    samples_ERHER2.icd = AUTO.output$samples_ERHER2.icd
-    methods = AUTO.output$methods
-
-    ## run each method
-    results <- lapply(methods, function(method) {
-        
-        ## try NC-based
-        if (method == "parker.original") {
-            message(method, " is running!")
-            return(
-                BS_parker(
-                    data_input$se_NC,
-                    calibration = "Internal",
-                    internal = "medianCtr",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-        if (method == "genefu.scale") {
-            message(method, " is running!")
-            return(
-                BS_parker(
-                    data_input$se_NC,
-                    calibration = "Internal",
-                    internal = "meanCtr",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-        if (method == "genefu.robust") {
-            message(method, " is running!")
-            return(
-                BS_parker(
-                    data_input$se_NC,
-                    calibration = "Internal",
-                    internal = "qCtr",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-        if (method == "cIHC") {
-            ## try conventional IHC
-            message(method, " is running!")
-            return(
-                BS_cIHC(
-                    data_input$se_NC,
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-
-        if (method == "cIHC.itr") {
-            ## try iterative IHC
-            message(method, " is running!")
-            return(
-                BS_cIHC.itr(
-                    data_input$se_NC,
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-
-        if (method == "PCAPAM50") {
-            message(method, " is running!")
-            return(
-                BS_PCAPAM50(
-                    data_input$se_NC,
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            )
-        }
-
-        if (method == "ssBC") {
-            message(method, " is running!")
-
-            if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
-                res_ssBC <- BS_ssBC(
-                    data_input$se_NC,
-                    s = "TN",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            } else {
-                res_ssBC <- BS_ssBC(
-                    data_input$se_NC,
-                    s = "ER",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            }
-
-            ## removing results for AUTO mode
-            if (!is.null(samples_ER.icd) &&
-                length(samples_ER.icd) < nrow(pheno)) {
-                idx <- !(res_ssBC$BS.all$PatientID %in% samples_ER.icd)
-                res_ssBC$BS.all[idx, 2:ncol(res_ssBC$BS.all)] <- NA
-            }
-
-
-            return(res_ssBC)
-        }
-
-        if (method == "ssBC.v2") {
-            message(method, " is running!")
-
-            if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
-                res_ssBC.v2 <- BS_ssBC(
-                    data_input$se_NC,
-                    s = "TN.v2",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            } else {
-                res_ssBC.v2 <- BS_ssBC(
-                    data_input$se_NC,
-                    s = "ER.v2",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
-            }
-
-            ## removing results for AUTO mode
-            if (!is.null(samples_ERHER2.icd) &&
-                length(samples_ERHER2.icd) < nrow(pheno)) {
-                idx <- !(res_ssBC.v2$BS.all$PatientID %in% samples_ERHER2.icd)
-                res_ssBC.v2$BS.all[idx, 2:ncol(res_ssBC.v2$BS.all)] <- NA
-            }
-
-            return(res_ssBC.v2)
-        }
-
-        if (method == "AIMS") {
-            message(method, " is running!")
-            data("BreastSubtypeRobj")
-
-            res_AIMS <- BS_AIMS(data_input$se_SSP)
-
-            res_AIMS$BS.all <- data.frame(
-                PatientID = rownames(res_AIMS$cl),
-                BS = res_AIMS$cl[, 1]
-            )
-
-            if (Subtype) {
-                res_AIMS$BS.all$BS.Subtype <- res_AIMS$BS.all$BS
-            }
-            return(res_AIMS)
-        }
-
-        if (method == "sspbc") {
-            message(method, " is running!")
-
-            res_sspbc <- BS_sspbc(
-                se_obj = data_input$se_SSP,
-                ssp.name = "ssp.pam50"
-            )
-
-            BS.all <- data.frame(
-                PatinetID = rownames(res_sspbc),
-                BS = res_sspbc[, 1],
-                row.names = rownames(res_sspbc)
-            )
-
-            if (Subtype) {
-                res_sspbc.Subtype <- BS_sspbc(
-                    se_obj = data_input$se_SSP,
-                    ssp.name = "ssp.subtype"
-                )
-                BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
-            }
-
-            return(list(BS.all = BS.all))
-        }
-
-        stop("Unknown method: ", method)
-    })
-
-    names(results) <- methods
-    samples <- colnames(assay(data_input$se_NC))
-
-    res_subtypes <- data.table(row_id = samples)
-    if (Subtype) {
-        res_subtypes.Subtype <- data.table(row_id = samples)
-    }
-
-    for (method in methods) {
-        if (!is.null(results[[method]])) {
-            set(res_subtypes, j = method, value = results[[method]]$BS.all$BS)
-            if (Subtype) {
-                set(res_subtypes.Subtype,
-                    j = method,
-                    value = results[[method]]$BS.all$BS.Subtype
-                )
-            }
-        }
-    }
-
-    ## entropy index
-    res_subtypes <- as.data.frame(res_subtypes)
-    rownames(res_subtypes) <- samples
-    res_subtypes[, 1] <- NULL
-
-    entropy <- apply(res_subtypes, 1, get_entropy)
-    res_subtypes$entropy <- entropy
-
-    if (Subtype) {
-        res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype)
-        rownames(res_subtypes.Subtype) <- samples
-        res_subtypes.Subtype[, 1] <- NULL
-
-        ## removing Nomal-like in AIMS
-        if ("AIMS" %in% methods) {
-            res_subtypes.Subtype$AIMS[which(res_subtypes.Subtype$AIMS == "Normal")] <- NA
-        }
-        entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
-        res_subtypes.Subtype$entropy <- entropy
-    }
-
-    if (Subtype) {
-        res <- list(
-            res_subtypes = res_subtypes,
-            res_subtypes.Subtype = res_subtypes.Subtype,
-            results = results
+                     methods = "AUTO",
+                     Subtype = FALSE,
+                     hasClinical = FALSE) {
+  valid_methods <- c(
+    "parker.original", "genefu.scale", "genefu.robust",
+    "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
+    "AIMS", "sspbc", "AUTO"
+  )
+  
+  invalid_methods <- methods[!methods %in% valid_methods]
+  
+  if (length(invalid_methods) > 0) {
+    stop("Invalid method(s) specified: ", paste(invalid_methods, collapse = ", "))
+  }
+  
+  if (length(methods) == 1 && methods[1] == "AUTO") {
+    message("Running AUTO mode for subtyping.")
+  } else if (length(methods) < 2) {
+    stop("Select at least two methods or set method to 'AUTO'.")
+  }
+  
+  ## extract pheno table
+  pheno <- colData(data_input$se_NC) %>% data.frame()
+  rownames(pheno) <- pheno$PatientID
+  
+  # Check ER and HER2 columns in pheno
+  if (!("ER" %in% colnames(pheno)) && any(methods %in% c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
+    stop("The 'ER' column is required for selected methods.")
+  }
+  if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
+    stop("The 'HER2' column is required for the 'ssBC.v2' method.")
+  }
+  
+  ## AUTO mode
+  # methods = "AUTO"
+  if (length(methods) == 1 && methods[1] == "AUTO") {
+    AUTO.output = get_methods(pheno)
+  }
+  samples_ER.icd = AUTO.output$samples_ER.icd
+  samples_ERHER2.icd = AUTO.output$samples_ERHER2.icd
+  methods = AUTO.output$methods
+  
+  ## run each method
+  results <- lapply(methods, function(method) {
+    
+    ## try NC-based
+    if (method == "parker.original") {
+      message(method, " is running!")
+      return(
+        BS_parker(
+          data_input$se_NC,
+          calibration = "Internal",
+          internal = "medianCtr",
+          Subtype = Subtype,
+          hasClinical = hasClinical
         )
-    } else {
-        res <- list(res_subtypes = res_subtypes, results = results)
+      )
     }
+    if (method == "genefu.scale") {
+      message(method, " is running!")
+      return(
+        BS_parker(
+          data_input$se_NC,
+          calibration = "Internal",
+          internal = "meanCtr",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      )
+    }
+    if (method == "genefu.robust") {
+      message(method, " is running!")
+      return(
+        BS_parker(
+          data_input$se_NC,
+          calibration = "Internal",
+          internal = "qCtr",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      )
+    }
+    if (method == "cIHC") {
+      ## try conventional IHC
+      message(method, " is running!")
+      return(
+        BS_cIHC(
+          data_input$se_NC,
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      )
+    }
+    
+    if (method == "cIHC.itr") {
+      ## try iterative IHC
+      message(method, " is running!")
+      return(
+        BS_cIHC.itr(
+          data_input$se_NC,
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      )
+    }
+    
+    if (method == "PCAPAM50") {
+      message(method, " is running!")
+      return(
+        BS_PCAPAM50(
+          data_input$se_NC,
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      )
+    }
+    
+    if (method == "ssBC") {
+      message(method, " is running!")
+      
+      if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
+        res_ssBC <- BS_ssBC(
+          data_input$se_NC,
+          s = "TN",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      } else {
+        res_ssBC <- BS_ssBC(
+          data_input$se_NC,
+          s = "ER",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      }
+      
+      ## removing results for AUTO mode
+      if (!is.null(samples_ER.icd) &&
+          length(samples_ER.icd) < nrow(pheno)) {
+        idx <- !(res_ssBC$BS.all$PatientID %in% samples_ER.icd)
+        res_ssBC$BS.all[idx, 2:ncol(res_ssBC$BS.all)] <- NA
+      }
+      
+      
+      return(res_ssBC)
+    }
+    
+    if (method == "ssBC.v2") {
+      message(method, " is running!")
+      
+      if ("TN" %in% colnames(pheno) && cohort.select == "TNBC") {
+        res_ssBC.v2 <- BS_ssBC(
+          data_input$se_NC,
+          s = "TN.v2",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      } else {
+        res_ssBC.v2 <- BS_ssBC(
+          data_input$se_NC,
+          s = "ER.v2",
+          Subtype = Subtype,
+          hasClinical = hasClinical
+        )
+      }
+      
+      ## removing results for AUTO mode
+      if (!is.null(samples_ERHER2.icd) &&
+          length(samples_ERHER2.icd) < nrow(pheno)) {
+        idx <- !(res_ssBC.v2$BS.all$PatientID %in% samples_ERHER2.icd)
+        res_ssBC.v2$BS.all[idx, 2:ncol(res_ssBC.v2$BS.all)] <- NA
+      }
+      
+      return(res_ssBC.v2)
+    }
+    
+    if (method == "AIMS") {
+      message(method, " is running!")
+      data("BreastSubtypeRobj")
+      
+      res_AIMS <- BS_AIMS(data_input$se_SSP)
+      
+      res_AIMS$BS.all <- data.frame(
+        PatientID = rownames(res_AIMS$cl),
+        BS = res_AIMS$cl[, 1]
+      )
+      
+      if (Subtype) {
+        res_AIMS$BS.all$BS.Subtype <- res_AIMS$BS.all$BS
+      }
+      return(res_AIMS)
+    }
+    
+    if (method == "sspbc") {
+      message(method, " is running!")
+      
+      res_sspbc <- BS_sspbc(
+        se_obj = data_input$se_SSP,
+        ssp.name = "ssp.pam50"
+      )
+      
+      BS.all <- data.frame(
+        PatinetID = rownames(res_sspbc),
+        BS = res_sspbc[, 1],
+        row.names = rownames(res_sspbc)
+      )
+      
+      if (Subtype) {
+        res_sspbc.Subtype <- BS_sspbc(
+          se_obj = data_input$se_SSP,
+          ssp.name = "ssp.subtype"
+        )
+        BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
+      }
+      
+      return(list(BS.all = BS.all))
+    }
+    
+    stop("Unknown method: ", method)
+  })
+  
+  names(results) <- methods
+  samples <- colnames(assay(data_input$se_NC))
+  
+  res_subtypes <- data.table(row_id = samples)
+  if (Subtype) {
+    res_subtypes.Subtype <- data.table(row_id = samples)
+  }
+  
+  for (method in methods) {
+    if (!is.null(results[[method]])) {
+      set(res_subtypes, j = method, value = results[[method]]$BS.all$BS)
+      if (Subtype) {
+        set(res_subtypes.Subtype,
+            j = method,
+            value = results[[method]]$BS.all$BS.Subtype
+        )
+      }
+    }
+  }
+  
+  ## entropy index
+  res_subtypes <- as.data.frame(res_subtypes)
+  rownames(res_subtypes) <- samples
+  res_subtypes[, 1] <- NULL
+  
+  entropy <- apply(res_subtypes, 1, get_entropy)
+  res_subtypes$entropy <- entropy
+  
+  if (Subtype) {
+    res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype)
+    rownames(res_subtypes.Subtype) <- samples
+    res_subtypes.Subtype[, 1] <- NULL
+    
+    ## removing Nomal-like in AIMS
+    if ("AIMS" %in% methods) {
+      res_subtypes.Subtype$AIMS[which(res_subtypes.Subtype$AIMS == "Normal")] <- NA
+    }
+    entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
+    res_subtypes.Subtype$entropy <- entropy
+  }
+  
+  if (Subtype) {
+    res <- list(
+      res_subtypes = res_subtypes,
+      res_subtypes.Subtype = res_subtypes.Subtype,
+      results = results
+    )
+  } else {
+    res <- list(res_subtypes = res_subtypes, results = results)
+  }
 }
