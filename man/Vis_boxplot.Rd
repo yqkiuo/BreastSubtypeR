@@ -30,10 +30,10 @@ res <- OSLO2EMIT0obj$res
 
 # Prepare data: Subtype information and correlation matrix
 out <- data.frame(
-    PatientID = res$results$parker.original$BS.all$PatientID,
-    Subtype = res$results$parker.original$BS.all$BS
+    PatientID = res$results$genefu.robust$BS.all$PatientID,
+    Subtype = res$results$genefu.robust$BS.all$BS
 )
-correlations <- res$results$parker.original$outList$distances
+correlations <- res$results$genefu.robust$outList$distances
 
 # Generate the boxplot
 p <- Vis_boxplot(out, correlations)

@@ -35,8 +35,8 @@ res <- OSLO2EMIT0obj$res
 # Prepare data: Gene expression matrix and subtype information
 x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 out <- data.frame(
-    PatientID = res$results$parker.original$BS.all$PatientID,
-    Subtype = res$results$parker.original$BS.all$BS
+    PatientID = res$results$genefu.robust$BS.all$PatientID,
+    Subtype = res$results$genefu.robust$BS.all$BS
 )
 
 # Generate the PCA plot
