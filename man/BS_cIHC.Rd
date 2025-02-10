@@ -4,16 +4,19 @@
 \alias{BS_cIHC}
 \title{Conventional IHC Intrinsic Subtyping (BS_cIHC)}
 \usage{
-BS_cIHC(gene_expr, pheno, Subtype = FALSE, hasClinical = FALSE, seed = 118)
+BS_cIHC(se_obj, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. The data should be log-transformed.}
-
-\item{pheno}{A clinical information table. The first column must contain
-sample or patient names and be named \code{"PatientID"}. Additionally, the table
-must include an \code{"ER"} column, where estrogen receptor (ER) status is
-recorded as \code{"ER+"} or \code{"ER-"}.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix with genes (Gene Symbol)
+in rows and samples in columns. This matrix should be log-transformed.
+\item \strong{Column metadata} (\code{colData}): Clinical information table.
+\itemize{
+\item \code{"PatientID"}: Unique sample or patient identifiers.
+\item \code{"ER"}: Estrogen receptor (ER) status recorded as \code{"ER+"} or \code{"ER-"}.
+}
+}}
 
 \item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
 excluding the Normal-like subtype.}
@@ -39,8 +42,7 @@ gene centering.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC(
-    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-    pheno = OSLO2EMIT0obj$clinic.oslo,
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
     Subtype = FALSE,
     hasClinical = FALSE
 )

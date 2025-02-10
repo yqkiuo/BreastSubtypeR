@@ -25,11 +25,12 @@ patterns across breast cancer subtypes, based on the provided gene expression
 matrix and subtype information.
 }
 \examples{
+library(SummarizedExperiment)
 data("OSLO2EMIT0obj")
-res = OSLO2EMIT0obj$res
+res <- OSLO2EMIT0obj$res
 
 # Prepare data: Gene expression matrix and subtype information
-x <- OSLO2EMIT0obj$data_input$x_NC.log
+x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 out <- data.frame(
     PatientID = res$results$parker.original$BS.all$PatientID,
     Subtype = res$results$parker.original$BS.all$BS

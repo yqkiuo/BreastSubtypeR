@@ -26,7 +26,7 @@ provided correlation table and subtype information.
 }
 \examples{
 data("OSLO2EMIT0obj")
-res = OSLO2EMIT0obj$res
+res <- OSLO2EMIT0obj$res
 
 # Prepare data: Subtype information and correlation matrix
 out <- data.frame(

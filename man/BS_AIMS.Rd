@@ -4,15 +4,14 @@
 \alias{BS_AIMS}
 \title{AIMS Intrinsic Subtyping (BS_AIMS)}
 \usage{
-BS_AIMS(gene_expr, EntrezID)
+BS_AIMS(se_obj)
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. Note: The data must be \strong{unlogged} before using this
-function.}
-
-\item{EntrezID}{A vector of Entrez gene IDs corresponding to the genes in the
-gene expression matrix.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) and samples (columns).
+Note: The data must be \strong{unlogged} before using this function.
+}}
 }
 \value{
 A vector of intrinsic subtypes assigned to the samples, as estimated
@@ -25,19 +24,11 @@ the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
 \examples{
 # Load required datasets
 data("OSLO2EMIT0obj")
-data("BreastSubtypeRobj")
 
-# Extract AIMS-specific genes
-genes <- as.character(
-    BreastSubtypeRobj$genes.signature$EntrezGene.ID[
-        which(BreastSubtypeRobj$genes.signature$AIMS == "Yes")
-    ]
-)
 
 # Perform subtyping
 res <- BS_AIMS(
-    gene_expr = OSLO2EMIT0obj$data_input$x_SSP[genes, ],
-    EntrezID = rownames(OSLO2EMIT0obj$data_input$x_SSP[genes, ])
+    se_obj = OSLO2EMIT0obj$data_input$se_SSP
 )
 
 }

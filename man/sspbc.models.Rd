@@ -33,6 +33,5 @@ library(BreastSubtypeR)
 ## Load the sspbc.models
 data("sspbc.models")
 
-
 }
 \keyword{datasets}

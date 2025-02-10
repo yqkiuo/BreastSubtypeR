@@ -29,7 +29,6 @@ library(BreastSubtypeR)
 ## Load the Gene.ID.ann
 data(Gene.ID.ann)
 
-
 }
 \references{
 \itemize{

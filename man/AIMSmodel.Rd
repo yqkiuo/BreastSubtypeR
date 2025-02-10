@@ -44,7 +44,6 @@ review at JNCI).
 library(BreastSubtypeR)
 data("AIMSmodel")
 
-
 }
 \references{
 \itemize{

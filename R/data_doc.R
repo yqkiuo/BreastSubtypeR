@@ -1,19 +1,19 @@
 #' @title OSLO2EMIT0obj: Example Dataset for the OSLO2EMIT0 Cohort
 #'
 #' @description
-#' This example dataset is based on the OSLO2EMIT0 cohort described in Staaf et
-#' al., 2022. It contains subsetted data for gene expression, clinical
-#' information, feature annotations, and example outputs from the `Mapping` and
-#' `BS_Multi` functions.
+#' This example dataset is based on the OSLO2EMIT0 cohort
+#' described in Staaf et al., 2022. It contains subsetted data for gene
+#' expression, clinical information, feature annotations, and example outputs
+#' from the `Mapping` and `BS_Multi` functions.
 #'
 #' @docType data
 #' @usage data("OSLO2EMIT0obj")
 #'
 #' @format A list containing the following elements:
 #' \describe{
-#'   \item{\code{OSLO2EMIT0.103.genematrix_noNeg.subset}}{A subsetted gene expression matrix for the OSLO2EMIT0 cohort.}
-#'   \item{\code{clinic.oslo}}{Clinical information for the OSLO2EMIT0 cohort.}
-#'   \item{\code{anno_feature.subset}}{Subsetted gene feature annotations.}
+#'   \item{\code{se_obj}}{A SummarizedExperiment object containing a subset of
+#'   the gene expression matrix, clinical information, and gene feature
+#'   annotations for the OSLO2EMIT0 cohort.}
 #'   \item{\code{data_input}}{Example output from the \code{Mapping} function.}
 #'   \item{\code{res}}{Example output from the \code{BS_Multi} function.}
 #' }
@@ -57,7 +57,7 @@
 #'
 #'
 #' @references
-#' - Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
+#' - Bernard PS, Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
 #' *Supervised risk predictor of breast cancer based on intrinsic subtypes*.
 #' Journal of Clinical Oncology. 2009;27(8).
 #' https://doi.org/10.1200/JCO.2008.18.1370

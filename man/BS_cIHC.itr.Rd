@@ -5,8 +5,7 @@
 \title{Iterative conventional IHC Intrinsic Subtyping (BS_cIHC.itr)}
 \usage{
 BS_cIHC.itr(
-  gene_expr,
-  pheno,
+  se_obj,
   iteration = 100,
   ratio = 54/64,
   Subtype = FALSE,
@@ -15,13 +14,16 @@ BS_cIHC.itr(
 )
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. The data should be log-transformed.}
-
-\item{pheno}{A clinical information table. The first column must contain
-sample or patient names and be named \code{"PatientID"}. Additionally, the table
-must include an \code{"ER"} column, where estrogen receptor (ER) status is
-recorded as \code{"ER+"} or \code{"ER-"}.}
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
+\itemize{
+\item \strong{Assay data}: A gene expression matrix with genes (Gene Symbol)
+in rows and samples in columns. This matrix should be log-transformed.
+\item \strong{Column metadata} (\code{colData}): Clinical information table.
+\itemize{
+\item \code{"PatientID"}: Unique sample or patient identifiers.
+\item \code{"ER"}: Estrogen receptor (ER) status recorded as \code{"ER+"} or \code{"ER-"}.
+}
+}}
 
 \item{iteration}{Integer. Number of iterations for the ER-balanced procedure
 with the specified ratio. The default is 100.}
@@ -58,8 +60,7 @@ of the ER+/ER- ratio.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC.itr(
-    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-    pheno = OSLO2EMIT0obj$clinic.oslo,
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
     iteration = 10, ## For final analysis, set iteration = 100
     Subtype = FALSE,
     hasClinical = FALSE

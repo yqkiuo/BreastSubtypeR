@@ -65,11 +65,12 @@ overlapSets <- function(x, y) {
 #'   calculated by train cohorts. When users want to use Medians prepared by
 #'   user selves, this parameter should be "Given.mdns", not platform name.
 #' @noRd
-docalibration <- function(y,
-    df.al,
-    calibration = "None",
-    internal = internal,
-    external = external) {
+docalibration <- function(
+        y,
+        df.al,
+        calibration = "None",
+        internal = internal,
+        external = external) {
     mq <- 0.05 ## presetting in genefu robust model
     switch(calibration,
         "None" = {
@@ -131,10 +132,9 @@ standardize <- function(x) {
 
 #' Function for suffix of medians for gene centering
 #' @noRd
-getsurffix <- function(
-        calibration,
-        internal = internal,
-        external = external) {
+getsurffix <- function(calibration,
+    internal = internal,
+    external = external) {
     if (calibration == "None") {
         surffix <- calibration
     } else {
@@ -162,12 +162,11 @@ getsurffix <- function(
 #' @param centrids Logic
 #' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
-sspPredict <- function(
-        x,
-        y,
-        std = FALSE,
-        distm = "spearman",
-        Subtype = TRUE) {
+sspPredict <- function(x,
+    y,
+    std = FALSE,
+    distm = "spearman",
+    Subtype = TRUE) {
     dataMatrix <- x
     tdataMatrix <- y
 
@@ -341,11 +340,10 @@ sspPredict <- function(
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup <- function(
-        out,
-        df.cln,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+RORgroup <- function(out,
+    df.cln,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     sample <- data.frame(patientID = names(out$predictions))
 
     distance <- data.frame(out$distances, row.names = names(out$predictions))
@@ -702,7 +700,7 @@ makeCalls.parker <- function(mat,
     calibration = "None",
     internal = NA,
     external = NA,
-    medians = NA,
+    medians = NULL,
     Subtype = FALSE,
     hasClinical = FALSE) {
     ## loading dataset
@@ -710,13 +708,15 @@ makeCalls.parker <- function(mat,
 
     fl.mdn <- BreastSubtypeRobj$medians
 
-
     if (calibration == "External" & external == "Given.mdns") {
-        if (length(medians) == 1 | all(is.na(medians))) {
+        if (is.null(medians)) {
             stop(
                 "Please input prepared medians as requires. "
             )
         } else {
+            if (!is.data.frame(medians)) {
+                medians <- as.data.frame(medians)
+            }
             colnames(medians) <- c("X", "Given.mdns")
 
             df.al <- merge(fl.mdn, medians, by = "X")
@@ -809,16 +809,15 @@ makeCalls.parker <- function(mat,
 #' @noRd
 
 
-makeCalls_ihc <- function(
-        mat,
-        df.cln,
-        calibration = "Internal",
-        internal = "IHC.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls_ihc <- function(mat,
+    df.cln,
+    calibration = "Internal",
+    internal = "IHC.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -944,18 +943,17 @@ makeCalls_ihc <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls_ihc.iterative <- function(
-        mat,
-        df.cln,
-        iteration = 100,
-        ratio = 54 / 64,
-        calibration = "Internal",
-        internal = "ER.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls_ihc.iterative <- function(mat,
+    df.cln,
+    iteration = 100,
+    ratio = 54 / 64,
+    calibration = "Internal",
+    internal = "ER.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1139,15 +1137,16 @@ makeCalls_ihc.iterative <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.PC1ihc <- function(mat,
-    df.cln,
-    calibration = "Internal",
-    internal = "PC1ihc.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls.PC1ihc <- function(
+        mat,
+        df.cln,
+        calibration = "Internal",
+        internal = "PC1ihc.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1328,31 +1327,42 @@ makeCalls.PC1ihc <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.v1PAM <- function(mat,
-    df.pam,
-    calibration = "Internal",
-    internal = "v1PAM.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls.v1PAM <- function(
+        mat,
+        df.pam,
+        calibration = "Internal",
+        internal = "v1PAM.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
     ERN.pam <- df.pam[which(df.pam$PAM50 %in% c("Basal")), ]
-    ### get ER- samples data.frame
-
     dim(ERN.pam)
 
     ERP.pam <- df.pam[which(df.pam$PAM50 %in% c("LumA")), ]
     dim(ERP.pam)
 
+    # Determine the smaller size between ER+ and ER-
+    sample_size <- min(dim(ERP.pam)[1], dim(ERN.pam)[1])
+    
     # set.seed(seed)
     # i = sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
     # take equal number of ER+ and ER- samples
     withr::with_seed(seed, {
-        i <- sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
+        # i <- sample(dim(ERP.pam)[1], dim(ERN.pam)[1])
+        if (dim(ERN.pam)[1] <= dim(ERP.pam)[1]) {
+            i <- sample(dim(ERP.pam)[1], sample_size)
+            ERP.pam_sampled <- ERP.pam[i, ]
+            ERN.pam_sampled <- ERN.pam
+        } else {
+            i <- sample(dim(ERN.pam)[1], sample_size)
+            ERN.pam_sampled <- ERN.pam[i, ]
+            ERP.pam_sampled <- ERP.pam
+        }
     })
 
     length(ERP.pam$PatientID[i])
@@ -1360,8 +1370,7 @@ makeCalls.v1PAM <- function(mat,
     length(ERN.pam$PatientID)
     # ER negative samples
 
-    mbal.pam <- mat[, c(ERP.pam$PatientID[i], ERN.pam$PatientID)]
-
+    mbal.pam <- mat[, c(ERP.pam_sampled$PatientID, ERN.pam_sampled$PatientID)]
     dim(mbal.pam)
 
     # Find median
@@ -1442,11 +1451,12 @@ makeCalls.v1PAM <- function(mat,
 #'   should be in the "NODE" column.
 #' @noRd
 
-makeCalls.ssBC <- function(mat,
-    df.cln,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+makeCalls.ssBC <- function(
+        mat,
+        df.cln,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
 

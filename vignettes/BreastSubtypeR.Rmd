@@ -31,9 +31,10 @@ To address these challenges, **BreastSubtypeR** was developed as a comprehensive
 
 Importantly, **BreastSubtypeR** is designed to be an accessible tool. The package includes an interactive **Shiny app** (**iBreastSubtypeR**), offering a user-friendly interface for both bioinformaticians and researchers with limited R programming experience. This makes subtyping analyses more accessible to researchers across diverse fields, from bioinformatics to clinical research, without requiring deep technical knowledge of the underlying methods. By bridging the gap between computational expertise and clinical application, **BreastSubtypeR** facilitates BC research and ultimately contributes to advancing our understanding of this complex disease.
 
+
 ## Features
 
--   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
+-   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Bernard et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
 -   **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
 -   **AUTO Mode**: Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort, ensuring compatibility with the method-specific assumptions and improving accuracy.
 -   **Optimized Gene Mapping**: Uses Entrez IDs for gene mapping to ensure the maximum inclusion of genes across subtyping methods.
@@ -234,3 +235,4 @@ sessionInfo()
 ```
 
 ## References
+

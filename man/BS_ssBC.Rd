@@ -4,25 +4,24 @@
 \alias{BS_ssBC}
 \title{ssBC Intrinsic Subtyping (BS_ssBC)}
 \usage{
-BS_ssBC(gene_expr, pheno, s, Subtype = FALSE, hasClinical = FALSE)
+BS_ssBC(se_obj, s, Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
-\item{gene_expr}{A gene expression matrix with genes in rows and
-samples in columns. The data should be log-transformed.}
-
-\item{pheno}{A clinical information table. The first column must contain
-sample or patient names, named \code{"PatientID"}.
+\item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item When \code{"s"} is set as \code{"ER"},
-the table must include an \code{"ER"} column, where estrogen receptor (ER)
-status is recorded as \code{"ER+"} or \code{"ER-"}.
-\item When \code{"s"} is set as \code{"ER.v2"},
-the table must include an \code{"ER"} column, where estrogen receptor (ER)
-status is recorded as \code{"ER+"} or \code{"ER-"}, and a \code{"HER2"} column, where
-human epidermal growth factor receptor 2 (HER2) status is recorded as
-\code{"HER2+"} or \code{"HER2-"}.
-\item When \code{"s"} is set as \code{"TN"} or \code{"TN.v2"}, the table
-must include a \code{"TN"} column, recording triple-negative samples as \code{"TN"}.
+\item \strong{Assay data}: A gene expression matrix with genes (rows) and samples (columns).
+Data should be log-transformed.
+\item \strong{Column metadata} (\code{colData}): A clinical information table. If \code{hasClinical = TRUE},
+the table must include:
+\itemize{
+\item \code{"PatientID"}: Unique identifiers for patients or samples.
+\item Additional columns based on the \code{s} parameter:
+\itemize{
+\item \code{"ER"} for estrogen receptor status (\code{"ER+"} or \code{"ER-"}) if \code{s = "ER"}.
+\item \code{"HER2"} for HER2 status (\code{"HER2+"} or \code{"HER2-"}) if \code{s = "ER.v2"}.
+\item \code{"TN"} for triple-negative status (\code{"TN"}) if \code{s = "TN"} or \code{s = "TN.v2"}.
+}
+}
 }}
 
 \item{s}{Character. Options are \code{"ER"}, \code{"TN"}, \code{"ER.v2"}, or \code{"TN.v2"}.
@@ -62,8 +61,7 @@ original training cohort (e.g., an ER+ selected cohort).
 ## ssBC.v2
 data("OSLO2EMIT0obj")
 res <- BS_ssBC(
-    gene_expr = OSLO2EMIT0obj$data_input$x_NC.log,
-    pheno = OSLO2EMIT0obj$clinic.oslo,
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
     s = "ER.v2",
     Subtype = FALSE,
     hasClinical = FALSE
