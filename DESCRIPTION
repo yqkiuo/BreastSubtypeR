@@ -7,29 +7,25 @@ Version: 0.99.0
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
-	    role=c("aut", "cre"), email="yq.kiuo@gmail.com", 
-            comment = c(ORCID = "0000-0002-4098-3246")) 
-  )
+	    role=c("aut"), email="yq.kiuo@gmail.com", 
+            comment = c(ORCID = "0000-0002-4098-3246")),
+    person(given = "Emmanouil", family = "G. Sifakis", 
+	    role=c("cre"), email="emmanouil.sifakis@ki.se"))
 Depends:
     R (>= 4.4.0)
 Imports:
+    methods,
+    tidyverse,
+    ComplexHeatmap,
     impute (>= 1.80.0),
-    magrittr (>= 2.0.3),
-    dplyr (>= 1.1.0),
     data.table (>= 1.16.0),
-    stringr (>= 1.5.1),
-    rlang (>= 1.1.4),
-    ComplexHeatmap (>= 2.22.0),
     RColorBrewer (>= 1.1-3),
     circlize (>= 0.4.16),
     bslib (>= 0.8.0),
-    ggplot2 (>= 3.5.1),
     ggrepel (>= 0.9.6),
     shiny (>= 1.9.1),
     e1071 (>= 1.7-8),
-    SummarizedExperiment (>= 1.36.0),
-    methods,
-    withr
+    SummarizedExperiment
 Suggests:
     knitr,
     rmarkdown

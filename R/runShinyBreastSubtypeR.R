@@ -38,6 +38,10 @@
 #'
 #' @import bslib
 #' @import shiny
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment colData
+#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment assay
 #'
 #' @usage iBreastSubtypeR()
 #'
