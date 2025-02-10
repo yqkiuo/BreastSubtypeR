@@ -315,7 +315,7 @@ get_methods <- function(pheno) {
                     "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
                 )
                 message("Running methods:
-                        ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
+                        genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")
                 methods <- c(
                     "genefu.robust",
                     "ssBC",
@@ -565,10 +565,10 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
 #'
 #' # Prepare data: Subtype information and correlation matrix
 #' out <- data.frame(
-#'     PatientID = res$results$parker.original$BS.all$PatientID,
-#'     Subtype = res$results$parker.original$BS.all$BS
+#'     PatientID = res$results$genefu.robust$BS.all$PatientID,
+#'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
-#' correlations <- res$results$parker.original$outList$distances
+#' correlations <- res$results$genefu.robust$outList$distances
 #'
 #' # Generate the boxplot
 #' p <- Vis_boxplot(out, correlations)
@@ -617,8 +617,8 @@ Vis_boxplot <- function(out, correlations) {
 #' # Prepare data: Gene expression matrix and subtype information
 #' x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 #' out <- data.frame(
-#'     PatientID = res$results$parker.original$BS.all$PatientID,
-#'     Subtype = res$results$parker.original$BS.all$BS
+#'     PatientID = res$results$genefu.robust$BS.all$PatientID,
+#'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
 #'
 #' # Generate the heatmap
@@ -709,8 +709,8 @@ Vis_heatmap <- function(x, out) {
 #' # Prepare data: Gene expression matrix and subtype information
 #' x <- assay(OSLO2EMIT0obj$data_input$se_NC)
 #' out <- data.frame(
-#'     PatientID = res$results$parker.original$BS.all$PatientID,
-#'     Subtype = res$results$parker.original$BS.all$BS
+#'     PatientID = res$results$genefu.robust$BS.all$PatientID,
+#'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
 #'
 #' # Generate the PCA plot
@@ -823,8 +823,8 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
 #'
 #' # Prepare data: Subtype information
 #' out <- data.frame(
-#'     PatientID = res$results$parker.original$BS.all$PatientID,
-#'     Subtype = res$results$parker.original$BS.all$BS
+#'     PatientID = res$results$genefu.robust$BS.all$PatientID,
+#'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
 #'
 #' # Generate the pie chart
@@ -933,7 +933,7 @@ Vis_Multi <- function(data) {
         "LumB" = "skyblue",
         "Normal" = "green"
     )
-    col_cat <- setNames(c("#fb9a99", "#a6cee3"), c("NC-based", "SSP-based"))
+    col_cat <- setNames(c("#984ea3", "#ff7f00"), c("NC-based", "SSP-based"))
 
     ## make row annotation
     row_anno <- data.frame(

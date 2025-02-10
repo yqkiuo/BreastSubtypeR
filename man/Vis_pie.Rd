@@ -27,8 +27,8 @@ res <- OSLO2EMIT0obj$res
 
 # Prepare data: Subtype information
 out <- data.frame(
-    PatientID = res$results$parker.original$BS.all$PatientID,
-    Subtype = res$results$parker.original$BS.all$BS
+    PatientID = res$results$genefu.robust$BS.all$PatientID,
+    Subtype = res$results$genefu.robust$BS.all$BS
 )
 
 # Generate the pie chart
