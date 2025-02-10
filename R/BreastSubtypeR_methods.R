@@ -29,7 +29,7 @@ NULL
 #' for subsequent analyses.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+#'   - **Assay data**: A log2-transformed gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
 #'     and columns represent samples. This should be stored in the `assay()` slot.
 #'   - **Row metadata**: A data frame with annotations for probes, including at least the following columns:
 #'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
@@ -47,12 +47,10 @@ NULL
 #'   execution.
 #'
 #' @return A list containing three preprocessed gene expression matrices:
-#'   - `"x_NC"`: The processed gene expression matrix
-#'   for nearest-centroid (NC)-based methods.
-#'   - `"x_NC.log"`: The log-transformed version
-#'   of `"x_NC"` for NC-based methods.
-#'   - `"x_SSP"`: The processed gene expression matrix
-#'   for single-sample predictor (SSP)-based methods.
+#'   - `"x_NC"`: A `SummarizedExperiment` object contains: 1) The log2-transformed gene expression matrix
+#'   for nearest-centroid (NC)-based methods; 2) clinical information.
+#'   - `"x_SSP"`: A `SummarizedExperiment` object contains: 1) The exponential-transformed gene expression matrix
+#'   for single-sample predictor (SSP)-based methods; 2) clinical information.
 #'
 #'
 #' @details If the rows of the gene expression matrix/table represent gene
@@ -70,10 +68,11 @@ NULL
 #'
 #' @export
 
-Mapping <- function(se_obj,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
+Mapping <- function(
+        se_obj,
+        method = "max",
+        impute = TRUE,
+        verbose = TRUE) {
     arguments <- rlang::dots_list(
         se_obj = se_obj,
         method = method,
@@ -87,12 +86,11 @@ Mapping <- function(se_obj,
 
     # Extract results for NC-based and SSP-based methods
     x_NC <- res$x_NC
-    x_NC.log <- res$x_NC.log
     x_SSP <- res$x_SSP
 
     ## create se_obj for NC_based methods
     se_NC <- SummarizedExperiment(
-        assays = list(counts = x_NC.log),
+        assays = list(counts = x_NC),
         colData = colData(se_obj)
     )
     ## create se_obj for SSP_based methods
@@ -169,13 +167,14 @@ Mapping <- function(se_obj,
 #'
 #' @export
 
-BS_parker <- function(se_obj,
-    calibration = "None",
-    internal = NA,
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_parker <- function(
+        se_obj,
+        calibration = "None",
+        internal = NA,
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -253,10 +252,11 @@ BS_parker <- function(se_obj,
 #'
 #' @export
 
-BS_cIHC <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -337,12 +337,13 @@ BS_cIHC <- function(se_obj,
 #'
 #' @export
 
-BS_cIHC.itr <- function(se_obj,
-    iteration = 100,
-    ratio = 54 / 64,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC.itr <- function(
+        se_obj,
+        iteration = 100,
+        ratio = 54 / 64,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -417,10 +418,11 @@ BS_cIHC.itr <- function(se_obj,
 #'
 #' @export
 
-BS_PCAPAM50 <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_PCAPAM50 <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -564,10 +566,11 @@ BS_PCAPAM50 <- function(se_obj,
 #'
 #' @export
 
-BS_ssBC <- function(se_obj,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_ssBC <- function(
+        se_obj,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -795,10 +798,11 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(data_input,
-    methods = "AUTO",
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_Multi <- function(
+        data_input,
+        methods = "AUTO",
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -832,15 +836,14 @@ BS_Multi <- function(data_input,
     ## AUTO mode
     # methods = "AUTO"
     if (length(methods) == 1 && methods[1] == "AUTO") {
-        AUTO.output = get_methods(pheno)
+        AUTO.output <- get_methods(pheno)
+        samples_ER.icd <- AUTO.output$samples_ER.icd
+        samples_ERHER2.icd <- AUTO.output$samples_ERHER2.icd
+        methods <- AUTO.output$methods
     }
-    samples_ER.icd = AUTO.output$samples_ER.icd
-    samples_ERHER2.icd = AUTO.output$samples_ERHER2.icd
-    methods = AUTO.output$methods
 
     ## run each method
     results <- lapply(methods, function(method) {
-        
         ## try NC-based
         if (method == "parker.original") {
             message(method, " is running!")

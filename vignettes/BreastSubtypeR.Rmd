@@ -100,12 +100,11 @@ result <- BS_Multi(
 )
 
 # View the results
-head(result$res_subtypes)
+head(result)
 
 # Visualize results
 plot <- Vis_Multi(result$res_subtypes)
 plot(plot)
-
 ```
 
 Here's how to use **BreastSubtypeR** for multi-method subtyping with **AUTO** mode:
@@ -153,7 +152,6 @@ res <- BS_parker(
     Subtype = FALSE,
     hasClinical = FALSE
 )
-
 ```
 
 For using **BreastSubtypeR** with the `AIMS` method:
@@ -167,7 +165,6 @@ data("OSLO2EMIT0obj")
 
 # Perform subtyping with the `AIMS` method
 res <- BS_AIMS(OSLO2EMIT0obj$data_input$se_SSP)
-
 ```
 
 ### Usage
@@ -206,7 +203,6 @@ To run iBreastSubtypeR locally with your data, first install and load the packag
 # Launch iBreastSubtypeR for interactive analysis
 library(BreastSubtypeR)
 iBreastSubtypeR()
-
 ```
 
 The Shiny app allows you to:\

@@ -12,20 +12,19 @@
 #'
 #' @noRd
 
-applySSP <- function(
-        tsv,
-        ssp = "",
-        plot = FALSE,
-        txt = FALSE,
-        report = FALSE,
-        add.is.num = TRUE,
-        mylas = 1,
-        ssp.name = "",
-        gex = NULL,
-        id = NULL,
-        id.type = "Gene.ID",
-        full.out = FALSE,
-        output) {
+applySSP <- function(tsv,
+    ssp = "",
+    plot = FALSE,
+    txt = FALSE,
+    report = FALSE,
+    add.is.num = TRUE,
+    mylas = 1,
+    ssp.name = "",
+    gex = NULL,
+    id = NULL,
+    id.type = "Gene.ID",
+    full.out = FALSE,
+    output) {
     data("Gene.ID.ann")
 
     if (report) {
@@ -326,12 +325,11 @@ read_StringTie_tsv_FPKM <- function(tsv, id, report = FALSE) {
 #####################################
 
 # function
-translate_id2entrez <- function(
-        id,
-        ann,
-        id.type = "Gene.ID",
-        e = FALSE,
-        report = FALSE) {
+translate_id2entrez <- function(id,
+    ann,
+    id.type = "Gene.ID",
+    e = FALSE,
+    report = FALSE) {
     if (id.type %in% c("Gene.ID", "Gene.Name", "HGNC", "EntrezGene")) {
         # find first index for id in ann
         id.i <- match(as.character(id), ann[, id.type])
