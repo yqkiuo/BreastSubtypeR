@@ -14,6 +14,7 @@
 #'
 #' @noRd
 NULL
+NULL
 
 
 #' Map Gene IDs and Handle missing data
@@ -891,7 +892,7 @@ Vis_pie <- function(out) {
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
-#' 
+#'
 #' # Assuming `OSLO2EMIT0obj$res$res_subtypes` contains multi-method subtype results
 #' p <- Vis_Multi(OSLO2EMIT0obj$res$res_subtypes)
 #' plot(p)
