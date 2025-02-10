@@ -23,7 +23,7 @@ vignette: >
 
 Breast cancer (BC) is a highly heterogeneous disease characterized by distinct molecular intrinsic subtypes (IS) with unique clinical, biological, and prognostic profiles. These subtypes---such as Luminal A, Luminal B, HER2-Enriched, Basal-like, and Normal-like---are instrumental in guiding treatment strategies and prognostic evaluations. While clinical assays like **Prosigna®** provide standardized subtyping for patient care, the research community still lacks consensus due to fragmented methods and difficulties adapting them across diverse datasets. This inconsistency undermines the reproducibility and reliability of scientific findings.
 
-Current methods, such as the original **PAM50** (Bernard et al., J Clin Oncol, 2009) and **AIMS** (Paquet et al., J Natl Cancer Inst, 2015), have significantly advanced BC subtyping but suffer from challenges such as limited adaptability to varying datasets. These limitations often lead to difficulties in reproducing results across independent studies, especially when datasets come from different platforms or research environments. Furthermore, there is no centralized, accessible framework that integrates multiple subtyping methods with a focus on consistency and reliability.
+Current methods, such as the original **PAM50** (Parker et al., J Clin Oncol, 2009) and **AIMS** (Paquet et al., J Natl Cancer Inst, 2015), have significantly advanced BC subtyping but suffer from challenges such as limited adaptability to varying datasets. These limitations often lead to difficulties in reproducing results across independent studies, especially when datasets come from different platforms or research environments. Furthermore, there is no centralized, accessible framework that integrates multiple subtyping methods with a focus on consistency and reliability.
 
 Existing IS tools, like the **genefu** package, are limited to a small subset of PAM50 variations and AIMS, restricting their use to a narrow range of studies. High-performing methods, such as **subgroup-specific gene-centering (ssBC)**, perform well across various datasets but are not readily available as R packages; instead, they are distributed as standalone scripts. This makes it difficult for many researchers, particularly those without advanced computational skills, to implement these methods. Additionally, traditional IHC-based strategies, such as the conventional ER-balancing using immunohistochemistry approach (**cIHC**), remain inaccessible to most, limiting adoption without specialized expertise.
 
@@ -33,7 +33,7 @@ Importantly, **BreastSubtypeR** is designed to be an accessible tool. The packag
 
 ## Features
 
--   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Bernard et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
+-   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
 -   **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
 -   **AUTO Mode**: Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort, ensuring compatibility with the method-specific assumptions and improving accuracy.
 -   **Optimized Gene Mapping**: Uses Entrez IDs for gene mapping to ensure the maximum inclusion of genes across subtyping methods.
@@ -46,7 +46,7 @@ Importantly, **BreastSubtypeR** is designed to be an accessible tool. The packag
 
 | **Approach**      | **Description**                                                       | **Group** | **Citation**                                                            |
 |---------------|---------------------------|---------------|---------------|
-| `parker.original` | Original PAM50 by Bernard et al., 2009                                 | NC-based  | [Bernard et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)         |
+| `parker.original` | Original PAM50 by Parker et al., 2009                                 | NC-based  | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)         |
 | `genefu.scale`    | PAM50 implementation as in the genefu R package (scaled version)      | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
 | `genefu.robust`   | PAM50 implementation as in the genefu R package (robust version)      | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
 | `cIHC`            | Conventional ER-balancing using immunohistochemistry (IHC)           | NC-based  | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)     |

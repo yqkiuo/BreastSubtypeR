@@ -17,7 +17,7 @@ clinicians with limited R programming experience.
 
 ## Features
 
--   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Bernard et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
+-   **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
 -   **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
 -   **AUTO Mode**: Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort, ensuring compatibility with the method-specific assumptions and improving accuracy.
 -   **Optimized Gene Mapping**: Uses Entrez IDs for gene mapping to ensure the maximum inclusion of genes across subtyping methods.
@@ -28,7 +28,7 @@ clinicians with limited R programming experience.
 
 | **Approach**      | **Description**                                                               | **Group** | **Citation**                                                            |
 |--------------|-------------------------------|--------------|---------------|
-| `parker.original` | Original PAM50 by Bernard et al., 2009                                         | NC-based  | [Bernard et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)         |
+| `parker.original` | Original PAM50 by Parker et al., 2009                                         | NC-based  | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370)         |
 | `genefu.scale`    | PAM50 implementation as in the genefu R package (scaled version)              | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
 | `genefu.robust`   | PAM50 implementation as in the genefu R package (robust version)              | NC-based  | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693)    |
 | `cIHC`            | Conventional ER-balancing using immunohistochemistry (cIHC)                                 | NC-based  | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033)     |
