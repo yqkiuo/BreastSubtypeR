@@ -9,7 +9,7 @@ Mapping(se_obj, method = "max", impute = TRUE, verbose = TRUE)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+\item \strong{Assay data}: A log2-transformed gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
 and columns represent samples. This should be stored in the \code{assay()} slot.
 \item \strong{Row metadata}: A data frame with annotations for probes, including at least the following columns:
 \itemize{
@@ -36,12 +36,10 @@ execution.}
 \value{
 A list containing three preprocessed gene expression matrices:
 \itemize{
-\item \code{"x_NC"}: The processed gene expression matrix
-for nearest-centroid (NC)-based methods.
-\item \code{"x_NC.log"}: The log-transformed version
-of \code{"x_NC"} for NC-based methods.
-\item \code{"x_SSP"}: The processed gene expression matrix
-for single-sample predictor (SSP)-based methods.
+\item \code{"x_NC"}: A \code{SummarizedExperiment} object contains: 1) The log2-transformed gene expression matrix
+for nearest-centroid (NC)-based methods; 2) clinical information.
+\item \code{"x_SSP"}: A \code{SummarizedExperiment} object contains: 1) The exponential-transformed gene expression matrix
+for single-sample predictor (SSP)-based methods; 2) clinical information.
 }
 }
 \description{
