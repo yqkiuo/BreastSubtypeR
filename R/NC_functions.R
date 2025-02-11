@@ -189,7 +189,8 @@ sspPredict <- function(
     nClasses <- dim(centroids)[2]
     classLevels <- dimnames(centroids)[[2]]
 
-    distances <- matrix(ncol = nClasses, nrow = dim(tdataMatrix)[2])
+    distances <- matrix( ncol = nClasses, nrow = dim(tdataMatrix)[2], 
+                        dimnames = list(colnames(tdataMatrix), colnames(centroids) ))
     for (j in seq(1, nClasses, 1)) {
         if (distm == "euclidean") {
             combined <- cbind(centroids[, j], tdataMatrix)
@@ -217,22 +218,23 @@ sspPredict <- function(
     prediction <- classLevels[apply(distances, 1, which.min, simplify = TRUE)]
     names(prediction) <- colnames(tdataMatrix)
 
-    ## run four Subtypes
+    ## run Four Subtypes
     if (Subtype) {
         nClasses <- nClasses - 1 ## omitting normal
         classLevels <- classLevels[seq(1, 4, 1)]
-        dist.Subtype.Subtype <- matrix(
+        dist.FourSubtype <- matrix(
             ncol = nClasses,
-            nrow = dim(tdataMatrix)[2]
+            nrow = dim(tdataMatrix)[2],
+            dimnames = list(colnames(tdataMatrix), classLevels )
         )
         for (j in seq(1, nClasses, 1)) {
             if (distm == "euclidean") {
                 combined_matrix <- cbind(centroids[, j], tdataMatrix)
                 distances_vec <- dist(t(combined_matrix))
-                dist.Subtype.Subtype[, j] <- distances_vec[seq_len(ncol(tdataMatrix))]
+                dist.FourSubtype[, j] <- distances_vec[seq_len(ncol(tdataMatrix))]
             }
             if (distm == "correlation" | distm == "pearson") {
-                dist.Subtype.Subtype[, j] <- apply(tdataMatrix, 2, function(x) {
+                dist.FourSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
                     -cor(centroids[, j], x,
                         method = "pearson",
                         use = "pairwise.complete.obs"
@@ -240,7 +242,7 @@ sspPredict <- function(
                 })
             }
             if (distm == "spearman") {
-                dist.Subtype.Subtype[, j] <- apply(tdataMatrix, 2, function(x) {
+                dist.FourSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
                     -cor(centroids[, j], x,
                         method = "spearman",
                         use = "pairwise.complete.obs"
@@ -249,7 +251,7 @@ sspPredict <- function(
             }
         }
 
-        prediction.Subtype <- classLevels[apply(dist.Subtype.Subtype, 1,
+        prediction.Subtype <- classLevels[apply(dist.FourSubtype, 1,
             which.min,
             simplify = TRUE
         )]
@@ -272,21 +274,23 @@ sspPredict <- function(
     ## omitting normal
     dataMatrix <- dataMatrix[, seq(1, 4, 1)] ## omitting normal
     nGenes <- dim(dataMatrix)[1]
-    centroids.Subtype <- dataMatrix
-    nClasses <- dim(centroids.Subtype)[2] ## four subtypes
-    classLevels <- dimnames(centroids.Subtype)[[2]]
+    centroids.RORSubtype <- dataMatrix
+    nClasses <- dim(centroids.RORSubtype)[2] ## four subtypes
+    classLevels <- dimnames(centroids.RORSubtype)[[2]]
 
-    dist.Subtype <- matrix(ncol = nClasses, nrow = dim(tdataMatrix)[2])
+    dist.RORSubtype <- matrix(ncol = nClasses, nrow = dim(tdataMatrix)[2],
+                              dimnames = list(colnames(tdataMatrix),colnames(centroids.RORSubtype) )
+                              )
     for (j in seq(1, nClasses, 1)) {
         if (distm == "euclidean") {
             idx <- seq_len(ncol(tdataMatrix))
-            combined_matrix <- cbind(centroids.Subtype[, j], tdataMatrix)
-            dist.Subtype[, j] <- dist(t(combined_matrix))[idx]
+            combined_matrix <- cbind(centroids.RORSubtype[, j], tdataMatrix)
+            dist.RORSubtype[, j] <- dist(t(combined_matrix))[idx]
         }
         if (distm == "correlation" | distm == "pearson") {
-            dist.Subtype[, j] <- apply(tdataMatrix, 2, function(x) {
+            dist.RORSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
                 -cor(
-                    centroids.Subtype[, j],
+                    centroids.RORSubtype[, j],
                     x,
                     method = "pearson",
                     use = "pairwise.complete.obs"
@@ -294,9 +298,9 @@ sspPredict <- function(
             })
         }
         if (distm == "spearman") {
-            dist.Subtype[, j] <- apply(tdataMatrix, 2, function(x) {
+            dist.RORSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
                 -cor(
-                    centroids.Subtype[, j],
+                    centroids.RORSubtype[, j],
                     x,
                     method = "spearman",
                     use = "pairwise.complete.obs"
@@ -309,11 +313,11 @@ sspPredict <- function(
     if (Subtype) {
         res <- list(
             predictions = prediction,
-            predictions.Subtype = prediction.Subtype,
+            predictions.FourSubtype = prediction.Subtype,
             testData = as.matrix(y),
             distances = distances,
-            dist.Subtype = dist.Subtype,
-            dist.Subtype.Subtype = dist.Subtype.Subtype,
+            dist.RORSubtype = dist.RORSubtype,
+            dist.FourSubtype = dist.FourSubtype,
             centroids = centroids
         )
     } else {
@@ -321,7 +325,7 @@ sspPredict <- function(
             predictions = prediction,
             testData = as.matrix(y),
             distances = distances,
-            dist.Subtype = dist.Subtype,
+            dist.RORSubtype = dist.RORSubtype,
             centroids = centroids
         )
     }
@@ -540,8 +544,8 @@ RORgroup <- function(
             )
 
             cmbWprolif.Subtype <- 54.7690 * (
-                -0.0067 * out$dist.Subtype[, 1] + 0.4317 * out$dist.Subtype[, 2] -
-                    0.3172 * out$dist.Subtype[, 3] + 0.4894 * out$dist.Subtype[, 4] +
+                -0.0067 * out$dist.RORSubtype[, 1] + 0.4317 * out$dist.RORSubtype[, 2] -
+                    0.3172 * out$dist.RORSubtype[, 3] + 0.4894 * out$dist.RORSubtype[, 4] +
                     0.1981 * prolifScore_Subtype + 0.1133 * xT + 0.8826
             )
 
@@ -647,8 +651,8 @@ RORgroup <- function(
     if (Subtype) {
         ## pass distances (just omitting normal)
         Call.Subtype <- data.frame(
-            "Call.Subtype" = out$predictions.Subtype,
-            row.names = names(out$predictions.Subtype)
+            "Call.Subtype" = out$predictions.FourSubtype,
+            row.names = names(out$predictions.FourSubtype)
         )
         outtable <- cbind(outtable, Call.Subtype)
         outtable <- outtable %>% dplyr::select(
@@ -708,7 +712,7 @@ makeCalls.parker <- function(
         hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
-
+    
     fl.mdn <- BreastSubtypeRobj$medians
 
     if (calibration == "External" & external == "Given.mdns") {
@@ -737,7 +741,6 @@ makeCalls.parker <- function(
 
 
     ## run
-
     # normalization
     mat <- docalibration(mat,
         df.al,
@@ -754,12 +757,11 @@ makeCalls.parker <- function(
         Subtype = Subtype
     )
 
-
     if (Subtype) {
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            BS.Subtype = out$predictions.Subtype,
+            BS.Subtype = out$predictions.FourSubtype,
             row.names = NULL
         )
     } else {
@@ -769,7 +771,7 @@ makeCalls.parker <- function(
             row.names = NULL
         )
     }
-    out$dist.Subtype <- -1 * out$dist.Subtype
+    out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
 
@@ -888,18 +890,18 @@ makeCalls_ihc <- function(
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            BS.Subtype = out$predictions.Subtype,
-            row.names = NULL
+            BS.Subtype = out$predictions.FourSubtype,
+            row.names = names(out$predictions)
         )
     } else {
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            row.names = NULL
+            row.names = names(out$predictions)
         )
     }
 
-    out$dist.Subtype <- -1 * out$dist.Subtype
+    out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
     ## calculate and grouping
@@ -1054,25 +1056,25 @@ makeCalls_ihc.iterative <- function(
     if (Subtype) {
         Call_subtypes.Subtype <- mapply(
             function(res_ihs) {
-                res_ihs$predictions.Subtype
+                res_ihs$predictions.FourSubtype
             },
             res_ihc_iterative,
             SIMPLIFY = TRUE,
             USE.NAMES = TRUE
         )
-        cs_subtypes.Subtype <- apply(Call_subtypes.Subtype, 1, get_consensus_subtype)
+        cs_FourSubtype <- apply(Call_subtypes.Subtype, 1, get_consensus_subtype)
 
         Int.sbs <- data.frame(
             PatientID = names(consensus_subtypes),
             BS = consensus_subtypes,
-            BS.Subtype = cs_subtypes.Subtype,
-            row.names = NULL
+            BS.Subtype = cs_FourSubtype,
+            row.names = names(consensus_subtypes)
         )
     } else {
         Int.sbs <- data.frame(
             PatientID = names(consensus_subtypes),
             BS = consensus_subtypes,
-            row.names = NULL
+            row.names = names(consensus_subtypes)
         )
     }
 
@@ -1081,10 +1083,10 @@ makeCalls_ihc.iterative <- function(
     if (Subtype) {
         out <- list(
             predictions = consensus_subtypes,
-            predictions.Subtype = cs_subtypes.Subtype,
+            predictions.FourSubtype = cs_FourSubtype,
             testData = mean_eve$testdata,
             distances = -1 * mean_eve$mean_distance,
-            dist.Subtype = -1 * mean_eve$mean_distance.Subtype,
+            dist.RORSubtype = -1 * mean_eve$mean_distance.Subtype,
             centroids = centroids
         )
     } else {
@@ -1092,7 +1094,7 @@ makeCalls_ihc.iterative <- function(
             predictions = consensus_subtypes,
             testData = mean_eve$testdata,
             distances = -1 * mean_eve$mean_distance,
-            dist.Subtype = -1 * mean_eve$mean_distance.Subtype,
+            dist.RORSubtype = -1 * mean_eve$mean_distance.Subtype,
             centroids = centroids
         )
     }
@@ -1287,18 +1289,18 @@ makeCalls.PC1ihc <- function(mat,
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            BS.Subtype = out$predictions.Subtype,
-            row.names = NULL
+            BS.Subtype = out$predictions.FourSubtype,
+            row.names = names(out$predictions)
         )
     } else {
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            row.names = NULL
+            row.names = names(out$predictions)
         )
     }
 
-    out$dist.Subtype <- -1 * out$dist.Subtype
+    out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
     ## calculate and grouping
@@ -1409,17 +1411,17 @@ makeCalls.v1PAM <- function(mat,
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            BS.Subtype = out$predictions.Subtype,
-            row.names = NULL
+            BS.Subtype = out$predictions.FourSubtype,
+            row.names = names(out$predictions)
         )
     } else {
         Int.sbs <- data.frame(
             PatientID = names(out$predictions),
             BS = out$predictions,
-            row.names = NULL
+            row.names = names(out$predictions)
         )
     }
-    out$dist.Subtype <- -1 * out$dist.Subtype
+    out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
     ## calculate and grouping
@@ -1481,7 +1483,9 @@ makeCalls.ssBC <- function(mat,
     } else if (s == "TN") {
         ## if there is no sample in either of both, wont influence the code
         TN_samples <- rownames(df.cln)[which(df.cln$TN == "TN")]
-        samples_selected <- list(TN = TN_samples)
+        nTN_samples <- rownames(df.cln)[which(df.cln$TN == "nonTN")]
+        
+        samples_selected <- list(TN = TN_samples, nonTN = nTN_samples)
     } else if (s == "ER.v2") {
         # TNBC-JAMAOncol2024
 
@@ -1504,7 +1508,6 @@ makeCalls.ssBC <- function(mat,
         )
     } else if (s == "TN.v2") {
         ## selected cohort; TNBC-JAMAOncol2024
-
         ## if there is no sample in either of both, wont influence the code
         TN_samples <- rownames(df.cln)[which(df.cln$TN == "TN")]
         samples_selected <- list(TNBC = TN_samples)
@@ -1544,15 +1547,15 @@ makeCalls.ssBC <- function(mat,
         predictions <- c(res$ER_neg$predictions, res$ER_pos$predictions)
         distances <- rbind(res$ER_neg$distances, res$ER_pos$distances)
         testData <- cbind(res$ER_neg$testData, res$ER_pos$testData)
-        dist.Subtype <- rbind(
-            res$ER_neg$dist.Subtype,
-            res$ER_pos$dist.Subtype
+        dist.RORSubtype <- rbind(
+            res$ER_neg$dist.RORSubtype,
+            res$ER_pos$dist.RORSubtype
         )
 
         if (Subtype) {
-            predictions.Subtype <- c(
-                res$ER_neg$predictions.Subtype,
-                res$ER_pos$predictions.Subtype
+            predictions.FourSubtype <- c(
+                res$ER_neg$predictions.FourSubtype,
+                res$ER_pos$predictions.FourSubtype
             )
         }
     } else if (s == "ER.v2") {
@@ -1574,91 +1577,148 @@ makeCalls.ssBC <- function(mat,
             res$HER2pos_ERneg$testData,
             res$HER2pos_ERpos$testData
         )
-        dist.Subtype <- rbind(
-            res$ERneg_HER2neg$dist.Subtype,
-            res$ERpos_HER2neg$dist.Subtype,
-            res$HER2pos_ERneg$dist.Subtype,
-            res$HER2pos_ERpos$dist.Subtype
+        dist.RORSubtype <- rbind(
+            res$ERneg_HER2neg$dist.RORSubtype,
+            res$ERpos_HER2neg$dist.RORSubtype,
+            res$HER2pos_ERneg$dist.RORSubtype,
+            res$HER2pos_ERpos$dist.RORSubtype
         )
 
         if (Subtype) {
-            predictions.Subtype <- c(
-                res$ERneg_HER2neg$predictions.Subtype,
-                res$ERpos_HER2neg$predictions.Subtype,
-                res$HER2pos_ERneg$predictions.Subtype,
-                res$HER2pos_ERpos$predictions.Subtype
+            predictions.FourSubtype <- c(
+                res$ERneg_HER2neg$predictions.FourSubtype,
+                res$ERpos_HER2neg$predictions.FourSubtype,
+                res$HER2pos_ERneg$predictions.FourSubtype,
+                res$HER2pos_ERpos$predictions.FourSubtype
             )
         }
     } else if (s == "TN") {
-        predictions <- res$TN$predictions
-        distances <- res$TN$distances
-        testData <- res$TN$testData
-        dist.Subtype <- res$TN$dist.Subtype
-
+        predictions <- c(res$TN$predictions,
+                         res$nonTN$predictions
+                         )
+        distances <- rbind(res$TN$distances,
+                           res$nonTN$distances
+                           )
+        testData <- cbind( res$TN$testData, 
+                           res$nonTN$testData )
+        dist.RORSubtype <- rbind( res$TN$dist.RORSubtype, 
+                               res$nonTN$dist.RORSubtype)
+        
         if (Subtype) {
-            predictions.Subtype <- res$TN$predictions.Subtype
-        }
+            predictions.FourSubtype <- c(res$TN$predictions.FourSubtype, 
+                                     res$nonTN$predictions.FourSubtype)
+            }
     } else if (s == "TN.v2") {
         predictions <- res$TNBC$predictions
         distances <- res$TNBC$distances
         testData <- res$TNBC$testData
-        dist.Subtype <- res$TNBC$dist.Subtype
+        dist.RORSubtype <- res$TNBC$dist.RORSubtype
 
         if (Subtype) {
-            predictions.Subtype <- res$TNBC$predictions.Subtype
+            predictions.FourSubtype <- res$TNBC$predictions.FourSubtype
         }
     }
 
-
     if (Subtype) {
+        ## subtype table
+        Int.sbs <- data.frame(
+            PatientID = names(predictions),
+            BS = predictions,
+            BS.Subtypeype = predictions.FourSubtype,
+            row.names = names(predictions)
+        )
+        
+        ##out list
         out <- list(
             predictions = predictions,
-            predictions.Subtype = predictions.Subtype,
+            predictions.FourSubtype = predictions.FourSubtype,
             testData = testData,
             distances = distances,
-            dist.Subtype = dist.Subtype,
+            dist.RORSubtype = dist.RORSubtype,
             centroids = BreastSubtypeRobj$centroid
         )
-        Int.sbs <- data.frame(
-            PatientID = names(out$predictions),
-            BS = out$predictions,
-            BS.Subtypeype = out$predictions.Subtype,
-            row.names = NULL
-        )
+        
     } else {
+        ## subtype table
+        Int.sbs <- data.frame(
+            PatientID = names(predictions),
+            BS = predictions,
+            row.names = names(predictions)
+        )
+        
+        ## out list
         out <- list(
             predictions = predictions,
             testData = testData,
             distances = distances,
-            dist.Subtype = dist.Subtype,
+            dist.RORSubtype = dist.RORSubtype,
             centroids = BreastSubtypeRobj$centroid
         )
-        Int.sbs <- data.frame(
-            PatientID = names(out$predictions),
-            BS = out$predictions,
-            row.names = NULL
-        )
+
     }
-    out$dist.Subtype <- -1 * out$dist.Subtype
+    
+    out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
-
-    ## calculate and grouping
+    ## calculate and grouping ROR score
     out.ROR <- RORgroup(
         out, df.cln,
         hasClinical = hasClinical,
         Subtype = Subtype
     )
+    
+    ## supplementing NA samples
+    if(length(out$predictions) != ncol(mat)){
+        sample_ex = setdiff(colnames(mat), Int.sbs$PatientID)
+        
+        predictions_ex = rep(NA, length(sample_ex))
+        names(predictions_ex) = sample_ex
+        out$predictions = c(out$predictions, predictions_ex)
+
+        testData_ex = matrix(data = NA, nrow = nrow(testData) , ncol = length(sample_ex),
+                             dimnames = list(rownames(testData), sample_ex))
+        out$testData = cbind(out$testData,testData_ex )
+        
+        distances_ex = matrix( data = NA, nrow = length(sample_ex), ncol = 5,
+                               dimnames = list(sample_ex, colnames(distances))
+        )
+        out$distances = rbind(out$distances, distances_ex)
+        
+        dist.RORSubtype_ex = matrix( data = NA, nrow = length(sample_ex), ncol = 4,
+                                     dimnames = list(sample_ex, colnames(dist.RORSubtype)))
+        out$dist.RORSubtype = rbind(out$dist.RORSubtype, dist.RORSubtype_ex)
+        
+        out.ROR_ex = matrix( data = NA, nrow = length(sample_ex), ncol = ncol(out.ROR),
+                             dimnames = list( sample_ex, colnames(out.ROR) ))
+        out.ROR = rbind(out.ROR, out.ROR_ex)
+        
+        if (Subtype){
+            predictions.FourSubtype_ex = rep(NA, length(sample_ex))
+            names(predictions.FourSubtype_ex) = sample_ex
+            out$predictions.FourSubtype = c(out$predictions.FourSubtype, predictions.FourSubtype_ex)
+            
+            Int.sbs_ex = data.frame(PatientID = sample_ex, 
+                                    BS = NA,
+                                    BS.Subtypeype = NA,
+                                    row.names = sample_ex )
+            Int.sbs = rbind(Int.sbs, Int.sbs_ex)
+        } else {
+            Int.sbs_ex = data.frame(PatientID = sample_ex, 
+                                    BS = NA,
+                                    row.names = sample_ex )
+            Int.sbs = rbind(Int.sbs, Int.sbs_ex) 
+            }
+        
+    }
 
     ## reorder
-    orde.No <- match(colnames(mat), Int.sbs$PatientID)
-    Int.sbs <- Int.sbs[orde.No, ]
+    Int.sbs <- Int.sbs[colnames(mat), ]
     out.ROR <- out.ROR[colnames(mat), ]
-    out$dist.Subtype <- out$dist.Subtype[orde.No, ]
-    out$distances <- out$distances[orde.No, ]
-
+    out$dist.RORSubtype <- out$dist.RORSubtype[colnames(mat), ]
+    out$distances <- out$distances[colnames(mat), ]
+    
     out$testData <- out$testData[, colnames(mat)]
-    out$predictions <- out$predictions[colnames(mat)]
+    out$predictions <- out$predictions[colnames(mat)] 
 
     return(list(
         BS.all = Int.sbs,

@@ -486,7 +486,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
         function(res_ihc) {
             # res_ihc = res_ihc_iterative[[1]]
 
-            res_ihc$distances.Subtype <- data.frame(res_ihc$dist.Subtype)
+            res_ihc$distances.Subtype <- data.frame(res_ihc$dist.RORSubtype)
 
             ## if FALSE, make the cell as NULL
             keep <- res_ihc$predictions == consensus_subtypes
