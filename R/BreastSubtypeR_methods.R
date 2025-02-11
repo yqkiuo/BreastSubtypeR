@@ -835,6 +835,8 @@ BS_Multi <- function(
 
     ## AUTO mode
     # methods = "AUTO"
+    samples_ER.icd = NULL
+    samples_ERHER2.icd = NULL
     if (length(methods) == 1 && methods[1] == "AUTO") {
         AUTO.output <- get_methods(pheno)
         samples_ER.icd <- AUTO.output$samples_ER.icd
