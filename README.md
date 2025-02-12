@@ -161,6 +161,7 @@ To run iBreastSubtypeR locally with your data, first install and load the packag
 ```R
 # Launch iBreastSubtypeR for interactive analysis
 library(BreastSubtypeR)
+library(tidyverse)
 iBreastSubtypeR()
 ```
 
