@@ -833,6 +833,7 @@ BS_Multi <- function(
         stop("The 'HER2' column is required for the 'ssBC.v2' method.")
     }
 
+    cohort.select = "ERpos"
     ## AUTO mode
     # methods = "AUTO"
     samples_ER.icd = NULL
@@ -842,6 +843,7 @@ BS_Multi <- function(
         samples_ER.icd <- AUTO.output$samples_ER.icd
         samples_ERHER2.icd <- AUTO.output$samples_ERHER2.icd
         methods <- AUTO.output$methods
+        cohort.select <- AUTO.output$cohort.select
     }
 
     ## run each method

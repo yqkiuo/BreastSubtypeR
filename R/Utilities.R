@@ -200,8 +200,6 @@ domapping <- function(
 #' @noRd
 get_methods <- function(pheno) {
     #### AUTO mode
-    samples_ER.icd <- NULL
-    samples_ERHER2.icd <- NULL
     cohort.select <- "ERpos"
     if (ncol(pheno) == 0) {
         message("The pheno table has not been detected.")
@@ -389,7 +387,7 @@ get_methods <- function(pheno) {
         }
     }
 
-    return(list(samples_ER.icd = samples_ER.icd, samples_ERHER2.icd = samples_ERHER2.icd, methods = methods))
+    return(list(samples_ER.icd = samples_ER.icd, samples_ERHER2.icd = samples_ERHER2.icd, methods = methods, cohort.select = cohort.select))
 }
 
 #' Function for consensus subtype
