@@ -68,11 +68,10 @@ NULL
 #'
 #' @export
 
-Mapping <- function(
-        se_obj,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
+Mapping <- function(se_obj,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     arguments <- rlang::dots_list(
         se_obj = se_obj,
         method = method,
@@ -167,14 +166,13 @@ Mapping <- function(
 #'
 #' @export
 
-BS_parker <- function(
-        se_obj,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_parker <- function(se_obj,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -252,11 +250,10 @@ BS_parker <- function(
 #'
 #' @export
 
-BS_cIHC <- function(
-        se_obj,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_cIHC <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -337,13 +334,12 @@ BS_cIHC <- function(
 #'
 #' @export
 
-BS_cIHC.itr <- function(
-        se_obj,
-        iteration = 100,
-        ratio = 54 / 64,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_cIHC.itr <- function(se_obj,
+    iteration = 100,
+    ratio = 54 / 64,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -418,11 +414,10 @@ BS_cIHC.itr <- function(
 #'
 #' @export
 
-BS_PCAPAM50 <- function(
-        se_obj,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_PCAPAM50 <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -566,11 +561,10 @@ BS_PCAPAM50 <- function(
 #'
 #' @export
 
-BS_ssBC <- function(
-        se_obj,
-        s,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_ssBC <- function(se_obj,
+    s,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -798,11 +792,10 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(
-        data_input,
-        methods = "AUTO",
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_Multi <- function(data_input,
+    methods = "AUTO",
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -833,11 +826,11 @@ BS_Multi <- function(
         stop("The 'HER2' column is required for the 'ssBC.v2' method.")
     }
 
-    cohort.select = "ERpos"
+    cohort.select <- "ERpos"
     ## AUTO mode
     # methods = "AUTO"
-    samples_ER.icd = NULL
-    samples_ERHER2.icd = NULL
+    samples_ER.icd <- NULL
+    samples_ERHER2.icd <- NULL
     if (length(methods) == 1 && methods[1] == "AUTO") {
         AUTO.output <- get_methods(pheno)
         samples_ER.icd <- AUTO.output$samples_ER.icd

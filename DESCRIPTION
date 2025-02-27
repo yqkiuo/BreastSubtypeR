@@ -7,15 +7,19 @@ Version: 0.99.0
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
-	    role=c("aut"), email="yq.kiuo@gmail.com", 
-            comment = c(ORCID = "0000-0002-4098-3246")),
-    person(given = "Emmanouil", family = "G. Sifakis", 
-	    role=c("cre"), email="emmanouil.sifakis@ki.se"))
+	    role = c("aut", "cre"), 
+            email="yq.kiuo@gmail.com", 
+            comment = c(ORCID = "0000-0002-4098-3246")))
 Depends:
     R (>= 4.4.0)
 Imports:
     methods,
-    tidyverse,
+    dplyr,
+    ggplot2,
+    magrittr,
+    rlang,
+    stringr,
+    withr,
     ComplexHeatmap,
     impute (>= 1.80.0),
     data.table (>= 1.16.0),
