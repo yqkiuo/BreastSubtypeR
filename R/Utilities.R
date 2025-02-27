@@ -46,11 +46,10 @@ NULL
 #'
 #' @noRd
 
-domapping <- function(
-        se_obj,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
+domapping <- function(se_obj,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     data("BreastSubtypeRobj")
 
     ## Extract data from SummarizedExperiment

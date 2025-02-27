@@ -2,6 +2,7 @@
 #' Functions adapted from NC-based subtyping methods
 #' @import magrittr
 #' @import impute
+#' @importFrom withr with_seed
 #' @importFrom dplyr select
 #' @noRd
 NULL
@@ -65,11 +66,12 @@ overlapSets <- function(x, y) {
 #'   calculated by train cohorts. When users want to use Medians prepared by
 #'   user selves, this parameter should be "Given.mdns", not platform name.
 #' @noRd
-docalibration <- function(y,
-    df.al,
-    calibration = "None",
-    internal = internal,
-    external = external) {
+docalibration <- function(
+        y,
+        df.al,
+        calibration = "None",
+        internal = internal,
+        external = external) {
     mq <- 0.05 ## presetting in genefu robust model
     switch(calibration,
         "None" = {
@@ -131,10 +133,9 @@ standardize <- function(x) {
 
 #' Function for suffix of medians for gene centering
 #' @noRd
-getsurffix <- function(
-        calibration,
-        internal = internal,
-        external = external) {
+getsurffix <- function(calibration,
+    internal = internal,
+    external = external) {
     if (calibration == "None") {
         surffix <- calibration
     } else {
@@ -162,12 +163,11 @@ getsurffix <- function(
 #' @param centrids Logic
 #' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
-sspPredict <- function(
-        x,
-        y,
-        std = FALSE,
-        distm = "spearman",
-        Subtype = TRUE) {
+sspPredict <- function(x,
+    y,
+    std = FALSE,
+    distm = "spearman",
+    Subtype = TRUE) {
     dataMatrix <- x
     tdataMatrix <- y
 
@@ -189,8 +189,10 @@ sspPredict <- function(
     nClasses <- dim(centroids)[2]
     classLevels <- dimnames(centroids)[[2]]
 
-    distances <- matrix( ncol = nClasses, nrow = dim(tdataMatrix)[2], 
-                        dimnames = list(colnames(tdataMatrix), colnames(centroids) ))
+    distances <- matrix(
+        ncol = nClasses, nrow = dim(tdataMatrix)[2],
+        dimnames = list(colnames(tdataMatrix), colnames(centroids))
+    )
     for (j in seq(1, nClasses, 1)) {
         if (distm == "euclidean") {
             combined <- cbind(centroids[, j], tdataMatrix)
@@ -225,7 +227,7 @@ sspPredict <- function(
         dist.FourSubtype <- matrix(
             ncol = nClasses,
             nrow = dim(tdataMatrix)[2],
-            dimnames = list(colnames(tdataMatrix), classLevels )
+            dimnames = list(colnames(tdataMatrix), classLevels)
         )
         for (j in seq(1, nClasses, 1)) {
             if (distm == "euclidean") {
@@ -278,9 +280,10 @@ sspPredict <- function(
     nClasses <- dim(centroids.RORSubtype)[2] ## four subtypes
     classLevels <- dimnames(centroids.RORSubtype)[[2]]
 
-    dist.RORSubtype <- matrix(ncol = nClasses, nrow = dim(tdataMatrix)[2],
-                              dimnames = list(colnames(tdataMatrix),colnames(centroids.RORSubtype) )
-                              )
+    dist.RORSubtype <- matrix(
+        ncol = nClasses, nrow = dim(tdataMatrix)[2],
+        dimnames = list(colnames(tdataMatrix), colnames(centroids.RORSubtype))
+    )
     for (j in seq(1, nClasses, 1)) {
         if (distm == "euclidean") {
             idx <- seq_len(ncol(tdataMatrix))
@@ -345,11 +348,10 @@ sspPredict <- function(
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup <- function(
-        out,
-        df.cln,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+RORgroup <- function(out,
+    df.cln,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     sample <- data.frame(patientID = names(out$predictions))
 
     distance <- data.frame(out$distances, row.names = names(out$predictions))
@@ -701,18 +703,17 @@ RORgroup <- function(
 #' @noRd
 #'
 
-makeCalls.parker <- function(
-        mat,
-        df.cln,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NULL,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+makeCalls.parker <- function(mat,
+    df.cln,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NULL,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
-    
+
     fl.mdn <- BreastSubtypeRobj$medians
 
     if (calibration == "External" & external == "Given.mdns") {
@@ -814,16 +815,15 @@ makeCalls.parker <- function(
 #' @noRd
 
 
-makeCalls_ihc <- function(
-        mat,
-        df.cln,
-        calibration = "Internal",
-        internal = "IHC.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls_ihc <- function(mat,
+    df.cln,
+    calibration = "Internal",
+    internal = "IHC.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -949,18 +949,17 @@ makeCalls_ihc <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls_ihc.iterative <- function(
-        mat,
-        df.cln,
-        iteration = 100,
-        ratio = 54 / 64,
-        calibration = "Internal",
-        internal = "ER.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls_ihc.iterative <- function(mat,
+    df.cln,
+    iteration = 100,
+    ratio = 54 / 64,
+    calibration = "Internal",
+    internal = "ER.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1144,15 +1143,16 @@ makeCalls_ihc.iterative <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.PC1ihc <- function(mat,
-    df.cln,
-    calibration = "Internal",
-    internal = "PC1ihc.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls.PC1ihc <- function(
+        mat,
+        df.cln,
+        calibration = "Internal",
+        internal = "PC1ihc.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1333,15 +1333,16 @@ makeCalls.PC1ihc <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.v1PAM <- function(mat,
-    df.pam,
-    calibration = "Internal",
-    internal = "v1PAM.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls.v1PAM <- function(
+        mat,
+        df.pam,
+        calibration = "Internal",
+        internal = "v1PAM.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1456,11 +1457,12 @@ makeCalls.v1PAM <- function(mat,
 #'   should be in the "NODE" column.
 #' @noRd
 
-makeCalls.ssBC <- function(mat,
-    df.cln,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+makeCalls.ssBC <- function(
+        mat,
+        df.cln,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1484,7 +1486,7 @@ makeCalls.ssBC <- function(mat,
         ## if there is no sample in either of both, wont influence the code
         TN_samples <- rownames(df.cln)[which(df.cln$TN == "TN")]
         nTN_samples <- rownames(df.cln)[which(df.cln$TN == "nonTN")]
-        
+
         samples_selected <- list(TN = TN_samples, nonTN = nTN_samples)
     } else if (s == "ER.v2") {
         # TNBC-JAMAOncol2024
@@ -1593,21 +1595,29 @@ makeCalls.ssBC <- function(mat,
             )
         }
     } else if (s == "TN") {
-        predictions <- c(res$TN$predictions,
-                         res$nonTN$predictions
-                         )
-        distances <- rbind(res$TN$distances,
-                           res$nonTN$distances
-                           )
-        testData <- cbind( res$TN$testData, 
-                           res$nonTN$testData )
-        dist.RORSubtype <- rbind( res$TN$dist.RORSubtype, 
-                               res$nonTN$dist.RORSubtype)
-        
+        predictions <- c(
+            res$TN$predictions,
+            res$nonTN$predictions
+        )
+        distances <- rbind(
+            res$TN$distances,
+            res$nonTN$distances
+        )
+        testData <- cbind(
+            res$TN$testData,
+            res$nonTN$testData
+        )
+        dist.RORSubtype <- rbind(
+            res$TN$dist.RORSubtype,
+            res$nonTN$dist.RORSubtype
+        )
+
         if (Subtype) {
-            predictions.FourSubtype <- c(res$TN$predictions.FourSubtype, 
-                                     res$nonTN$predictions.FourSubtype)
-            }
+            predictions.FourSubtype <- c(
+                res$TN$predictions.FourSubtype,
+                res$nonTN$predictions.FourSubtype
+            )
+        }
     } else if (s == "TN.v2") {
         predictions <- res$TNBC$predictions
         distances <- res$TNBC$distances
@@ -1627,8 +1637,8 @@ makeCalls.ssBC <- function(mat,
             BS.Subtypeype = predictions.FourSubtype,
             row.names = names(predictions)
         )
-        
-        ##out list
+
+        ## out list
         out <- list(
             predictions = predictions,
             predictions.FourSubtype = predictions.FourSubtype,
@@ -1637,7 +1647,6 @@ makeCalls.ssBC <- function(mat,
             dist.RORSubtype = dist.RORSubtype,
             centroids = BreastSubtypeRobj$centroid
         )
-        
     } else {
         ## subtype table
         Int.sbs <- data.frame(
@@ -1645,7 +1654,7 @@ makeCalls.ssBC <- function(mat,
             BS = predictions,
             row.names = names(predictions)
         )
-        
+
         ## out list
         out <- list(
             predictions = predictions,
@@ -1654,9 +1663,8 @@ makeCalls.ssBC <- function(mat,
             dist.RORSubtype = dist.RORSubtype,
             centroids = BreastSubtypeRobj$centroid
         )
-
     }
-    
+
     out$dist.RORSubtype <- -1 * out$dist.RORSubtype
     out$distances <- -1 * out$distances
 
@@ -1666,49 +1674,59 @@ makeCalls.ssBC <- function(mat,
         hasClinical = hasClinical,
         Subtype = Subtype
     )
-    
-    ## supplementing NA samples
-    if(length(out$predictions) != ncol(mat)){
-        sample_ex = setdiff(colnames(mat), Int.sbs$PatientID)
-        
-        predictions_ex = rep(NA, length(sample_ex))
-        names(predictions_ex) = sample_ex
-        out$predictions = c(out$predictions, predictions_ex)
 
-        testData_ex = matrix(data = NA, nrow = nrow(testData) , ncol = length(sample_ex),
-                             dimnames = list(rownames(testData), sample_ex))
-        out$testData = cbind(out$testData,testData_ex )
-        
-        distances_ex = matrix( data = NA, nrow = length(sample_ex), ncol = 5,
-                               dimnames = list(sample_ex, colnames(distances))
+    ## supplementing NA samples
+    if (length(out$predictions) != ncol(mat)) {
+        sample_ex <- setdiff(colnames(mat), Int.sbs$PatientID)
+
+        predictions_ex <- rep(NA, length(sample_ex))
+        names(predictions_ex) <- sample_ex
+        out$predictions <- c(out$predictions, predictions_ex)
+
+        testData_ex <- matrix(
+            data = NA, nrow = nrow(testData), ncol = length(sample_ex),
+            dimnames = list(rownames(testData), sample_ex)
         )
-        out$distances = rbind(out$distances, distances_ex)
-        
-        dist.RORSubtype_ex = matrix( data = NA, nrow = length(sample_ex), ncol = 4,
-                                     dimnames = list(sample_ex, colnames(dist.RORSubtype)))
-        out$dist.RORSubtype = rbind(out$dist.RORSubtype, dist.RORSubtype_ex)
-        
-        out.ROR_ex = matrix( data = NA, nrow = length(sample_ex), ncol = ncol(out.ROR),
-                             dimnames = list( sample_ex, colnames(out.ROR) ))
-        out.ROR = rbind(out.ROR, out.ROR_ex)
-        
-        if (Subtype){
-            predictions.FourSubtype_ex = rep(NA, length(sample_ex))
-            names(predictions.FourSubtype_ex) = sample_ex
-            out$predictions.FourSubtype = c(out$predictions.FourSubtype, predictions.FourSubtype_ex)
-            
-            Int.sbs_ex = data.frame(PatientID = sample_ex, 
-                                    BS = NA,
-                                    BS.Subtypeype = NA,
-                                    row.names = sample_ex )
-            Int.sbs = rbind(Int.sbs, Int.sbs_ex)
+        out$testData <- cbind(out$testData, testData_ex)
+
+        distances_ex <- matrix(
+            data = NA, nrow = length(sample_ex), ncol = 5,
+            dimnames = list(sample_ex, colnames(distances))
+        )
+        out$distances <- rbind(out$distances, distances_ex)
+
+        dist.RORSubtype_ex <- matrix(
+            data = NA, nrow = length(sample_ex), ncol = 4,
+            dimnames = list(sample_ex, colnames(dist.RORSubtype))
+        )
+        out$dist.RORSubtype <- rbind(out$dist.RORSubtype, dist.RORSubtype_ex)
+
+        out.ROR_ex <- matrix(
+            data = NA, nrow = length(sample_ex), ncol = ncol(out.ROR),
+            dimnames = list(sample_ex, colnames(out.ROR))
+        )
+        out.ROR <- rbind(out.ROR, out.ROR_ex)
+
+        if (Subtype) {
+            predictions.FourSubtype_ex <- rep(NA, length(sample_ex))
+            names(predictions.FourSubtype_ex) <- sample_ex
+            out$predictions.FourSubtype <- c(out$predictions.FourSubtype, predictions.FourSubtype_ex)
+
+            Int.sbs_ex <- data.frame(
+                PatientID = sample_ex,
+                BS = NA,
+                BS.Subtypeype = NA,
+                row.names = sample_ex
+            )
+            Int.sbs <- rbind(Int.sbs, Int.sbs_ex)
         } else {
-            Int.sbs_ex = data.frame(PatientID = sample_ex, 
-                                    BS = NA,
-                                    row.names = sample_ex )
-            Int.sbs = rbind(Int.sbs, Int.sbs_ex) 
-            }
-        
+            Int.sbs_ex <- data.frame(
+                PatientID = sample_ex,
+                BS = NA,
+                row.names = sample_ex
+            )
+            Int.sbs <- rbind(Int.sbs, Int.sbs_ex)
+        }
     }
 
     ## reorder
@@ -1716,9 +1734,9 @@ makeCalls.ssBC <- function(mat,
     out.ROR <- out.ROR[colnames(mat), ]
     out$dist.RORSubtype <- out$dist.RORSubtype[colnames(mat), ]
     out$distances <- out$distances[colnames(mat), ]
-    
+
     out$testData <- out$testData[, colnames(mat)]
-    out$predictions <- out$predictions[colnames(mat)] 
+    out$predictions <- out$predictions[colnames(mat)]
 
     return(list(
         BS.all = Int.sbs,
