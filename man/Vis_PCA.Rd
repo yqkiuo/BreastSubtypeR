@@ -29,6 +29,7 @@ Optionally, it can display a scree plot of eigenvalues to evaluate the
 explained variance.
 }
 \examples{
+library(SummarizedExperiment)
 data("OSLO2EMIT0obj")
 res <- OSLO2EMIT0obj$res
 
