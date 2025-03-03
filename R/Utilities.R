@@ -706,6 +706,7 @@ Vis_heatmap <- function(x, out) {
 #'   `Eigen` is set to `TRUE`, a scree plot of the eigenvalues is also included.
 #'
 #' @examples
+#' library(SummarizedExperiment)
 #' data("OSLO2EMIT0obj")
 #' res <- OSLO2EMIT0obj$res
 #'
