@@ -19,7 +19,7 @@ the table must include:
 \itemize{
 \item \code{"ER"} for estrogen receptor status (\code{"ER+"} or \code{"ER-"}) if \code{s = "ER"}.
 \item \code{"HER2"} for HER2 status (\code{"HER2+"} or \code{"HER2-"}) if \code{s = "ER.v2"}.
-\item \code{"TN"} for triple-negative status (\code{"TN"} or \code{"nonTN"}) if \code{s = "TN"} or \code{s = "TN.v2"}.
+\item \code{"TN"} for triple-negative status (\code{"TN"} or \code{"nonTN"}) if \code{s = "TN"} or \code{s = "TN.v2"}, indicating a triple-negative cohort.
 }
 }
 }}
