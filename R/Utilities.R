@@ -200,6 +200,10 @@ domapping <- function(se_obj,
 get_methods <- function(pheno) {
     #### AUTO mode
     cohort.select <- "ERpos"
+    samples_ER.icd <- NULL
+    samples_ERHER2.icd <- NULL
+    methods <- NULL
+    
     if (ncol(pheno) == 0) {
         message("The pheno table has not been detected.")
         message("Running methods: AIMS, & sspbc")
@@ -225,7 +229,18 @@ get_methods <- function(pheno) {
         lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
 
         ## main panel
-        if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
+        if ( "TN" %in% colnames(pheno) ){
+            message("A TNBC cohort has been detected.")
+            cohort.select <- "TNBC"
+            
+            if (!("TN" %in% colnames(pheno))) {
+                stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
+            }
+            
+            message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
+            methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
+            
+        } else if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
             message("A HER2+ cohort has been detected.")
             cohort.select <- "HER2pos"
 
@@ -245,16 +260,6 @@ get_methods <- function(pheno) {
                 message("Running methods: ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC.v2", "AIMS", "sspbc")
             }
-        } else if (n_ERnegHER2pos == 0 && n_ERposHER2pos == 0 && n_ERposHER2neg == 0) {
-            message("A TNBC cohort has been detected.")
-            cohort.select <- "TNBC"
-
-            if (!("TN" %in% colnames(pheno))) {
-                stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
-            }
-
-            message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
-            methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERpos < n_ER_threshold && n_ERneg < n_ER_threshold) {
             message("A small number of ER-/ER+ samples has been detected.")
             message("Running methods: AIMS & sspbc")
@@ -383,7 +388,7 @@ get_methods <- function(pheno) {
                     )
                 }
             }
-        }
+        } 
     }
 
     return(list(samples_ER.icd = samples_ER.icd, samples_ERHER2.icd = samples_ERHER2.icd, methods = methods, cohort.select = cohort.select))
