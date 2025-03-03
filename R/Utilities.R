@@ -716,7 +716,7 @@ Vis_heatmap <- function(x, out) {
 #'     PatientID = res$results$genefu.robust$BS.all$PatientID,
 #'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
-#'
+#' 
 #' # Generate the PCA plot
 #' p <- Vis_PCA(x = x, out = out)
 #' plot(p)
