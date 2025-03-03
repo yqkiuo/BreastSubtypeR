@@ -519,7 +519,7 @@ BS_PCAPAM50 <- function(se_obj,
 #'     - Additional columns based on the `s` parameter:
 #'       - `"ER"` for estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.
 #'       - `"HER2"` for HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.
-#'       - `"TN"` for triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `s = "TN.v2"`.
+#'       - `"TN"` for triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `s = "TN.v2"`, indicating a triple-negative cohort.
 #' @param s Character. Options are `"ER"`, `"TN"`, `"ER.v2"`, or `"TN.v2"`.
 #'   These specifies which subgroup-specific quantiles to use:
 #'   - `"ER"` and `"TN"`: Original subgroup-specific quantiles published in
