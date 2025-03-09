@@ -200,6 +200,6 @@ applyAIMS_AIMS <- function(eset, EntrezID) {
         D <- eset
     }
 
-    data("AIMSmodel")
+    data("AIMSmodel", package = "BreastSubtypeR", envir = environment())
     .apply.nbc_AIMS(D, EntrezID, AIMSmodel)
 }

@@ -4,6 +4,7 @@
 #' @import impute
 #' @importFrom withr with_seed
 #' @importFrom dplyr select
+#' @importFrom tidyselect everything
 #' @noRd
 NULL
 
@@ -54,7 +55,7 @@ overlapSets <- function(x, y) {
 
 #' Function for calibration methods
 #' @param y Gene expression matrix
-#' @param df.al Medians for calibration
+#' @param medians.all Medians for calibration
 #' @param calibration How to do calibration, "None"(default) means no
 #'   calibration for gene expression matrix. When setting calibration =None, you
 #'   dont need to set internal and external parameters.  "Internal" means
@@ -66,49 +67,45 @@ overlapSets <- function(x, y) {
 #'   calculated by train cohorts. When users want to use Medians prepared by
 #'   user selves, this parameter should be "Given.mdns", not platform name.
 #' @noRd
-docalibration <- function(
-        y,
-        df.al,
-        calibration = "None",
-        internal = internal,
-        external = external) {
+docalibration <- function(y,
+    medians.all,
+    calibration = c("None", "Internal", "External"),
+    internal = NA,
+    external = NA) {
+    calibration <- match.arg(calibration)
+
     mq <- 0.05 ## presetting in genefu robust model
     switch(calibration,
         "None" = {
             message("No calibration")
         },
         "Internal" = {
-            ## internal
-            if (internal == "medianCtr") {
-                y <- medianCtr(y)
-            } else
-            ## parker default method
-            if (internal == "meanCtr") {
-                y <- t(scale(t(y), center = TRUE, scale = TRUE))
-            } else
-            ## "scale" in genefu method
-            if (internal == "qCtr") {
-                y <- t(apply(y, 1, function(x) {
-                    return((rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2)
-                }))
-            } else
-            ## "robust" in genefu method; mp = 0.05
-            if (internal == internal) {
-                ## which column to use
-                medians <- df.al
+            # Define allowed internal methods
+            allowed_methods <- c("medianCtr", "meanCtr", "qCtr")
 
+            if (internal %in% allowed_methods) {
+                # Perform standard internal calibration
+                if (internal == "medianCtr") {
+                    y <- medianCtr(y)
+                } else if (internal == "meanCtr") {
+                    y <- t(scale(t(y), center = TRUE, scale = TRUE))
+                } else if (internal == "qCtr") {
+                    y <- t(apply(y, 1, function(x) {
+                        return((rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2)
+                    }))
+                }
+            } else if (!is.na(internal) && internal %in% colnames(medians.all)) {
+                # Use the column from medians.all for calibration
+                medians <- medians.all
                 tm <- overlapSets(medians, y)
                 y <- (tm$y - tm$x[, internal])
             } else {
-                message(
-                    "Please choose internal calibration stategy
-                medianCtr, meanCtr, qCtr."
-                )
+                stop("Invalid internal calibration method. Choose 'medianCtr', 'meanCtr', 'qCtr', or a valid column name from medians.all.")
             }
         },
         "External" = {
             ## external
-            medians <- df.al
+            medians <- medians.all
             ## print(paste("calibration to:",external))
             ## pre-prepared medians and givenmedians
             tm <- overlapSets(medians, y)
@@ -133,25 +130,18 @@ standardize <- function(x) {
 
 #' Function for suffix of medians for gene centering
 #' @noRd
-getsurffix <- function(calibration,
-    internal = internal,
-    external = external) {
-    if (calibration == "None") {
-        surffix <- calibration
-    } else {
-        switch(calibration,
-            "None" = {
-                surffix <- calibration
-            },
-            "Internal" = {
-                surffix <- internal
-            },
-            "External" = {
-                surffix <- external
-            }
-        )
-    }
-    return(surffix)
+getsuffix <- function(
+        calibration,
+        internal = NA,
+        external = NA) {
+    calibration <- match.arg(calibration, choices = c("None", "Internal", "External"))
+
+    suffix <- switch(calibration,
+        "None" = "None",
+        "Internal" = internal,
+        "External" = external
+    )
+    return(suffix)
 }
 
 
@@ -159,15 +149,17 @@ getsurffix <- function(calibration,
 #' @param x median train file
 #' @param y gene expression matrix
 #' @param std Logic
-#' @param distm "euclidean" or "spearman" (default)
-#' @param centrids Logic
+#' @param distm "spearman" (default), "euclidean", "correlation" or "pearson"
 #' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
-sspPredict <- function(x,
-    y,
-    std = FALSE,
-    distm = "spearman",
-    Subtype = TRUE) {
+sspPredict <- function(
+        x,
+        y,
+        std = FALSE,
+        distm = "spearman",
+        Subtype = TRUE) {
+    distm <- match.arg(distm, choices = c("spearman", "euclidean", "correlation", "pearson"))
+
     dataMatrix <- x
     tdataMatrix <- y
 
@@ -348,10 +340,11 @@ sspPredict <- function(x,
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup <- function(out,
-    df.cln,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+RORgroup <- function(
+        out,
+        df.cln,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     sample <- data.frame(patientID = names(out$predictions))
 
     distance <- data.frame(out$distances, row.names = names(out$predictions))
@@ -417,7 +410,6 @@ RORgroup <- function(out,
     cplthreshold <- -0.2
     cphthreshold <- 0.2
 
-    ## ???
     # for combined + proliferation model + Subtype with negative node status
     cpl.Subtype.NODE <- 40
     cph.Subtype.NODE.0 <- 60
@@ -594,36 +586,22 @@ RORgroup <- function(out,
                         cprskg.Subtype[pts.NODE.0][which.med] <- "med"
                         cprskg.Subtype[pts.NODE.0][tmp < cpl.Subtype.NODE] <- "low"
                     }
-
-                    ## check if NA NODE
-                    ## grouping by NA NODE
-                    patients.NA <- rownames(Clinical)[is.na(Clinical$NODE) |
-                        is.na(Clinical$T)]
-
-                    if (length(patients.NA) > 0) {
-                        cprskg.Subtype[patients.NA] <- NA
-                    }
-
-                    ROR.combined.Subtype <- data.frame(
-                        "ROR-PC (Subtype + Clinic + Prolif.Subtype)" = cmbWprolif.Subtype,
-                        "ROR-PC Group (Subtype + Clinic + Prolif.Subtype)" = cprskg.Subtype,
-                        check.names = FALSE
-                    )
-                } else {
-                    cprskg.Subtype[cmbWprolif.Subtype > cphthreshold.Subtype] <- "high"
-                    cprskg.Subtype[cmbWprolif.Subtype > cplthreshold.Subtype &
-                        cmbWprolif.Subtype < cphthreshold.Subtype] <- "med"
-                    cprskg.Subtype[cmbWprolif.Subtype < cplthreshold.Subtype] <- "low"
-
-
-                    ROR.combined.Subtype <- data.frame(
-                        "ROR-PC (Subtype + Clinic + Prolif.Subtype)" =
-                            cmbWprolif.Subtype,
-                        "ROR-PC Group (Subtype + Clinic + Prolif.Subtype)" =
-                            cprskg.Subtype,
-                        check.names = FALSE
-                    )
                 }
+
+                ## check if NA NODE
+                ## grouping by NA NODE
+                patients.NA <- rownames(Clinical)[is.na(Clinical$NODE) |
+                    is.na(Clinical$T)]
+
+                if (length(patients.NA) > 0) {
+                    cprskg.Subtype[patients.NA] <- NA
+                }
+
+                ROR.combined.Subtype <- data.frame(
+                    "ROR-PC (Subtype + Clinic + Prolif.Subtype)" = cmbWprolif.Subtype,
+                    "ROR-PC Group (Subtype + Clinic + Prolif.Subtype)" = cprskg.Subtype,
+                    check.names = FALSE
+                )
             }
         }
 
@@ -658,7 +636,7 @@ RORgroup <- function(out,
         )
         outtable <- cbind(outtable, Call.Subtype)
         outtable <- outtable %>% dplyr::select(
-            patientID,
+            .data$patientID,
             colnames(distance),
             Call,
             Call.Subtype,
@@ -703,16 +681,19 @@ RORgroup <- function(out,
 #' @noRd
 #'
 
-makeCalls.parker <- function(mat,
-    df.cln,
-    calibration = "None",
-    internal = NA,
-    external = NA,
-    medians = NULL,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+makeCalls.parker <- function(
+        mat,
+        df.cln,
+        calibration = c("None", "Internal", "External"),
+        internal = NA,
+        external = NA,
+        medians = NULL,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
+
+    calibration <- match.arg(calibration)
 
     fl.mdn <- BreastSubtypeRobj$medians
 
@@ -727,24 +708,24 @@ makeCalls.parker <- function(mat,
             }
             colnames(medians) <- c("X", "Given.mdns")
 
-            df.al <- merge(fl.mdn, medians, by = "X")
-            rownames(df.al) <- df.al$X
-            df.al <- df.al[, -1]
+            medians.all <- merge(fl.mdn, medians, by = "X")
+            rownames(medians.all) <- medians.all$X
+            medians.all <- medians.all[, -1]
 
-            surffix <- external
+            suffix <- external
         }
     } else {
-        df.al <- fl.mdn
+        medians.all <- fl.mdn
 
-        rownames(df.al) <- df.al$X
-        df.al <- df.al[, -1]
+        rownames(medians.all) <- medians.all$X
+        medians.all <- medians.all[, -1]
     }
 
 
     ## run
     # normalization
     mat <- docalibration(mat,
-        df.al,
+        medians.all,
         calibration,
         internal = internal,
         external = external
@@ -782,7 +763,7 @@ makeCalls.parker <- function(mat,
     return(list(
         BS.all = Int.sbs,
         score.ROR = out.ROR,
-        mdns = df.al,
+        mdns = medians.all,
         outList = out
     ))
 }
@@ -815,15 +796,16 @@ makeCalls.parker <- function(mat,
 #' @noRd
 
 
-makeCalls_ihc <- function(mat,
-    df.cln,
-    calibration = "Internal",
-    internal = "IHC.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls_ihc <- function(
+        mat,
+        df.cln,
+        calibration = "Internal",
+        internal = "IHC.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -856,7 +838,7 @@ makeCalls_ihc <- function(mat,
     dim(mbal.ihc)
 
     # Find median
-    surffix <- getsurffix(calibration = calibration, internal, external)
+    suffix <- getsuffix(calibration = calibration, internal, external)
 
     mdns <- apply(mbal.ihc, 1, median, na.rm = TRUE)
     # compute median of each row i.e gene
@@ -864,20 +846,20 @@ makeCalls_ihc <- function(mat,
     df.mdns <- data.frame(X = rownames(mdns.df), mdns.ihc = mdns.df$mdns)
     # ER-blanced set based on IHC status alone---
 
-    colnames(df.mdns) <- c("X", surffix)
+    colnames(df.mdns) <- c("X", suffix)
 
     ## merge mdns
     fl.mdn <- BreastSubtypeRobj$medians
 
-    df.al <- merge(fl.mdn, df.mdns, by = "X")
-    rownames(df.al) <- df.al$X
-    df.al <- df.al[, -1]
+    medians.all <- merge(fl.mdn, df.mdns, by = "X")
+    rownames(medians.all) <- medians.all$X
+    medians.all <- medians.all[, -1]
 
     ## centroids
     centroids <- BreastSubtypeRobj$centroid # pam50_centroids.txt
 
     ## normalization
-    mat <- docalibration(mat, df.al, calibration, internal)
+    mat <- docalibration(mat, medians.all, calibration, internal)
 
     out <- sspPredict(centroids,
         mat,
@@ -914,7 +896,7 @@ makeCalls_ihc <- function(mat,
     return(list(
         BS.all = Int.sbs,
         score.ROR = out.ROR,
-        mdns = df.al,
+        mdns = medians.all,
         outList = out
     ))
 }
@@ -949,17 +931,18 @@ makeCalls_ihc <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls_ihc.iterative <- function(mat,
-    df.cln,
-    iteration = 100,
-    ratio = 54 / 64,
-    calibration = "Internal",
-    internal = "ER.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls_ihc.iterative <- function(
+        mat,
+        df.cln,
+        iteration = 100,
+        ratio = 54 / 64,
+        calibration = "Internal",
+        internal = "ER.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1003,7 +986,7 @@ makeCalls_ihc.iterative <- function(mat,
 
                 mbal.ihc <- mat[, c(ERP.ihc$PatientID[i], ERN.ihc$PatientID)]
 
-                surffix <- getsurffix(calibration = calibration, internal)
+                suffix <- getsuffix(calibration = calibration, internal)
 
                 # Calculate median
                 mdns <- apply(mbal.ihc, 1, median, na.rm = TRUE)
@@ -1014,17 +997,17 @@ makeCalls_ihc.iterative <- function(mat,
                     mdns.ihc = mdns.df$mdns
                 )
                 # ER-blanced set based on IHC status alone---
-                colnames(df.mdns) <- c("X", surffix)
+                colnames(df.mdns) <- c("X", suffix)
 
                 ## integrate ihc.mdns
                 fl.mdn <- BreastSubtypeRobj$medians
 
-                df.al <- merge(fl.mdn, df.mdns, by = "X")
-                rownames(df.al) <- df.al$X
-                df.al <- df.al[, -1]
+                medians.all <- merge(fl.mdn, df.mdns, by = "X")
+                rownames(medians.all) <- medians.all$X
+                medians.all <- medians.all[, -1]
 
                 ## normalization
-                mat <- docalibration(mat, df.al, calibration, internal)
+                mat <- docalibration(mat, medians.all, calibration, internal)
 
                 out <- sspPredict(centroids,
                     mat,
@@ -1143,16 +1126,15 @@ makeCalls_ihc.iterative <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.PC1ihc <- function(
-        mat,
-        df.cln,
-        calibration = "Internal",
-        internal = "PC1ihc.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls.PC1ihc <- function(mat,
+    df.cln,
+    calibration = "Internal",
+    internal = "PC1ihc.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1257,25 +1239,25 @@ makeCalls.PC1ihc <- function(
 
     # Find median
 
-    surffix <- getsurffix(calibration = calibration, internal)
+    suffix <- getsuffix(calibration = calibration, internal)
 
     # compute median of each row i.e gene
     mdns <- apply(mbal.pc1ihc, 1, median, na.rm = TRUE)
     mdns.df <- as.data.frame(mdns)
     # ER-blanced set based on IHC status alone---
     df.mdns <- data.frame(X = rownames(mdns.df), mdns.pc1ihc = mdns.df$mdns)
-    colnames(df.mdns) <- c("X", surffix)
+    colnames(df.mdns) <- c("X", suffix)
 
     ## medians
     fl.mdn <- BreastSubtypeRobj$medians
 
-    df.al <- merge(fl.mdn, df.mdns, by = "X")
-    rownames(df.al) <- df.al$X
-    df.al <- df.al[, -1]
+    medians.all <- merge(fl.mdn, df.mdns, by = "X")
+    rownames(medians.all) <- medians.all$X
+    medians.all <- medians.all[, -1]
 
 
     # normalization
-    mat <- docalibration(mat, df.al, calibration, internal)
+    mat <- docalibration(mat, medians.all, calibration, internal)
 
     out <- sspPredict(
         BreastSubtypeRobj$centroid,
@@ -1314,7 +1296,7 @@ makeCalls.PC1ihc <- function(
     return(list(
         BS.all = Int.sbs,
         score.ROR = out.ROR,
-        mdns = df.al,
+        mdns = medians.all,
         outList = out
     ))
 }
@@ -1333,16 +1315,15 @@ makeCalls.PC1ihc <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.v1PAM <- function(
-        mat,
-        df.pam,
-        calibration = "Internal",
-        internal = "v1PAM.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls.v1PAM <- function(mat,
+    df.pam,
+    calibration = "Internal",
+    internal = "v1PAM.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data("BreastSubtypeRobj")
 
@@ -1380,25 +1361,25 @@ makeCalls.v1PAM <- function(
     dim(mbal.pam)
 
     # Find median
-    surffix <- getsurffix(calibration = calibration, internal)
+    suffix <- getsuffix(calibration = calibration, internal)
 
     mdns <- apply(mbal.pam, 1, median, na.rm = TRUE)
     # compute median of each row i.e gene
     mdns.df <- as.data.frame(mdns)
     df.mdns <- data.frame(X = rownames(mdns.df), mdns.pam = mdns.df$mdns)
     # ER-blanced set based on IHC status alone---
-    colnames(df.mdns) <- c("X", surffix)
+    colnames(df.mdns) <- c("X", suffix)
 
     ## median
     fl.mdn <- BreastSubtypeRobj$medians
 
-    df.al <- merge(fl.mdn, df.mdns, by = "X")
-    rownames(df.al) <- df.al$X
-    df.al <- df.al[, -1]
+    medians.all <- merge(fl.mdn, df.mdns, by = "X")
+    rownames(medians.all) <- medians.all$X
+    medians.all <- medians.all[, -1]
 
 
     ## normalization
-    mat <- docalibration(mat, df.al, calibration, internal)
+    mat <- docalibration(mat, medians.all, calibration, internal)
 
     out <- sspPredict(
         BreastSubtypeRobj$centroid,
@@ -1435,7 +1416,7 @@ makeCalls.v1PAM <- function(
     return(list(
         BS.all = Int.sbs,
         score.ROR = out.ROR,
-        mdns.fl = df.al,
+        mdns.fl = medians.all,
         outList = out
     ))
 }
@@ -1457,14 +1438,15 @@ makeCalls.v1PAM <- function(
 #'   should be in the "NODE" column.
 #' @noRd
 
-makeCalls.ssBC <- function(
-        mat,
-        df.cln,
-        s,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+makeCalls.ssBC <- function(mat,
+    df.cln,
+    s = c("ER", "TN", "ER.v2", "TN.v2"),
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     ## loading dataset
     data("BreastSubtypeRobj")
+
+    s <- match.arg(s)
 
     if (!(dim(mat)[2] == dim(df.cln)[1])) {
         stop(

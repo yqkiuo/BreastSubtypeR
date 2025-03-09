@@ -46,10 +46,11 @@ NULL
 #'
 #' @noRd
 
-domapping <- function(se_obj,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
+domapping <- function(
+        se_obj,
+        method = "max",
+        impute = TRUE,
+        verbose = TRUE) {
     data("BreastSubtypeRobj")
 
     ## Extract data from SummarizedExperiment
@@ -203,7 +204,7 @@ get_methods <- function(pheno) {
     samples_ER.icd <- NULL
     samples_ERHER2.icd <- NULL
     methods <- NULL
-    
+
     if (ncol(pheno) == 0) {
         message("The pheno table has not been detected.")
         message("Running methods: AIMS, & sspbc")
@@ -229,17 +230,16 @@ get_methods <- function(pheno) {
         lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
 
         ## main panel
-        if ( "TN" %in% colnames(pheno) ){
+        if ("TN" %in% colnames(pheno)) {
             message("A TNBC cohort has been detected.")
             cohort.select <- "TNBC"
-            
+
             if (!("TN" %in% colnames(pheno))) {
                 stop("Provide \"TN\" in pheno for: ssBC(TN) & ssBC.v2 (TN)")
             }
-            
+
             message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS & sspbc")
             methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            
         } else if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
             message("A HER2+ cohort has been detected.")
             cohort.select <- "HER2pos"
@@ -388,7 +388,7 @@ get_methods <- function(pheno) {
                     )
                 }
             }
-        } 
+        }
     }
 
     return(list(samples_ER.icd = samples_ER.icd, samples_ERHER2.icd = samples_ERHER2.icd, methods = methods, cohort.select = cohort.select))
@@ -417,7 +417,6 @@ get_entropy <- function(patient_row) {
 #' @noRd
 get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
     ## correlation and ROR to be averaged
-    ## if hasclini ?? need to be added later
     sum_colnames <- c("Basal", "Her2", "LumA", "LumB", "Normal")
 
     all_patients <- names(res_ihc_iterative[[1]]$predictions)
@@ -585,7 +584,7 @@ Vis_boxplot <- function(out, correlations) {
         cor = apply(correlations, 1, max)
     )
 
-    plot <- ggplot(df, aes(x = predictions, y = cor)) +
+    plot <- ggplot(df, aes(x = .data$predictions, y = .data$cor)) +
         geom_boxplot() +
         labs(x = "", y = "Correlation") +
         theme_classic() +
@@ -716,7 +715,7 @@ Vis_heatmap <- function(x, out) {
 #'     PatientID = res$results$genefu.robust$BS.all$PatientID,
 #'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
-#' 
+#'
 #' # Generate the PCA plot
 #' p <- Vis_PCA(x = x, out = out)
 #' plot(p)
@@ -744,7 +743,7 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
 
         screeplot <- ggplot(
             scree_data[seq(1, 10), ],
-            aes(x = PC, y = Variance)
+            aes(x = .data$PC, y = .data$Variance)
         ) +
             geom_bar(
                 stat = "identity",
@@ -756,8 +755,8 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
             scale_x_continuous(breaks = seq(1, 10, 1)) +
             geom_text(
                 aes(
-                    x = PC,
-                    label = paste0(round(Variance, 2), "%")
+                    x = .data$PC,
+                    label = paste0(round(.data$Variance, 2), "%")
                 ),
                 nudge_y = 1
             ) +
@@ -784,7 +783,7 @@ Vis_PCA <- function(x, out, Eigen = FALSE) {
 
         pcaplot <- ggplot(
             data = scores,
-            aes(x = PC1, y = PC2, color = Subtype)
+            aes(x = .data$PC1, y = .data$PC2, color = .data$Subtype)
         ) +
             geom_point(size = 2) +
             geom_vline(xintercept = 0, linetype = "dashed") +
@@ -841,10 +840,10 @@ Vis_pie <- function(out) {
     data <- data.frame(table(out$Subtype))
     data <- data %>%
         dplyr::mutate(
-            perc = round(`Freq` / sum(`Freq`) * 100, 2),
-            csum = rev(cumsum(rev(perc))),
-            pos = perc / 2 + dplyr::lead(csum, 1),
-            pos = dplyr::if_else(is.na(pos), perc / 2, pos)
+            perc = round(.data$`Freq` / sum(.data$`Freq`) * 100, 2),
+            csum = rev(cumsum(rev(.data$perc))),
+            pos = .data$perc / 2 + dplyr::lead(.data$csum, 1),
+            pos = dplyr::if_else(is.na(.data$pos), .data$perc / 2, .data$pos)
         )
 
 
@@ -856,12 +855,12 @@ Vis_pie <- function(out) {
         "Normal" = "green"
     )
 
-    plot <- ggplot(data, aes(x = "", y = perc, fill = Var1)) +
+    plot <- ggplot(data, aes(x = "", y = .data$perc, fill = .data$Var1)) +
         geom_bar(stat = "identity") +
         scale_fill_manual(name = "Subtype", values = Subtype.color) +
         geom_text_repel(
             data = data,
-            aes(y = pos, label = paste0(Freq, " (", perc, "%", ")")),
+            aes(y = .data$pos, label = paste0(.data$Freq, " (", .data$perc, "%", ")")),
             size = 4.5,
             nudge_x = 0.6,
             show.legend = FALSE,

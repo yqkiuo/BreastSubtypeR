@@ -1,15 +1,39 @@
-#' Collection of Breast Cancer Intrinsic Subtyping methods
+#' BreastSubtypeR: A Unified R Package for Intrinsic Molecular Subtyping in Breast Cancer Research
 #'
-#' @title Collection of Breast Cancer Intrinsic Subtyping methods
-#' @description is an R package designed to unify and streamline intrinsic
-#'   molecular subtyping approaches for breast cancer.
+#' @description **BreastSubtypeR** is an R package designed to unify and
+#'   streamline intrinsic molecular subtyping methods for breast cancer (BC).
 #'
-#' @name BreastSubtypeR
 #'
+#'   It integrates both nearest-centroid (NC-based) and single-sample predictor
+#'   (SSP-based) approaches, along with an innovative **AUTO mode** feature
+#'   (described below).The package utilizes standardized input and output
+#'   formats, providing a cohesive framework that is fully compatible with other
+#'   R packages in the gene expression profiling field. Additionally, its core
+#'   functions are accessible through an **interactive Shiny app**, making it
+#'   user-friendly for researchers and clinicians with limited R programming
+#'   experience.
+#'
+#' ## **Workflow**
+#' 1. Load example data or provide your own expression dataset (SummarizedExperiment object).
+#' 2. Perform gene mapping using \code{\link{Mapping}}.
+#' 3. Run multiple subtyping methods with \code{\link{BS_Multi}}.
+#' 4. Visualize and interpret results using \code{\link{Vis_Multi}}.
+#'
+#'
+#' ## **Key Functions**
+#' - \code{\link{Mapping}}: Prepares gene expression data for subtyping.
+#' - \code{\link{BS_Multi}}: Runs multiple/**AUTO** subtyping methods.
+#' - \code{\link{Vis_Multi}}: Generates visualizations of subtyping results.
+#'
+#'
+#' @seealso \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
+#'
+#' @name BreastSubtypeR-package
 #' @docType _PACKAGE
 #'
 #' @import stringr
 #' @import e1071
+#' @import Biobase
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom SummarizedExperiment colData
 #' @importFrom SummarizedExperiment rowData
@@ -18,7 +42,9 @@
 #' @importFrom data.table set
 #' @importFrom rlang call2
 #' @importFrom rlang dots_list
-#' @noRd
+#' @importFrom utils data installed.packages read.delim write.table
+#' @importFrom graphics barplot mtext par
+#' @importFrom grDevices dev.off pdf
 #'
 NULL
 
@@ -38,9 +64,11 @@ NULL
 #'
 #' @param method Method for deduplicating probes in microarray or RNA-seq data.
 #'   Choose one of the following options:
-#'   - `"IQR"` for Affymetrix arrays,
+#'   - `"iqr"` for Affymetrix arrays,
 #'   - `"mean"` for Agilent/Illumina arrays,
-#'   - `"max"` for RNA-seq data.
+#'   - `"max"` for RNA-seq data
+#'   - `"stdev"` for ,
+#'   - `"median"` for .
 #' @param impute Logical. Specify whether to perform K-Nearest Neighbors (KNN)
 #'   imputation on missing data (`NA` values).
 #' @param verbose Logical. If `TRUE`, progress messages will be displayed during
@@ -68,10 +96,13 @@ NULL
 #'
 #' @export
 
-Mapping <- function(se_obj,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
+Mapping <- function(
+        se_obj,
+        method = c("max", "mean", "median", "iqr", "stdev"),
+        impute = TRUE,
+        verbose = TRUE) {
+    method <- match.arg(method)
+
     arguments <- rlang::dots_list(
         se_obj = se_obj,
         method = method,
@@ -166,13 +197,14 @@ Mapping <- function(se_obj,
 #'
 #' @export
 
-BS_parker <- function(se_obj,
-    calibration = "None",
-    internal = NA,
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_parker <- function(
+        se_obj,
+        calibration = "None",
+        internal = NA,
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -250,10 +282,11 @@ BS_parker <- function(se_obj,
 #'
 #' @export
 
-BS_cIHC <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -334,12 +367,13 @@ BS_cIHC <- function(se_obj,
 #'
 #' @export
 
-BS_cIHC.itr <- function(se_obj,
-    iteration = 100,
-    ratio = 54 / 64,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC.itr <- function(
+        se_obj,
+        iteration = 100,
+        ratio = 54 / 64,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -414,10 +448,11 @@ BS_cIHC.itr <- function(se_obj,
 #'
 #' @export
 
-BS_PCAPAM50 <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_PCAPAM50 <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -561,10 +596,11 @@ BS_PCAPAM50 <- function(se_obj,
 #'
 #' @export
 
-BS_ssBC <- function(se_obj,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_ssBC <- function(
+        se_obj,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -642,8 +678,8 @@ BS_ssBC <- function(se_obj,
 
 BS_AIMS <- function(se_obj) {
     ## loading datasets
-    data("AIMSmodel")
-    data("BreastSubtypeRobj")
+    data("AIMSmodel", package = "BreastSubtypeR")
+    data("BreastSubtypeRobj", package = "BreastSubtypeR")
 
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
@@ -792,10 +828,11 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(data_input,
-    methods = "AUTO",
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_Multi <- function(
+        data_input,
+        methods = "AUTO",
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -828,6 +865,9 @@ BS_Multi <- function(data_input,
 
     ## AUTO mode
     # methods = "AUTO"
+    cohort.select <- "ERpos"
+    samples_ER.icd <- NULL
+    samples_ERHER2.icd <- NULL
     if (length(methods) == 1 && methods[1] == "AUTO") {
         AUTO.output <- get_methods(pheno)
         samples_ER.icd <- AUTO.output$samples_ER.icd

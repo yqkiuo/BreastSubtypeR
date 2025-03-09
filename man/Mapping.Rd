@@ -4,7 +4,12 @@
 \alias{Mapping}
 \title{Gene ID Mapping}
 \usage{
-Mapping(se_obj, method = "max", impute = TRUE, verbose = TRUE)
+Mapping(
+  se_obj,
+  method = c("max", "mean", "median", "iqr", "stdev"),
+  impute = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
@@ -22,9 +27,11 @@ and columns represent samples. This should be stored in the \code{assay()} slot.
 \item{method}{Method for deduplicating probes in microarray or RNA-seq data.
 Choose one of the following options:
 \itemize{
-\item \code{"IQR"} for Affymetrix arrays,
+\item \code{"iqr"} for Affymetrix arrays,
 \item \code{"mean"} for Agilent/Illumina arrays,
-\item \code{"max"} for RNA-seq data.
+\item \code{"max"} for RNA-seq data
+\item \code{"stdev"} for ,
+\item \code{"median"} for .
 }}
 
 \item{impute}{Logical. Specify whether to perform K-Nearest Neighbors (KNN)

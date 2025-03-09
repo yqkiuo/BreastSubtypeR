@@ -36,8 +36,6 @@
 #'   file. If you wish to continue your analysis, you can directly run another
 #'   method without needing to repeat Step 1.
 #'
-#' @import bslib
-#' @import shiny
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom SummarizedExperiment colData
 #' @importFrom SummarizedExperiment rowData
