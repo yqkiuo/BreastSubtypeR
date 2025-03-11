@@ -14,16 +14,16 @@
 #'   experience.
 #'
 #' ## **Workflow**
-#' 1. Load example data or provide your own expression dataset (SummarizedExperiment object).
-#' 2. Perform gene mapping using \code{\link{Mapping}}.
-#' 3. Run multiple subtyping methods with \code{\link{BS_Multi}}.
-#' 4. Visualize and interpret results using \code{\link{Vis_Multi}}.
+#' 1. **Data Input**: Load example data or supply your own gene expression dataset as a SummarizedExperiment object.
+#' 2. **Gene Mapping**: Prepare your dataset for subtyping using the \code{\link{Mapping}} function.
+#' 3. **Subtyping**: Run multiple subtyping methods (or leverage AUTO mode) with the \code{\link{BS_Multi}} function.
+#' 4. **Visualization**: Explore and interpret the subtyping results using the \code{\link{Vis_Multi}} function.
 #'
 #'
 #' ## **Key Functions**
 #' - \code{\link{Mapping}}: Prepares gene expression data for subtyping.
-#' - \code{\link{BS_Multi}}: Runs multiple/**AUTO** subtyping methods.
-#' - \code{\link{Vis_Multi}}: Generates visualizations of subtyping results.
+#' - \code{\link{BS_Multi}}: Executes multiple subtyping methods simultaneously, including an **AUTO** mode for method selection based on cohort characteristics.
+#' - \code{\link{Vis_Multi}}: Generates visualizations to facilitate interpretation of the subtyping outcomes.
 #'
 #'
 #' @seealso \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
@@ -64,11 +64,11 @@ NULL
 #'
 #' @param method Method for deduplicating probes in microarray or RNA-seq data.
 #'   Choose one of the following options:
-#'   - `"iqr"` for Affymetrix arrays,
-#'   - `"mean"` for Agilent/Illumina arrays,
-#'   - `"max"` for RNA-seq data
-#'   - `"stdev"` for ,
-#'   - `"median"` for .
+#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).  
+#'   - `"mean"`: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).  
+#'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.  
+#'   - `"stdev"`: Selects the probe with the highest standard deviation.  
+#'   - `"median"`: Chooses the probe with the highest median expression value.  
 #' @param impute Logical. Specify whether to perform K-Nearest Neighbors (KNN)
 #'   imputation on missing data (`NA` values).
 #' @param verbose Logical. If `TRUE`, progress messages will be displayed during
