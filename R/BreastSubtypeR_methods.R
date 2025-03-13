@@ -1,4 +1,26 @@
+#' @import stringr
+#' @import e1071
+#' @import Biobase
+#' @importFrom SummarizedExperiment SummarizedExperiment
+#' @importFrom SummarizedExperiment colData
+#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment assay
+#' @importFrom data.table data.table
+#' @importFrom data.table set
+#' @importFrom rlang call2
+#' @importFrom rlang dots_list
+#' @importFrom utils data installed.packages read.delim write.table
+#' @importFrom graphics barplot mtext par
+#' @importFrom grDevices dev.off pdf
+#'
+NULL
+
 #' BreastSubtypeR: A Unified R Package for Intrinsic Molecular Subtyping in Breast Cancer Research
+#'
+#'
+#' @name BreastSubtypeR
+#' @aliases NULL
+#' @docType package
 #'
 #' @description **BreastSubtypeR** is an R package designed to unify and
 #'   streamline intrinsic molecular subtyping methods for breast cancer (BC).
@@ -28,25 +50,9 @@
 #'
 #' @seealso \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
 #'
-#' @name BreastSubtypeR-package
-#' @docType _PACKAGE
 #'
-#' @import stringr
-#' @import e1071
-#' @import Biobase
-#' @importFrom SummarizedExperiment SummarizedExperiment
-#' @importFrom SummarizedExperiment colData
-#' @importFrom SummarizedExperiment rowData
-#' @importFrom SummarizedExperiment assay
-#' @importFrom data.table data.table
-#' @importFrom data.table set
-#' @importFrom rlang call2
-#' @importFrom rlang dots_list
-#' @importFrom utils data installed.packages read.delim write.table
-#' @importFrom graphics barplot mtext par
-#' @importFrom grDevices dev.off pdf
-#'
-NULL
+"_PACKAGE"
+
 
 #' Gene ID Mapping
 #'
