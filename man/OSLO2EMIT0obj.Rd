@@ -8,7 +8,7 @@
 A list containing the following elements:
 \describe{
 \item{\code{se_obj}}{A SummarizedExperiment object containing a subset of
-the log2-transformed gene expression matrix, clinical information, and gene feature
+the log2-transformed, normalized gene expression matrix, clinical information, and gene feature
 annotations for the OSLO2EMIT0 cohort.}
 \item{\code{data_input}}{Example output from the \code{Mapping} function.}
 \item{\code{res}}{Example output from the \code{BS_Multi} function with \emph{AUTO} mode.}
