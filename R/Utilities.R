@@ -881,16 +881,15 @@ Vis_pie <- function(out) {
 #' Multi-Method Subtype Heatmap Visualization
 #'
 #' @name Vis_Multi
-#' @description This function generates a heatmap visualization of breast cancer
-#' subtypes based on multiple subtyping methods. It allows users to visualize
-#' how different methods classify samples into subtypes.
+#' @description This function generates a heatmap to visualize breast cancer subtypes
+#' classified by multiple subtyping methods. It helps users compare how different methods
+#' assign subtypes to the same set of samples.
 #'
-#' @param data A data frame or matrix that includes the subtypes predicted by
-#'   different methods. The rows should represent individual samples (e.g.,
-#'   `PatientID`), and columns should correspond to the subtypes predicted by
-#'   different methods.
+#' @param data A data frame or matrix containing subtype predictions from multiple methods.
+#' - Rows:  Individual samples (e.g., `PatientID`).
+#' - Columns: Subtypes assigned by different methods.
 #'
-#' @return A heatmap visualization of multi-method subtype results.
+#' @return Returns a heatmap visualizing the subtype classifications across multiple methods.
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
