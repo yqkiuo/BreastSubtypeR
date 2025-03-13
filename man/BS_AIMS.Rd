@@ -9,17 +9,18 @@ BS_AIMS(se_obj)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) and samples (columns).
-Note: The data must be \strong{unlogged} before using this function.
+\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) as rows and samples as columns.
+Important: The gene expression values should not be gene-centered.
+All expression values must be \strong{positive}.
 }}
 }
 \value{
-A vector of intrinsic subtypes assigned to the samples, as estimated
+Returns a vector of intrinsic subtypes assigned to the samples, as estimated
 by the AIMS method.
 }
 \description{
 This function predicts breast cancer intrinsic subtypes using
-the AIMS (Absolute assignment of Intrinsic Molecular Subtype) method.
+the \strong{AIMS (Absolute assignment of Intrinsic Molecular Subtype)} method.
 }
 \examples{
 # Load required datasets

@@ -74,7 +74,7 @@ data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Perform gene mapping before subtyping
-data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, method = "max", impute = TRUE, verbose = FALSE )
 
 # Perform multi-method subtyping
 methods <- c("parker.original", "PCAPAM50", "sspbc")
@@ -104,7 +104,7 @@ data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Perform gene mapping before subtyping
-data_input <- Mapping( OSLO2EMIT0obj$se_obj, impute = TRUE, verbose = TRUE )
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, method = "max", impute = TRUE, verbose = FALSE )
 
 # Run subtyping with AUTO mode
 result <- BS_Multi(
@@ -158,6 +158,8 @@ To run iBreastSubtypeR locally with your data, first install and load the packag
 # Launch iBreastSubtypeR for interactive analysis
 library(BreastSubtypeR)
 library(tidyverse)
+library(shiny)
+library(bslib)
 iBreastSubtypeR()
 ```
 

@@ -7,18 +7,15 @@
 Vis_Multi(data)
 }
 \arguments{
-\item{data}{A data frame or matrix that includes the subtypes predicted by
-different methods. The rows should represent individual samples (e.g.,
-\code{PatientID}), and columns should correspond to the subtypes predicted by
-different methods.}
+\item{data}{Output of the \code{\link{BS_Multi}} function.}
 }
 \value{
-A heatmap visualization of multi-method subtype results.
+Returns a heatmap visualizing the subtype classifications across multiple methods.
 }
 \description{
-This function generates a heatmap visualization of breast cancer
-subtypes based on multiple subtyping methods. It allows users to visualize
-how different methods classify samples into subtypes.
+This function generates a heatmap to visualize breast cancer subtypes
+classified by multiple subtyping methods. It helps users compare how different methods
+assign subtypes to the same set of samples.
 }
 \examples{
 data("OSLO2EMIT0obj")

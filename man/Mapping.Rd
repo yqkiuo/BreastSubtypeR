@@ -14,49 +14,46 @@ Mapping(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log2-transformed gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
-and columns represent samples. This should be stored in the \code{assay()} slot.
-\item \strong{Row metadata}: A data frame with annotations for probes, including at least the following columns:
+\item \strong{Assay data}: A log2-transformed, normalized gene expression matrix,
+where rows correspond to probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
+and columns correspond to samples. This should be stored in the \code{assay()} slot.
+\item \strong{Row metadata}: A data frame with probe annotations, including at least the following columns:
 \itemize{
-\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
-\item \code{"ENTREZID"}: Entrez gene IDs corresponding to the probes.
+\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or Gene Symbol).
+\item \code{"ENTREZID"}: Entrez Gene IDs corresponding to the probes.
 }
 \item \strong{Column metadata} (optional): Sample metadata stored in the \code{colData()} slot.
 }}
 
-\item{method}{Method for deduplicating probes in microarray or RNA-seq data.
-Choose one of the following options:
+\item{method}{A string specifying the method for resolving duplicate probes in microarray or RNA-seq data. Options include:
 \itemize{
-\item \code{"iqr"} for Affymetrix arrays,
-\item \code{"mean"} for Agilent/Illumina arrays,
-\item \code{"max"} for RNA-seq data
-\item \code{"stdev"} for ,
-\item \code{"median"} for .
+\item \code{"iqr"}: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
+\item \code{"mean"}: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
+\item \code{"max"}: Retains the probe with the highest expression value, often used for RNA-seq data.
+\item \code{"stdev"}: Selects the probe with the highest standard deviation.
+\item \code{"median"}: Chooses the probe with the highest median expression value.
 }}
 
-\item{impute}{Logical. Specify whether to perform K-Nearest Neighbors (KNN)
-imputation on missing data (\code{NA} values).}
+\item{impute}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, performs K-Nearest Neighbors (KNN) imputation to handle missing data (\code{NA} values).}
 
-\item{verbose}{Logical. If \code{TRUE}, progress messages will be displayed during
-execution.}
+\item{verbose}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, displays progress messages during execution.}
 }
 \value{
-A list containing three preprocessed gene expression matrices:
+Returns a list containing two preprocessed gene expression datasets:
 \itemize{
-\item \code{"x_NC"}: A \code{SummarizedExperiment} object contains: 1) The log2-transformed gene expression matrix
-for nearest-centroid (NC)-based methods; 2) clinical information.
-\item \code{"x_SSP"}: A \code{SummarizedExperiment} object contains: 1) The exponential-transformed gene expression matrix
-for single-sample predictor (SSP)-based methods; 2) clinical information.
+\item \code{"x_NC"}: A \code{SummarizedExperiment} object containing: 1) The log2-transformed gene expression matrix
+for nearest-centroid (NC)-based methods; 2) clinical metadata.
+\item \code{"x_SSP"}: A \code{SummarizedExperiment} object containing: 1) The exponential-transformed gene expression matrix
+for single-sample predictor (SSP)-based methods; 2) clinical metadata.
 }
 }
 \description{
-A function to map gene IDs and preprocess gene expression data
-for subsequent analyses.
+A function to map gene identifiers and preprocess gene expression data
+for downstream analyses.
 }
 \details{
-If the rows of the gene expression matrix/table represent gene
-symbols, an additional \code{SYMBOL} column must be added to the feature table and
-renamed as \code{probe}.
+If gene symbols are used as row identifiers in the gene expression matrix, an additional \code{SYMBOL} column
+must be added to the feature table and renamed as\code{probe}.
 }
 \examples{
 data("OSLO2EMIT0obj")
@@ -64,7 +61,7 @@ data_input <- Mapping(
     se_obj = OSLO2EMIT0obj$se_obj,
     method = "max",
     impute = TRUE,
-    verbose = TRUE
+    verbose = FALSE
 )
 
 }

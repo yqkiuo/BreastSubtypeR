@@ -33,6 +33,7 @@ out <- data.frame(
     PatientID = res$results$genefu.robust$BS.all$PatientID,
     Subtype = res$results$genefu.robust$BS.all$BS
 )
+
 correlations <- res$results$genefu.robust$outList$distances
 
 # Generate the boxplot

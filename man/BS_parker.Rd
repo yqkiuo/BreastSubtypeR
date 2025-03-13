@@ -17,56 +17,55 @@ BS_parker(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix with genes (Gene Symbol) in rows
-and samples in columns. This matrix should be log-transformed.
+\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbols) as rows
+and samples as columns.
 \item \strong{Column metadata} (\code{colData}): Optional clinical information.
 }}
 
-\item{calibration}{The calibration method to use. Options include:
+\item{calibration}{Specifies the calibration method to apply. Options include:
 \itemize{
 \item \code{"None"}: No calibration is applied.
-\item \code{"Internal"}: Calibration is performed using internal strategies.
-See the \code{internal} parameter for details.
-\item \code{"External"}: Calibration is performed using external medians.
-See the \code{external} parameter for details.
+\item \code{"Internal"}: Uses internal calibration strategies (see \code{internal} argument).
+\item \code{"External"}: Uses external medians (see \code{external} argument).
 }}
 
-\item{internal}{The internal calibration strategy to apply when \code{calibration = "Internal"}. Options are:
+\item{internal}{Specifies the internal calibration strategy when \code{calibration = "Internal"}. Options include:
 \itemize{
 \item \code{"medianCtr"} (default): Median-centered calibration.
-\item \code{"meanCtr"}:
-Mean-centered calibration (aligned with \code{genefu.scale} function).
-\item \code{"qCtr"}:
-Quantile-based calibration (aligned with \code{genefu.robust} function).
+\item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
+\item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust}).
 }}
 
-\item{external}{Specify the platform name (i.e., column name) for external
-medians calculated from the training cohort. To use user-provided medians,
-set this parameter to \code{"Given.mdns"} and provide the values via the
-\code{medians} parameter.}
-
-\item{medians}{A matrix or table of user-provided medians. Required if
-\code{external = "Given.mdns"}. The first column should list 50 genes, and the
-second column should provide the corresponding median values.}
-
-\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
-excluding the Normal-like subtype.}
-
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
-the \code{pheno} table. Required columns include:
+\item{external}{Specifies the platform name (i.e., column name) for external
+medians derived from the training cohort.
 \itemize{
-\item \code{"TSIZE"}: Tumor size.
-\item \code{"NODE"}: Lymph node status.
+\item To use user-provided medians, set \verb{"external = "Given.mdns"} and provide values via the
+\code{medians} argument.
+}}
+
+\item{medians}{A matrix or table of user-provided median values, required if
+\code{external = "Given.mdns"}.
+\itemize{
+\item The first column should contain 50 genes.
+\item The second column should contain the corresponding median values.
+}}
+
+\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
+\strong{excluding} the Normal-like subtype.}
+
+\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
+the phenotype (\code{pheno}) table. Required columns:
+\itemize{
+\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
+\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
 }}
 }
 \value{
-A list containing the intrinsic subtypes assigned using the
-Parker-based method.
+Returns a list containing intrinsic subtypes assigned using the Parker-based method, or its variations.
 }
 \description{
 This function predicts breast cancer intrinsic subtypes using
-the original Parker et al., 2019 method, as well as some variations of the
-original approach.
+the original Parker et al. (2019) method, along with variations of the original approach.
 }
 \examples{
 data("OSLO2EMIT0obj")
@@ -81,7 +80,7 @@ res <- BS_parker(
 }
 \references{
 \itemize{
-\item Bernard PS, Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
+\item Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
 \emph{Supervised risk predictor of breast cancer based on intrinsic subtypes}.
 Journal of Clinical Oncology. 2009;27(8).
 https://doi.org/10.1200/JCO.2008.18.1370

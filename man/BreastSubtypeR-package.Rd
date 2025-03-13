@@ -18,18 +18,18 @@ user-friendly for researchers and clinicians with limited R programming
 experience.
 \subsection{\strong{Workflow}}{
 \enumerate{
-\item Load example data or provide your own expression dataset (SummarizedExperiment object).
-\item Perform gene mapping using \code{\link{Mapping}}.
-\item Run multiple subtyping methods with \code{\link{BS_Multi}}.
-\item Visualize and interpret results using \code{\link{Vis_Multi}}.
+\item \strong{Data Input}: Load example data or supply your own gene expression dataset as a SummarizedExperiment object.
+\item \strong{Gene Mapping}: Prepare your dataset for subtyping using the \code{\link{Mapping}} function.
+\item \strong{Subtyping}: Run multiple subtyping methods (or leverage AUTO mode) with the \code{\link{BS_Multi}} function.
+\item \strong{Visualization}: Explore and interpret the subtyping results using the \code{\link{Vis_Multi}} function.
 }
 }
 
 \subsection{\strong{Key Functions}}{
 \itemize{
 \item \code{\link{Mapping}}: Prepares gene expression data for subtyping.
-\item \code{\link{BS_Multi}}: Runs multiple/\strong{AUTO} subtyping methods.
-\item \code{\link{Vis_Multi}}: Generates visualizations of subtyping results.
+\item \code{\link{BS_Multi}}: Executes multiple subtyping methods simultaneously, including an \strong{AUTO} mode for method selection based on cohort characteristics.
+\item \code{\link{Vis_Multi}}: Generates visualizations to facilitate interpretation of the subtyping outcomes.
 }
 }
 }

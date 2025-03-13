@@ -16,8 +16,8 @@ BS_cIHC.itr(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix with genes (Gene Symbol)
-in rows and samples in columns. This matrix should be log-transformed.
+\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbol)
+in rows and samples in columns.
 \item \strong{Column metadata} (\code{colData}): Clinical information table.
 \itemize{
 \item \code{"PatientID"}: Unique sample or patient identifiers.
@@ -25,24 +25,26 @@ in rows and samples in columns. This matrix should be log-transformed.
 }
 }}
 
-\item{iteration}{Integer. Number of iterations for the ER-balanced procedure
-with the specified ratio. The default is 100.}
+\item{iteration}{Integer. The number of iterations for the ER-balanced procedure
+with the specified ratio. Default: 100.}
 
-\item{ratio}{Numeric. Specifies the ER+/ER??? ratio for balancing. Options
-are \code{1:1} or \code{54:64} (default). The latter corresponds to the ER+/ER- ratio
-used in the UNC232 training cohort.}
-
-\item{Subtype}{Logical. If \code{TRUE}, the function predicts four subtypes by
-excluding the Normal-like subtype.}
-
-\item{hasClinical}{Logical. If \code{TRUE}, the function uses clinical data from
-the \code{pheno} table. Required columns include:
+\item{ratio}{Numeric. Specifies the ER+/ER− ratio for balancing. Options:
 \itemize{
-\item \code{"TSIZE"}: Tumor size.
-\item \code{"NODE"}: Lymph node status.
+\item \code{1:1}: Equal balancing.
+\item \code{54:64}: Default, based on the ER+/ER− ratio in the UNC232 training cohort.
 }}
 
-\item{seed}{An integer value is used to set the random seed.}
+\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
+\strong{excluding} the Normal-like subtype.}
+
+\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
+the phenotype (\code{pheno}) table. Required columns:
+\itemize{
+\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
+\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+}}
+
+\item{seed}{An integer used to set the random seed for reproducibility.}
 }
 \value{
 A list containing:
@@ -54,8 +56,8 @@ A list containing:
 }
 \description{
 This function predicts breast cancer intrinsic subtypes using an
-iterative ER-balanced procedure for gene centering. It supports customization
-of the ER+/ER- ratio.
+\strong{iterative} version of conventional estrogen receptor (ER)-balancing via immunohistochemistry (cIHC).
+It allows customization of the ER+/ER- ratio to refine subtype classification..
 }
 \examples{
 data("OSLO2EMIT0obj")

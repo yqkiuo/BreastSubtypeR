@@ -19,31 +19,12 @@ NULL
 
 #' Map Gene IDs and Handle missing data
 #'
-#' @name Mapping
-#' @description A function to map gene IDs and preprocess gene expression data
-#' for subsequent analyses.
-#' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed gene expression matrix where rows represent probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
-#'     and columns represent samples. This should be stored in the `assay()` slot.
-#'   - **Row metadata**: A data frame with annotations for probes, including at least the following columns:
-#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or gene symbol).
-#'     - `"ENTREZID"`: Entrez gene IDs corresponding to the probes.
-#' @param method Method for deduplicating probes in microarray or RNA-seq data.
-#'   Choose one of the following options:
-#'   - `"iqr"` for Affymetrix arrays,
-#'   - `"mean"` for Agilent/Illumina arrays,
-#'   - `"max"` for RNA-seq data.
-#' @param impute Logical. Specify whether to perform K-Nearest Neighbors (KNN)
-#'   imputation on missing data (`NA` values).
-#' @param verbose Logical. If `TRUE`, progress messages will be displayed during
-#'   execution.
-#'
-#' @return A list containing three gene expression matrices:
-#'   - `"x_NC.log"`:
-#'   Preprocessed matrix for input into nearest-centroid (NC)-based methods.
-#'   - `"x_SSP"`: Preprocessed matrix for input into single-sample predictor
-#'   (SSP)-based methods.
-#'
+#' @param method A string specifying the method for resolving duplicate probes in microarray or RNA-seq data. Options include:
+#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
+#'   - `"mean"`: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
+#'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.
+#'   - `"stdev"`: Selects the probe with the highest standard deviation.
+#'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
 domapping <- function(
@@ -570,6 +551,7 @@ get_average_subtype <- function(res_ihc_iterative, consensus_subtypes) {
 #'     PatientID = res$results$genefu.robust$BS.all$PatientID,
 #'     Subtype = res$results$genefu.robust$BS.all$BS
 #' )
+#'
 #' correlations <- res$results$genefu.robust$outList$distances
 #'
 #' # Generate the boxplot
@@ -885,9 +867,7 @@ Vis_pie <- function(out) {
 #' classified by multiple subtyping methods. It helps users compare how different methods
 #' assign subtypes to the same set of samples.
 #'
-#' @param data A data frame or matrix containing subtype predictions from multiple methods.
-#' - Rows:  Individual samples (e.g., `PatientID`).
-#' - Columns: Subtypes assigned by different methods.
+#' @param data Output of the \code{\link{BS_Multi}} function.
 #'
 #' @return Returns a heatmap visualizing the subtype classifications across multiple methods.
 #'
