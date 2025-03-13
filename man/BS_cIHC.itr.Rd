@@ -28,10 +28,10 @@ in rows and samples in columns.
 \item{iteration}{Integer. The number of iterations for the ER-balanced procedure
 with the specified ratio. Default: 100.}
 
-\item{ratio}{Numeric. Specifies the ER+/ER− ratio for balancing. Options:
+\item{ratio}{Numeric. Specifies the ER+/ER- ratio for balancing. Options:
 \itemize{
 \item \code{1:1}: Equal balancing.
-\item \code{54:64}: Default, based on the ER+/ER− ratio in the UNC232 training cohort.
+\item \code{54:64}: Default, based on the ER+/ER- ratio in the UNC232 training cohort.
 }}
 
 \item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,

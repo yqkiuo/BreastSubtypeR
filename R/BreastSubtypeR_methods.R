@@ -327,9 +327,9 @@ BS_cIHC <- function(
 #'
 #' @param iteration Integer. The number of iterations for the ER-balanced procedure
 #'   with the specified ratio. Default: 100.
-#' @param ratio Numeric. Specifies the ER+/ER− ratio for balancing. Options:
+#' @param ratio Numeric. Specifies the ER+/ER- ratio for balancing. Options:
 #'   - `1:1`: Equal balancing.
-#'   - `54:64`: Default, based on the ER+/ER− ratio in the UNC232 training cohort.
+#'   - `54:64`: Default, based on the ER+/ER- ratio in the UNC232 training cohort.
 #'
 #' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
 #'   **excluding** the Normal-like subtype.
