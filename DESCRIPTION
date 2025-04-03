@@ -11,7 +11,7 @@ Authors@R: c(
             email="yq.kiuo@gmail.com", 
             comment = c(ORCID = "0000-0002-4098-3246")) )
 Depends:
-    R (>= 4.5.0)
+    R (>= 4.4.0)
 Imports:
     methods,
     Biobase,
