@@ -27,12 +27,13 @@ NULL
 #'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
-domapping <- function(
-        se_obj,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
-    data("BreastSubtypeRobj")
+domapping <- function(se_obj,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
+    data_env <- new.env(parent = emptyenv())
+    data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
+    BreastSubtypeRobj <- data_env[["BreastSubtypeRobj"]]
 
     ## Extract data from SummarizedExperiment
     x <- assay(se_obj)
