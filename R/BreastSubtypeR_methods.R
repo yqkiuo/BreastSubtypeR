@@ -1007,21 +1007,44 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                res_ssBC <- BS_ssBC(
-                    data_input$se_NC,
-                    s = "ER",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
+
+                if(!is.null(samples_ER.icd) ){
+                    res_ssBC <- BS_ssBC(
+                        data_input$se_NC[,samples_ER.icd],
+                        s = "ER",
+                        Subtype = Subtype,
+                        hasClinical = hasClinical
+                    )
+                } else {
+                    res_ssBC <- BS_ssBC(
+                        data_input$se_NC,
+                        s = "ER",
+                        Subtype = Subtype,
+                        hasClinical = hasClinical
+                    )
+                }
+                
             }
 
-            ## removing results for AUTO mode
+            ## Keep patients' results for AUTO mode
             if (!is.null(samples_ER.icd) &&
                 length(samples_ER.icd) < nrow(pheno)) {
-                idx <- !(res_ssBC$BS.all$PatientID %in% samples_ER.icd)
-                res_ssBC$BS.all[idx, 2:ncol(res_ssBC$BS.all)] <- NA
+                unprocessed_patients = base::setdiff( pheno$PatientID, samples_ER.icd)
+                
+                # Create NA-filled dataframe for unprocessed patients with matching structure
+                na_df <- data.frame(
+                    PatientID = unprocessed_patients,
+                    matrix(
+                        nrow = length(unprocessed_patients),
+                        ncol = ncol(res_ssBC$BS.all) - 1,  # Subtract 1 for PatientID column
+                        dimnames = list(NULL, colnames(res_ssBC$BS.all)[-1])
+                    ),
+                    row.names = unprocessed_patients
+                )
+                
+                res_ssBC$BS.all = rbind(res_ssBC$BS.all, na_df)
+                res_ssBC$BS.all = res_ssBC$BS.all[ pheno$PatientID,]
             }
-
 
             return(res_ssBC)
         }
@@ -1037,19 +1060,29 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                res_ssBC.v2 <- BS_ssBC(
-                    data_input$se_NC[,samples_ERHER2.icd],
-                    s = "ER.v2",
-                    Subtype = Subtype,
-                    hasClinical = hasClinical
-                )
+                if(!is.null(samples_ERHER2.icd) ){
+                    res_ssBC.v2 <- BS_ssBC(
+                        data_input$se_NC[,samples_ERHER2.icd],
+                        s = "ER.v2",
+                        Subtype = Subtype,
+                        hasClinical = hasClinical
+                    )
+                } else {
+                    res_ssBC.v2 <- BS_ssBC(
+                        data_input$se_NC,
+                        s = "ER.v2",
+                        Subtype = Subtype,
+                        hasClinical = hasClinical
+                    )
+                }
+                
             }
 
-            ## removing results for AUTO mode
+            ## Keep patients' results for AUTO mode
             if (!is.null(samples_ERHER2.icd) &&
                 length(samples_ERHER2.icd) < nrow(pheno)) {
-                unprocessed_patients = setdiff( pheno$PatientID, samples_ERHER2.icd)
-                
+                unprocessed_patients = base::setdiff( pheno$PatientID, samples_ERHER2.icd)
+
                 # Create NA-filled dataframe for unprocessed patients with matching structure
                 na_df <- data.frame(
                     PatientID = unprocessed_patients,
@@ -1060,10 +1093,11 @@ BS_Multi <- function(
                     ),
                     row.names = unprocessed_patients
                 )
-                
+
                 res_ssBC.v2$BS.all = rbind(res_ssBC.v2$BS.all, na_df)
-                res_ssBC.v2$BS.all <- res_ssBC.v2$BS.all[match(pheno$PatientID, res_ssBC.v2$BS.all), ]
+                res_ssBC.v2$BS.all = res_ssBC.v2$BS.all[ pheno$PatientID,]
             }
+            
 
             return(res_ssBC.v2)
         }
