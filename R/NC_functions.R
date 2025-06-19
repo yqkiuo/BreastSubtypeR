@@ -1517,8 +1517,6 @@ makeCalls.ssBC <- function(
 
     res <- mapply(
         function(element) {
-            print(element)
-            element = "HER2pos_ERpos"
             x.m <- mat[, samples_selected[[element]]]
 
             gene.sigma.o <- gene.sigma[rownames(x.m), element]
