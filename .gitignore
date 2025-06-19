@@ -29,7 +29,7 @@ unsrturl.bst
 .settings
 .tm_properties
 .Rproj.user
-.Rhistory
+*.Rhistory
 .RData
 .Ruserdata
 inst/doc
