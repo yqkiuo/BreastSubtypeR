@@ -1169,7 +1169,7 @@ makeCalls.PC1ihc <- function(
     # select  = order(rv, decreasing = TRUE)[seq_len(dim(mat)[1])]
     # the input is PAM50 matrix --50 genes -- get from dimension
     pca <- prcomp(t(mat)) # [select,]
-    pc12 <- pca$x[, seq(1, 2, 1)] # get two principal
+    pc12 <- pca$x[,1:2]  # get two principal
     df.pc1 <- data.frame(
         PatientID = rownames(pc12),
         PC1 = pc12[, 1],
@@ -1186,7 +1186,7 @@ makeCalls.PC1ihc <- function(
     # Determine if the majority of ER-negative cases fall in the negative axis
     # of PC1
 
-    if (sum(df.pca1$PC1[er_negative] < 0) > sum(df.pca1$PC1[er_negative] >= 0)) {
+    if (sum(df.pca1$PC1[er_negative] < 0) > sum(df.pca1$PC1[er_negative] >= 0) ) {
         df.pca1$PC1 <- -df.pca1$PC1
     }
 
@@ -1219,8 +1219,8 @@ makeCalls.PC1ihc <- function(
     ERN.pc1ihc <- df.pca1[which(!grepl("^L", df.pca1$IHC) &
         df.pca1$PC1 > mean(num.min)), ]
 
-    dim(ERP.pc1ihc)
-    dim(ERN.pc1ihc)
+    # dim(ERP.pc1ihc)
+    # dim(ERN.pc1ihc)
 
     if (dim(ERP.pc1ihc)[1] < dim(ERN.pc1ihc)[1]) {
         temp <- ERN.pc1ihc
