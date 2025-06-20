@@ -987,13 +987,22 @@ BS_Multi <- function(
 
         if (method == "PCAPAM50") {
             message(method, " is running!")
-            return(
+            result <- tryCatch({
+                # Attempt to run PCAPAM50
                 BS_PCAPAM50(
                     data_input$se_NC,
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
-            )
+            }, 
+            error = function(e) {
+                # Error handling
+                warning("PCAPAM50 failed in this iteration. Error: ")
+                return(NULL)  # Return NULL or a dummy tibble with NAs
+            })
+            
+            # Return result (or NULL if failed)
+            return(result)
         }
 
         if (method == "ssBC") {
@@ -1008,7 +1017,7 @@ BS_Multi <- function(
                 )
             } else {
 
-                if(!is.null(samples_ER.icd) ){
+                if(!is.null(samples_ER.icd) & length(samples_ERHER2.icd) < nrow(pheno) ){
                     res_ssBC <- BS_ssBC(
                         data_input$se_NC[,samples_ER.icd],
                         s = "ER",
@@ -1060,7 +1069,7 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                if(!is.null(samples_ERHER2.icd) ){
+                if(!is.null(samples_ERHER2.icd) & length(samples_ERHER2.icd) < nrow(pheno) ){
                     res_ssBC.v2 <- BS_ssBC(
                         data_input$se_NC[,samples_ERHER2.icd],
                         s = "ER.v2",
