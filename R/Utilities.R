@@ -37,10 +37,11 @@ domapping <- function(se_obj,
 
     ## Extract data from SummarizedExperiment
     x <- assay(se_obj)
-    y <- rowData(se_obj)
+    y <- rowData(se_obj) %>% data.frame()
 
-    if (!is.data.frame(y)) {
-        y <- as.data.frame(y)
+    ## change data type
+    if(  !is.character(y$ENTREZID)  ){
+        y$ENTREZID = as.character(y$ENTREZID)
     }
 
     samplenames <- colnames(x)
