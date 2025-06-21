@@ -151,7 +151,7 @@ Mapping <- function(se_obj,
 #'   - `"External"`: Uses external medians (see `external` argument).
 #' @param internal Specifies the internal calibration strategy when `calibration
 #'   = "Internal"`. Options include:
-#'   - `"medianCtr"` (default): Median-centered calibration.
+#'   - `"-1"` (default): Median-centered calibration.
 #'   - `"meanCtr"`: Mean-centered calibration (aligned with `genefu.scale`).
 #'   - `"qCtr"`: Quantile-based calibration (aligned with `genefu.robust`).
 #' @param external Specifies the platform name (i.e., column name) for external
@@ -188,7 +188,7 @@ Mapping <- function(se_obj,
 #' res <- BS_parker(
 #'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     calibration = "Internal",
-#'     internal = "medianCtr",
+#'     internal = "-1",
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
@@ -931,7 +931,7 @@ BS_Multi <- function(
                 BS_parker(
                     data_input$se_NC,
                     calibration = "Internal",
-                    internal = "medianCtr",
+                    internal = "-1",
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
