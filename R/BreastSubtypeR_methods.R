@@ -1140,7 +1140,7 @@ BS_Multi <- function(
             )
 
             BS.all <- data.frame(
-                PatinetID = rownames(res_sspbc),
+                PatientID = rownames(res_sspbc),
                 BS = res_sspbc[, 1],
                 row.names = rownames(res_sspbc)
             )
