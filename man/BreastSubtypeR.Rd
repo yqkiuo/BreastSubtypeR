@@ -40,4 +40,9 @@ experience.
 \author{
 \strong{Maintainer}: Qiao Yang \email{yq.kiuo@gmail.com} (\href{https://orcid.org/0000-0002-4098-3246}{ORCID}) [funder]
 
+Authors:
+\itemize{
+  \item Emmanouil Sifakis \email{emmanouil.sifakis@ki.se}
+}
+
 }
