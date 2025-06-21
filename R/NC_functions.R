@@ -600,7 +600,11 @@ RORgroup <- function(out,
                     "ROR-PC Group (Subtype + Clinic + Prolif.Subtype)" = cprskg.Subtype,
                     check.names = FALSE
                 )
+            } else {
+                message("NODE infor is missing.")
             }
+        } else {
+            message("TSIZE infor is missing.")
         }
 
 
