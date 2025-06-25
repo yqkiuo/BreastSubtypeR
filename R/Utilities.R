@@ -168,11 +168,12 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
 #'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
-domapping <- function(se_obj,
-    RawCounts = FALSE,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
+domapping <- function(
+        se_obj,
+        RawCounts = FALSE,
+        method = "max",
+        impute = TRUE,
+        verbose = TRUE) {
     ## 1. Input raw counts
     if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
         stop("Gene length must be provided for raw counts.")
@@ -190,8 +191,7 @@ domapping <- function(se_obj,
         DEGList_obj.UQ <- edgeR::calcNormFactors(se_obj, method = "upperquartile")
         x <- edgeR::cpm(DEGList_obj.UQ, log = TRUE, prior.count = 1)
 
-        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric( rowData(se_obj)$Length) )
-        
+        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric(rowData(se_obj)$Length))
     } else {
         x <- assay(se_obj)
     }
@@ -335,7 +335,7 @@ get_methods <- function(pheno) {
             }
         } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
             ## for other NC-based methods
-            ratio_ER <- n_ERpos / ( n_ERneg + n_ERpos)
+            ratio_ER <- n_ERpos / (n_ERneg + n_ERpos)
 
             if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
                 message(

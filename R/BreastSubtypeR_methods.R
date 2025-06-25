@@ -107,12 +107,11 @@ NULL
 #'
 #' @export
 
-Mapping <- function(
-        se_obj,
-        RawCounts = FALSE,
-        method = c("max", "mean", "median", "iqr", "stdev"),
-        impute = TRUE,
-        verbose = TRUE) {
+Mapping <- function(se_obj,
+    RawCounts = FALSE,
+    method = c("max", "mean", "median", "iqr", "stdev"),
+    impute = TRUE,
+    verbose = TRUE) {
     method <- match.arg(method)
 
     arguments <- rlang::dots_list(
