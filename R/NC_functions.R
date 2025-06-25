@@ -62,16 +62,17 @@ overlapSets <- function(x, y) {
 #'   calibration for gene expression matrix by itself. "External" means
 #'   calibration by external cohort.
 #' @param internal Specify the strategy for internal calibration,
-#'   "-1" (default, median-centered), meanCtr and qCtr
+#'   "medianCtr" (default, median-centered), meanCtr and qCtr
 #' @param external Specify the platform name(which column) of external medians
 #'   calculated by train cohorts. When users want to use Medians prepared by
 #'   user selves, this parameter should be "Given.mdns", not platform name.
 #' @noRd
-docalibration <- function(y,
-    medians.all,
-    calibration = c("None", "Internal", "External"),
-    internal = NA,
-    external = NA) {
+docalibration <- function(
+        y,
+        medians.all,
+        calibration = c("None", "Internal", "External"),
+        internal = NA,
+        external = NA) {
     calibration <- match.arg(calibration)
 
     mq <- 0.05 ## presetting in genefu robust model
@@ -81,11 +82,11 @@ docalibration <- function(y,
         },
         "Internal" = {
             # Define allowed internal methods
-            allowed_methods <- c("-1", "meanCtr", "qCtr")
+            allowed_methods <- c("medianCtr", "meanCtr", "qCtr")
 
             if (internal %in% allowed_methods) {
                 # Perform standard internal calibration
-                if (internal == "-1") {
+                if (internal == "medianCtr") {
                     y <- medianCtr(y)
                 } else if (internal == "meanCtr") {
                     y <- t(scale(t(y), center = TRUE, scale = TRUE))
@@ -671,7 +672,7 @@ RORgroup <- function(
 #'   calibration for gene expression matrix by itself. "External" means
 #'   calibration by external cohort.
 #' @param internal Specify the strategy for internal calibration,
-#'   "-1" (median centered, default), meanCtr and qCtr
+#'   "medianCtr" (median centered, default), meanCtr and qCtr
 #' @param external Specify the platform name(which column) of external medians
 #'   calculated by train cohorts. When users want to use Medians prepared by
 #'   user selves, this parameter should be "Given.mdns", not platform name.
@@ -786,7 +787,7 @@ makeCalls.parker <- function(
 #'   parameter for further details. If "External" is selected, see the
 #'   "external" parameter.
 #' @param internal Specify the strategy for internal calibration. Options are
-#'   median-centered ("-1", default), mean-centered ("meanCtr"), or
+#'   median-centered ("medianCtr", default), mean-centered ("meanCtr"), or
 #'   quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for
 #'   external medians, which are calculated by the training cohort. If you want
@@ -925,7 +926,7 @@ makeCalls_ihc <- function(
 #'   parameter for further details. If "External" is selected, see the
 #'   "external" parameter.
 #' @param internal Specify the strategy for internal calibration. Options are
-#'   median-centered ("-1", default), mean-centered ("meanCtr"), or
+#'   median-centered ("medianCtr", default), mean-centered ("meanCtr"), or
 #'   quantile-centered ("qCtr").
 #' @param external Specify the platform name (i.e., the column name) for
 #'   external medians, which are calculated by the training cohort. If you want

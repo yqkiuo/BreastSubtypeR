@@ -205,17 +205,20 @@ Mapping <- function(se_obj,
 #'
 #' @export
 
-BS_parker <- function(
-        se_obj,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_parker <- function(se_obj,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
+    }
+
+    if (internal == "-1") {
+        internal <- "medianCtr"
     }
 
     ## Extract data from SummarizedExperiment
