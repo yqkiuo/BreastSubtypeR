@@ -16,65 +16,34 @@
 NULL
 NULL
 
-
-#' Map Gene IDs and Handle missing data
+#' Impute missing values using k-nearest neighbors
 #'
-#' @param method A string specifying the method for resolving duplicate probes in microarray or RNA-seq data. Options include:
-#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
-#'   - `"mean"`: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-#'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.
-#'   - `"stdev"`: Selects the probe with the highest standard deviation.
-#'   - `"median"`: Chooses the probe with the highest median expression value.
+#' @param x Numeric matrix with missing values (NA).
+#' @param verbose Logical; if TRUE, prints missing probes/samples.
+#' @return Imputed matrix.
 #' @noRd
-
-domapping <- function(se_obj,
-    method = "max",
-    impute = TRUE,
-    verbose = TRUE) {
-    data_env <- new.env(parent = emptyenv())
-    data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
-    BreastSubtypeRobj <- data_env[["BreastSubtypeRobj"]]
-
-    ## Extract data from SummarizedExperiment
-    x <- assay(se_obj)
-    y <- rowData(se_obj) %>% data.frame()
-
-    ## change data type
-    if(  !is.character(y$ENTREZID)  ){
-        y$ENTREZID = as.character(y$ENTREZID)
-    }
-
-    samplenames <- colnames(x)
-
-    ## check feature data
-    if (length(y) == 0) {
-        stop("Please provide feature annotation to do probeID mapping ")
-    }
-
-    ## loading genes.signature
-    genes.s <- BreastSubtypeRobj$genes.signature
-
-    ## filter by ENTREZID
-    y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
-    x <- x[y$probe, ]
-
-    ## first step
-    ## for empty cells. imput or not ?
-    if (sum(apply(x, 2, is.na)) > 0 & impute) {
+impute_missing <- function(x, verbose = FALSE) {
+    if (anyNA(x)) {
         if (verbose) {
-            probeid_NA <- rownames(x)[rowSums(is.na(x))]
-            sample_NA <- colnames(x)[colSums(is.na(x))]
+            probeid_NA <- rownames(x)[rowSums(is.na(x)) > 0]
+            sample_NA <- colnames(x)[colSums(is.na(x)) > 0]
+            message("Missing probes: ", paste(probeid_NA, collapse = ", "))
+            message("Missing samples: ", paste(sample_NA, collapse = ", "))
         }
-
-        x <- impute::impute.knn(x)
-        x <- x$data
+        x <- impute::impute.knn(x)$data
     }
+    x
+}
 
 
-    #
-    ## second step
-    ## if mapping (microarray or transcript )
-
+#' Collapse duplicate genes by a summary statistic
+#'
+#' @param x Numeric matrix (rows = probes/genes, cols = samples).
+#' @param y Dataframe with `probe` and `ENTREZID` columns.
+#' @param method Method for resolving duplicates ("max", "mean", etc.).
+#' @return Deduplicated matrix (rows = unique Entrez IDs).
+#' @noRd
+duplicate_genes <- function(x, y, method) {
     probeid <- rownames(x)
     entrezid <- y$ENTREZID
     names(entrezid) <- y$probe
@@ -87,10 +56,9 @@ domapping <- function(se_obj,
     entrezid <- factor(entrezid, levels = unique(entrezid))
     ## names are unique probeid and content are redundant entrezid
 
-
     ## This is for probeID or transcriptID
     ## split expression matrix
-    split_mat <- split(as.data.frame(x), entrezid, drop = FALSE)
+    split_mat <- split.data.frame(as.data.frame(x), entrezid, drop = FALSE)
 
     # function to calculate the desired statistic
     calculate_stat <- function(mat, method) {
@@ -126,12 +94,21 @@ domapping <- function(se_obj,
     )
     x <- apply(x, 1, unlist)
 
+    return(x)
+}
+
+
+#' Collapse duplicate genes by a summary statistic
+#'
+#' @param x Numeric matrix (rows = probes/genes, cols = samples).
+#' @param y Dataframe with `probe` and `ENTREZID` columns.
+#' @return Deduplicated matrix (rows = unique Entrez IDs).
+#' @noRd
+prepare_nc_matrix <- function(x, genes.sig50, samplenames, verbose) {
     ## print necessary information
     ## Parker
-    missing_ID_parker <- setdiff(
-        BreastSubtypeRobj$genes.sig50$EntrezGene.ID,
-        rownames(x)
-    )
+    missing_ID_parker <- setdiff(genes.sig50$EntrezGene.ID, rownames(x))
+
     if (length(missing_ID_parker) == 0 & verbose) {
         message("Genes used in NC-based methods are covered.")
     } else if (verbose) {
@@ -139,42 +116,123 @@ domapping <- function(se_obj,
         message(paste(missing_ID_parker, collapse = "\n"))
     }
 
-    ## AIMS
-    missing_ID_AIMS <- setdiff(
-        genes.s[genes.s$SSP_based == "Yes", ]$EntrezGene.ID,
-        rownames(x)
-    )
-    if (length(missing_ID_AIMS) == 0 & verbose) {
-        message("Genes used in SSP-based methods are covered.")
-    } else if (verbose) {
-        message("These genes are missing for SSP-based methods:")
-        message(paste(missing_ID_AIMS, collapse = "\n"))
-    }
-
     ## get matrix for NC (symbol as rows, sample as col)
-    genes_nc <- BreastSubtypeRobj$genes.sig50$EntrezGene.ID
+    genes_nc <- genes.sig50$EntrezGene.ID
     x_NC <- x[na.omit(match(genes_nc, rownames(x))), ]
-    rownames(x_NC) <- BreastSubtypeRobj$genes.sig50$Symbol[match(
-        rownames(x_NC),
-        genes_nc
-    )]
+    rownames(x_NC) <- genes.sig50$Symbol[match(rownames(x_NC), genes_nc)]
     x_NC <- data.frame(x_NC)
     colnames(x_NC) <- samplenames
 
+    return(x_NC)
+}
+
+
+#' Prepare matrix for SSP-based methods
+#'
+#' @param x Numeric matrix (rows = Entrez IDs, cols = samples).
+#' @param genes.s Dataframe with gene signatures.
+#' @param RawCounts Logical; if TRUE, input is raw counts.
+#' @param verbose Logical; print missing genes.
+#' @return Processed matrix for SSP.
+prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
+    ## AIMS
+    genes_ssp <- genes.s$EntrezGene.ID[genes.s$SSP_based == "Yes"]
+    missing <- setdiff(genes_ssp, rownames(x))
+
+    if (verbose && length(missing) > 0) {
+        message("Missing SSP genes: ", paste(missing, collapse = ", "))
+    } else if (verbose) {
+        message("Genes used in SSP-based methods are covered.")
+    }
+
     ## get matrix for AIMS (entrezID as colnames)
-    genes_ssp <- as.character(genes.s$EntrezGene.ID[
-        genes.s$SSP_based == "Yes"
-    ])
-    x_SSP <- x[na.omit(match(genes_ssp, rownames(x))), ]
+    x_SSP <- x[intersect(genes_ssp, rownames(x)), , drop = FALSE]
     colnames(x_SSP) <- samplenames
 
-    ## exponential transformation
-    x_SSP <- 2^x_SSP
+    ## exponential transformation for microarray/RNAseq
+    if (!RawCounts) {
+        x_SSP <- 2^x_SSP
+    }
 
-    result <- list(
-        x_NC = x_NC,
-        x_SSP = x_SSP
+    return(x_SSP)
+}
+
+
+#' Map Gene IDs and Handle missing data
+#'
+#' @param method A string specifying the method for resolving duplicate probes in microarray or RNA-seq data. Options include:
+#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
+#'   - `"mean"`: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
+#'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.
+#'   - `"stdev"`: Selects the probe with the highest standard deviation.
+#'   - `"median"`: Chooses the probe with the highest median expression value.
+#' @noRd
+
+domapping <- function(se_obj,
+    RawCounts = FALSE,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
+    ## 1. Input raw counts
+    if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
+        stop("Gene length must be provided for raw counts.")
+    }
+
+    # 2. Load gene signatures
+    data_env <- new.env(parent = emptyenv())
+    data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
+    BreastSubtypeRobj <- data_env[["BreastSubtypeRobj"]]
+    genes.s <- BreastSubtypeRobj$genes.signature
+
+    # 3. Normalize raw counts (if applicable)
+    if (RawCounts) {
+        ## UQ for NC-based
+        DEGList_obj.UQ <- edgeR::calcNormFactors(se_obj, method = "upperquartile")
+        x <- edgeR::cpm(DEGList_obj.UQ, log = TRUE, prior.count = 1)
+
+        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric( rowData(se_obj)$Length) )
+        
+    } else {
+        x <- assay(se_obj)
+    }
+
+    # 4. Check feature data
+    ## Extract data from SummarizedExperiment
+    y <- rowData(se_obj) %>% data.frame()
+    ## check feature data
+    if (length(y) == 0) {
+        stop("Please provide feature annotation to do probeID mapping ")
+    }
+    ## change data type
+    y$ENTREZID <- as.integer(y$ENTREZID)
+    samplenames <- colnames(x)
+
+    # 5. Filter by signature genes and impute
+    ## filter by ENTREZID
+    y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
+    x <- x[y$probe, ]
+    if (impute && anyNA(x)) x <- impute_missing(x, verbose)
+    if (RawCounts && impute && anyNA(x)) {
+        counts.fpkm <- impute_missing(counts.fpkm, verbose)
+    }
+
+    # 6. Deduplicate by EntrezID
+    x <- duplicate_genes(x, y, method)
+    if (RawCounts) {
+        counts.fpkm <- duplicate_genes(counts.fpkm, y, method)
+    }
+
+    # 7. Prepare output (NC and SSP matrices)
+    x_NC <- prepare_nc_matrix(x, BreastSubtypeRobj$genes.sig50, samplenames, verbose)
+    x_SSP <- prepare_ssp_matrix(
+        if (RawCounts) counts.fpkm else x,
+        genes.s,
+        RawCounts,
+        samplenames,
+        verbose
     )
+
+    result <- list(x_NC = x_NC, x_SSP = x_SSP)
 
     return(result)
 }
@@ -209,8 +267,8 @@ get_methods <- function(pheno) {
         n_ER_threshold <- 10
         n_ERHER2_threshold <- 5
         per_ratio <- 0.2
-        upper_ratio <- 54 / 64 + (54 / 64) * per_ratio
-        lower_ratio <- 54 / 64 - (54 / 64) * per_ratio
+        upper_ratio <- 0.69
+        lower_ratio <- 0.39
 
         ## main panel
         if ("TN" %in% colnames(pheno)) {
@@ -277,7 +335,7 @@ get_methods <- function(pheno) {
             }
         } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
             ## for other NC-based methods
-            ratio_ER <- n_ERpos / n_ERneg
+            ratio_ER <- n_ERpos / ( n_ERneg + n_ERpos)
 
             if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
                 message(
@@ -298,7 +356,7 @@ get_methods <- function(pheno) {
                 )
             } else {
                 message(
-                    "The ER+/ER- ratio in the current dataset differs from that observed in the UNC232 training cohort."
+                    "The ER+ ratio in the current dataset differs from that observed in the UNC232 training cohort."
                 )
                 message("Running methods:
                         genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS & sspbc")

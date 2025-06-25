@@ -6,6 +6,7 @@
 \usage{
 Mapping(
   se_obj,
+  RawCounts = FALSE,
   method = c("max", "mean", "median", "iqr", "stdev"),
   impute = TRUE,
   verbose = TRUE
