@@ -134,6 +134,7 @@ prepare_nc_matrix <- function(x, genes.sig50, samplenames, verbose) {
 #' @param RawCounts Logical; if TRUE, input is raw counts.
 #' @param verbose Logical; print missing genes.
 #' @return Processed matrix for SSP.
+#' @noRd
 prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
     ## AIMS
     genes_ssp <- genes.s$EntrezGene.ID[genes.s$SSP_based == "Yes"]

@@ -3,7 +3,7 @@ Type: Package
 Title: Methods for breast cancer intrinsic subtyping
 Description: BreastSubtypeR is an R package that provides a collection of methods for intrinsic molecular subtyping of breast cancer. It includes subtyping methods for nearest centroid-based subtyping (NC-based) and single sample predictor (SSP-based), along with tools for integrating clinical data and visualizing results. 
 Encoding: UTF-8
-Version: 1.0.1
+Version: 1.99.1
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
@@ -26,6 +26,7 @@ Imports:
     rlang,
     stringr,
     withr,
+    edgeR,
     ComplexHeatmap,
     impute (>= 1.80.0),
     data.table (>= 1.16.0),
@@ -33,8 +34,7 @@ Imports:
     circlize (>= 0.4.16),
     ggrepel (>= 0.9.6),
     e1071 (>= 1.7-8),
-    SummarizedExperiment,
-    BiocGenerics
+    SummarizedExperiment
 Suggests:
     shiny (>= 1.9.1),
     bslib (>= 0.8.0),
