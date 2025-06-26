@@ -217,6 +217,7 @@ BS_parker <- function(se_obj,
         stop("Input must be a SummarizedExperiment object.")
     }
 
+    ## maintain parameter
     if (internal == "-1") {
         internal <- "medianCtr"
     }
