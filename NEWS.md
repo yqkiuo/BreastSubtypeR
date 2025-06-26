@@ -1,4 +1,4 @@
-# BreastSubtypeR 1.0.1
+# BreastSubtypeR 1.1.1
 
 ## Bug Fixes and Maintenance
 This patch release addresses minor issues identified after the initial 1.0.0 release while preserving all core functionality. Key fixes include:
