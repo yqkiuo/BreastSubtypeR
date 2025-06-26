@@ -31,7 +31,7 @@ and samples as columns.
 
 \item{internal}{Specifies the internal calibration strategy when \code{calibration = "Internal"}. Options include:
 \itemize{
-\item \code{"medianCtr"} (default): Median-centered calibration.
+\item \code{"-1"} (default): Median-centered calibration.
 \item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
 \item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust}).
 }}
@@ -72,7 +72,7 @@ data("OSLO2EMIT0obj")
 res <- BS_parker(
     se_obj = OSLO2EMIT0obj$data_input$se_NC,
     calibration = "Internal",
-    internal = "medianCtr",
+    internal = "-1",
     Subtype = FALSE,
     hasClinical = FALSE
 )

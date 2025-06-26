@@ -6,6 +6,7 @@
 \usage{
 Mapping(
   se_obj,
+  RawCounts = FALSE,
   method = c("max", "mean", "median", "iqr", "stdev"),
   impute = TRUE,
   verbose = TRUE
@@ -15,8 +16,9 @@ Mapping(
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
 \item \strong{Assay data}: A log2-transformed, normalized gene expression matrix,
-where rows correspond to probes (e.g., ProbeID, TranscriptID, or Gene Symbol)
-and columns correspond to samples. This should be stored in the \code{assay()} slot.
+where rows correspond to probes (e.g., ProbeID, TranscriptID, or Gene
+Symbol) and columns correspond to samples. This should be stored in the
+\code{assay()} slot.
 \item \strong{Row metadata}: A data frame with probe annotations, including at least the following columns:
 \itemize{
 \item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or Gene Symbol).
@@ -25,7 +27,12 @@ and columns correspond to samples. This should be stored in the \code{assay()} s
 \item \strong{Column metadata} (optional): Sample metadata stored in the \code{colData()} slot.
 }}
 
-\item{method}{A string specifying the method for resolving duplicate probes in microarray or RNA-seq data. Options include:
+\item{RawCounts}{Logical. Indicates whether the assay data in \code{se_obj}
+contains \strong{raw RNA-seq counts}. If "TRUE", please provide matched gene
+lengths in raw matedata.}
+
+\item{method}{A string specifying the method for resolving duplicate probes
+in microarray or RNA-seq data. Options include:
 \itemize{
 \item \code{"iqr"}: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
 \item \code{"mean"}: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
@@ -34,9 +41,11 @@ and columns correspond to samples. This should be stored in the \code{assay()} s
 \item \code{"median"}: Chooses the probe with the highest median expression value.
 }}
 
-\item{impute}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, performs K-Nearest Neighbors (KNN) imputation to handle missing data (\code{NA} values).}
+\item{impute}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, performs K-Nearest
+Neighbors (KNN) imputation to handle missing data (\code{NA} values).}
 
-\item{verbose}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, displays progress messages during execution.}
+\item{verbose}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, displays progress
+messages during execution.}
 }
 \value{
 Returns a list containing two preprocessed gene expression datasets:
@@ -48,12 +57,13 @@ for single-sample predictor (SSP)-based methods; 2) clinical metadata.
 }
 }
 \description{
-A function to map gene identifiers and preprocess gene expression data
-for downstream analyses.
+A function to map gene identifiers and preprocess gene
+expression data for downstream analyses.
 }
 \details{
-If gene symbols are used as row identifiers in the gene expression matrix, an additional \code{SYMBOL} column
-must be added to the feature table and renamed as\code{probe}.
+If gene symbols are used as row identifiers in the gene expression
+matrix, an additional \code{SYMBOL} column must be added to the feature table
+and renamed as\code{probe}.
 }
 \examples{
 data("OSLO2EMIT0obj")
