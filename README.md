@@ -128,7 +128,7 @@ plot(plot)
 
 | **Approach** | **Usage** |
 |--------------------|----------------------------------------------------|
-| `parker.original` | `BS_parker(calibration = "Internal", internal = "medianCtr", ...)` |
+| `parker.original` | `BS_parker(calibration = "Internal", internal = "-1", ...)` |
 | `genefu.scale` | `BS_parker(calibration = "Internal", internal = "meanCtr", ...)` |
 | `genefu.robust` | `BS_parker(calibration = "Internal", internal = "qCtr", ...)` |
 | `cIHC` | `BS_cIHC(...)` |
