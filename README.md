@@ -74,7 +74,7 @@ data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
 # Perform gene mapping before subtyping
-data_input <- Mapping( OSLO2EMIT0obj$se_obj, method = "max", impute = TRUE, verbose = FALSE )
+data_input <- Mapping( OSLO2EMIT0obj$se_obj, RawCounts = FALSE, method = "max", impute = TRUE, verbose = FALSE )
 
 # Perform multi-method subtyping
 methods <- c("parker.original", "PCAPAM50", "sspbc")
