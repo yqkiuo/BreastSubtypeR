@@ -100,6 +100,7 @@ NULL
 #' data("OSLO2EMIT0obj")
 #' data_input <- Mapping(
 #'     se_obj = OSLO2EMIT0obj$se_obj,
+#'     RawCounts = FALSE,
 #'     method = "max",
 #'     impute = TRUE,
 #'     verbose = FALSE
