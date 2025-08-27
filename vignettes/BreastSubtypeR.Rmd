@@ -98,7 +98,7 @@ library(BreastSubtypeR)
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
 
-# Perform mapping: map probes/IDs to Entrez and (optionally) impute missing values
+# Preprocessing: automatically apply tailored normalization, map probes/IDs to Entrez and (optionally) impute missing values
 data_input <- Mapping(
   OSLO2EMIT0obj$se_obj,
   method = "max",     # mapping strategy (example)

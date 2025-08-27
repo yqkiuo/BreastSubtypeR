@@ -57,21 +57,24 @@ NULL
 #' Gene ID Mapping
 #'
 #' @name Mapping
-#' @description A function to map gene identifiers and preprocess gene
-#'   expression data for downstream analyses.
+#' @description Preprocesses and maps gene expression input to prepare for
+#'   downstream subtyping workflows (both NC-based and SSP-based).
 #'
-#' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalized gene expression matrix,
-#'   where rows correspond to probes (e.g., ProbeID, TranscriptID, or Gene
-#'   Symbol) and columns correspond to samples. This should be stored in the
-#'   `assay()` slot.
-#'   - **Row metadata**: A data frame with probe annotations, including at least the following columns:
-#'     - `"probe"`: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or Gene Symbol).
-#'     - `"ENTREZID"`: Entrez Gene IDs corresponding to the probes.
-#'   - **Column metadata** (optional): Sample metadata stored in the `colData()` slot.
-#' @param RawCounts Logical. Indicates whether the assay data in `se_obj`
-#'   contains **raw RNA-seq counts**. If "TRUE", please provide matched gene
-#'   lengths in raw matedata.
+#' @param se_obj A `SummarizedExperiment` object with:
+#'   - **Assay data**: A gene expression matrix.
+#'     - If `RawCounts = FALSE`: `assay()` must contain log₂-transformed, normalized expression (e.g., pre-normalized microarray, nCounter, or FPKM RNAseq data).
+#'     - If `RawCounts = TRUE`: `assay()` contains raw RNA-seq read counts; see `RawCounts` parameter.
+#'   - **Row metadata**: Must include:
+#'     - `"probe"`: feature identifiers (e.g., Gene Symbols or Probe IDs)
+#'     - `"ENTREZID"`: matching Entrez Gene IDs
+#'     - When using gene symbols as row names, the feature data should have an additional `SYMBOL` column and renamed as`probe`
+#'   - **Column metadata** (optional): Sample descriptions via `colData()`.
+#'   
+#' @param RawCounts Logical. If `TRUE`, indicates that `assay()` holds raw RNA-seq counts.
+#'   You must supply gene lengths (e.g., in base pairs) in `rowData()` (column name e.g. `"Length"`),
+#'   which will be used to compute:
+#'   - NC-based methods: log₂ CPM using upper-quartile normalization
+#'   - SSP-based methods: linear FPKM (not log-transformed)
 #'
 #' @param method A string specifying the method for resolving duplicate probes
 #'   in microarray or RNA-seq data. Options include:
@@ -80,32 +83,44 @@ NULL
 #'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.
 #'   - `"stdev"`: Selects the probe with the highest standard deviation.
 #'   - `"median"`: Chooses the probe with the highest median expression value.
-#' @param impute Logical (`TRUE` or `FALSE`). If `TRUE`, performs K-Nearest
-#'   Neighbors (KNN) imputation to handle missing data (`NA` values).
-#' @param verbose Logical (`TRUE` or `FALSE`). If `TRUE`, displays progress
-#'   messages during execution.
+#'   
+#' @param impute Logical. If `TRUE`, applies K-Nearest Neighbors (KNN) imputation for missing values.
+#'   
+#' @param verbose Logical. If `TRUE`, prints progress messages during execution.
 #'
-#' @return Returns a list containing two preprocessed gene expression datasets:
-#'   - `"x_NC"`: A `SummarizedExperiment` object containing: 1) The log2-transformed gene expression matrix
-#'   for nearest-centroid (NC)-based methods; 2) clinical metadata.
-#'   - `"x_SSP"`: A `SummarizedExperiment` object containing: 1) The exponential-transformed gene expression matrix
-#'   for single-sample predictor (SSP)-based methods; 2) clinical metadata.
+#' @return A named list with:
+#'   \item{x_NC}{`SummarizedExperiment` with log₂-transformed data ready for NC-based methods, plus clinical metadata.}
+#'   \item{x_SSP}{`SummarizedExperiment` with exponential-transformed data ready for SSP-based methods, plus clinical metadata.}
 #'
-#'
-#' @details If gene symbols are used as row identifiers in the gene expression
-#'   matrix, an additional `SYMBOL` column must be added to the feature table
-#'   and renamed as`probe`.
+#' @details
+#' `Mapping()` can handle multiple input types seamlessly:
+#' - **Raw RNA-seq counts** (need gene lengths) → normalized to CPM or FPKM as appropriate
+#' - **Pre-computed log₂ FPKM** → used directly for NC, back-transformed for SSP
+#' - **Microarray or nCounter data** → expected to be log₂-normalized already, ingested directly or back-transformed for SSP
+#' This enables users to supply a single input type and let BreastSubtypeR manage the normalization pipeline automatically.
+#' 
 #'
 #' @examples
-#' data("OSLO2EMIT0obj")
-#' data_input <- Mapping(
-#'     se_obj = OSLO2EMIT0obj$se_obj,
-#'     RawCounts = FALSE,
-#'     method = "max",
-#'     impute = TRUE,
-#'     verbose = FALSE
+#' \donttest{
+#' library(BreastSubtypeR)
+#' # Using raw counts (with gene lengths in rowData)
+#' se_obj <- SummarizedExperiment(
+#'   assays = list(counts = raw_counts_mat),
+#'   rowData = DataFrame(
+#'     probe = rownames(raw_counts_mat),
+#'     ENTREZID = entrez_ids,
+#'     Length = gene_lengths
+#'   )
 #' )
+#' res <- Mapping(se_obj, RawCounts = TRUE)
 #'
+#' # Using pre-normalized log2 FPKM
+#' se_obj_fpkm <- SummarizedExperiment(
+#'   assays = list(expr = log2_fpkm_mat),
+#'   rowData = DataFrame(probe = rownames(log2_fpkm_mat), ENTREZID = entrez_ids)
+#' )
+#' res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
+#' }
 #' @export
 
 Mapping <- function(
