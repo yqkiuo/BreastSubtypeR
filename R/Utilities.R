@@ -176,7 +176,9 @@ domapping <- function(se_obj,
     verbose = TRUE) {
     ## 1. Input raw counts
     if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
-        stop("Gene length must be provided for raw counts.")
+        stop("Missing gene length information: for RawCounts=TRUE, ",
+             "rowData(se_obj)$Length must be provided (in BASES) ",
+             "to enable FPKM calculation.")
     }
 
     # 2. Load gene signatures
@@ -187,11 +189,19 @@ domapping <- function(se_obj,
 
     # 3. Normalize raw counts (if applicable)
     if (RawCounts) {
+      
+        # Adaptive gene filtering before UQ normalization (only for NC-based)
+        keep <- edgeR::filterByExpr(se_obj, group = NULL,
+                                    min.count = 10,
+                                    min.total.count = 15,
+                                    min.prop = 0.70) # (≈ “expressed in ≥70% of samples”)
+        se_obj_f  <- se_obj[keep,]
+      
         ## UQ for NC-based
-        DEGList_obj.UQ <- edgeR::calcNormFactors(se_obj, method = "upperquartile")
-        x <- edgeR::cpm(DEGList_obj.UQ, log = TRUE, prior.count = 1)
+        DGEList_obj.UQ <- edgeR::calcNormFactors(se_obj_f, method = "upperquartile")
+        x <- edgeR::cpm(DGEList_obj.UQ, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 1)
 
-        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric(rowData(se_obj)$Length))
+        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric(rowData(se_obj)$Length), normalized.lib.sizes = FALSE, log = FALSE)
     } else {
         x <- assay(se_obj)
     }
