@@ -190,20 +190,33 @@ domapping <- function(se_obj,
     # 3. Normalize raw counts (if applicable)
     if (RawCounts) {
       
-        # Adaptive gene filtering before UQ normalization (only for NC-based)
-        keep <- edgeR::filterByExpr(se_obj, group = NULL,
-                                    min.count = 10,
-                                    min.total.count = 15,
-                                    min.prop = 0.70) # (≈ “expressed in ≥70% of samples”)
-        se_obj_f  <- se_obj[keep,]
-      
-        ## UQ for NC-based
-        DGEList_obj.UQ <- edgeR::calcNormFactors(se_obj_f, method = "upperquartile")
-        x <- edgeR::cpm(DGEList_obj.UQ, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 1)
-
-        counts.fpkm <- edgeR::rpkm(se_obj, gene.length = as.numeric(rowData(se_obj)$Length), normalized.lib.sizes = FALSE, log = FALSE)
+        # Pull counts from SummarizedExperiment and build a DGEList
+        counts <- SummarizedExperiment::assay(se_obj)
+        y_all  <- edgeR::DGEList(counts = round(as.matrix(counts)))
+        
+        # Light positive-only subset (very gentle): CPM > 0 in ≥30% samples
+        prop_pos <- rowMeans(edgeR::cpm(y_all) > 0.1)
+        keep_sub <- prop_pos >= 0.30
+        if (!any(keep_sub)) stop("Cannot form a positive subset for UQ normalization.")
+        y_sub <- y_all[keep_sub, , keep.lib.sizes = TRUE]
+        
+        # Estimate UQ factors on the subset (p = 0.75)
+        y_sub <- edgeR::calcNormFactors(y_sub, method = "upperquartile", p = 0.75)
+        
+        # Apply those factors to the full data
+        y_all$samples$norm.factors <- y_sub$samples$norm.factors
+        
+        # NC-based input for downstream: log-CPM on the FULL matrix (uses effective lib sizes)
+        x <- edgeR::cpm(y_all, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 1)
+        
+        # FPKM from raw counts + gene lengths (in BASES)
+        gl <- as.numeric(SummarizedExperiment::rowData(se_obj)$Length)
+        names(gl) <- rownames(se_obj)
+        gl <- gl[rownames(y_all)]
+        counts.fpkm <- edgeR::rpkm(y_all, gene.length = gl,
+                                   normalized.lib.sizes = FALSE, log = FALSE)
     } else {
-        x <- assay(se_obj)
+        x <- SummarizedExperiment::assay(se_obj)
     }
 
     # 4. Check feature data
