@@ -1,18 +1,25 @@
-# BreastSubtypeR 1.1.1
+# BreastSubtypeR 1.1.2
 
-## Bug Fixes and Maintenance
-This patch release addresses minor issues identified after the initial 1.0.0 release while preserving all core functionality. Key fixes include:
-- Resolved input validation edge cases in the subtyping pipeline
-- Enhanced handling of cohorts with extreme ER+ ratios in AUTO mode
-- Corrected data type handling for raw counts input
-- Updated documentation typos and parameter descriptions
+## Highlights
+- Our manuscript describing **BreastSubtypeR** has been accepted in *NAR Genomics and Bioinformatics* (2025) and selected as **Editor’s Choice**.  
+  Citation: Yang Q, Hartman J, Sifakis EG. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.* NAR Genomics and Bioinformatics, In press 2025.  
 
-All core features remain fully functional:
-- **Comprehensive Intrinsic Subtyping for Breast Cancer**: Integrates multiple published intrinsic subtyping methods, including NC-based approaches like the original PAM50 (Parker et al., J Clin Oncol, 2009) and SSP-based methods like AIMS (Paquet et al., J Natl Cancer Inst, 2015).
-- **Multi-Method Subtyping Functionality**: Simultaneously predicts breast cancer intrinsic subtypes using a variety of validated methods for comparative analysis.
-- **AUTO Mode Feature**: Evaluates the distribution of ER and HER2 status in the test cohort to automatically select subtyping methods that align with the cohort's characteristics, ensuring compatibility with method-specific assumptions for greater accuracy and reliability.
-- **Optimized Gene Mapping**: Optimizes gene mapping using Entrez IDs to maximize the inclusion of genes across subtyping methods.
-- **Streamlined Input and Output**: Provides standardized input/output formats to ensure smooth integration with other gene expression analysis tools.
-- **User-Friendly Shiny App Interface**: Features a web-based GUI that runs entirely locally, ensuring data privacy with no online sharing, ideal for users who prefer a visual interface over R scripting.  
+## New Features and Bug Fixes
+This release enhances stability, adds new input support, and improves documentation. Key updates include:
+- **New:** Support for raw RNA-seq counts (requires user-supplied gene lengths)  
+- Refined, data-driven thresholds for ER+ skew detection in AUTO mode  
+- Fixed input validation edge cases in the subtyping pipeline  
+- Minor documentation updates and typo corrections  
 
-Users can safely upgrade from v1.0.0 for improved stability.
+## Core Features (from v1.0.0, unchanged but highlighted for reference)
+- **Comprehensive Intrinsic Subtyping:** Integrates multiple published algorithms (NC- and SSP-based), including PAM50 variants, AIMS, ssBC, sspbc, and others  
+- **Unified Multi-Method Interface (`BS_Multi`):** Execute multiple classifiers through a consistent API and compare results side-by-side  
+- **AUTO Mode (cohort-aware selection):** Evaluates cohort composition (e.g., receptor-status distribution, subtype purity, subgroup sizes) and automatically disables classifiers whose assumptions are violated, improving accuracy in skewed or small cohorts  
+- **Standardised Input & Method-Specific Normalisation:** Supports FPKM and log₂-normalised microarray/nCounter data with method-appropriate transformations  
+- **Optimised Probe/Gene Mapping:** Entrez ID–based mapping with conflict resolution to maximise marker coverage across platforms  
+- **Interactive Shiny App (`iBreastSubtypeR`):** Local GUI for non-programmers that replicates core workflows while preserving data privacy  
+- **Bioconductor Distribution & Reproducibility:** Unit tests, vignettes, and SummarizedExperiment compatibility for reproducible deployment  
+
+## Upgrade Note
+- Raw RNA-seq counts are supported **only from version 1.1.2 onwards**.  
+- Users working with raw counts should ensure they are running **v1.1.2 or later**, as earlier versions do not implement this functionality.

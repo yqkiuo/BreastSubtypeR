@@ -177,7 +177,7 @@ domapping <- function(se_obj,
     ## 1. Input raw counts
     if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
         stop("Missing gene length information: for RawCounts=TRUE, ",
-             "rowData(se_obj)$Length must be provided (in BASES) ",
+             "rowData(se_obj)$Length must be provided (in base pairs) ",
              "to enable FPKM calculation.")
     }
 
@@ -209,7 +209,7 @@ domapping <- function(se_obj,
         # NC-based input for downstream: log-CPM on the FULL matrix (uses effective lib sizes)
         x <- edgeR::cpm(y_all, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 1)
         
-        # FPKM from raw counts + gene lengths (in BASES)
+        # FPKM from raw counts + gene lengths (in base pairs)
         gl <- as.numeric(SummarizedExperiment::rowData(se_obj)$Length)
         names(gl) <- rownames(se_obj)
         gl <- gl[rownames(y_all)]

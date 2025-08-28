@@ -15,38 +15,51 @@
 #'
 NULL
 
-#' BreastSubtypeR: A Unified R Package for Intrinsic Molecular Subtyping in Breast Cancer Research
+#' BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research
 #'
 #'
 #' @name BreastSubtypeR
 #' @aliases NULL
 #' @docType package
 #'
-#' @description **BreastSubtypeR** is an R package designed to unify and
-#'   streamline intrinsic molecular subtyping methods for breast cancer (BC).
+#' @description
+#' **BreastSubtypeR** is an R/Bioconductor package that unifies multiple
+#' published intrinsic subtyping (IS) methods for breast cancer into a single,
+#' reproducible framework. It supports both nearest-centroid (NC-based) and
+#' single-sample predictor (SSP-based) classifiers and introduces an
+#' assumption-aware **AUTO mode** that dynamically selects methods compatible
+#' with the input cohort.
+#'
+#' By standardising input handling, applying method-specific normalisation,
+#' and providing optimised probe-to-gene mapping, BreastSubtypeR reduces
+#' inconsistencies across platforms and improves reproducibility in translational
+#' research. A companion Shiny app (**iBreastSubtypeR**) offers an intuitive GUI
+#' for non-programmers while preserving data privacy.
+#'
+#' ## Workflow
+#' 1. **Data Input**: Supply a gene expression dataset as a `SummarizedExperiment`.
+#'    Supported inputs include raw RNA-seq counts (with gene lengths),
+#'    log₂(FPKM+1) RNA-seq, or log₂-normalised microarray/nCounter data.
+#' 2. **Gene Mapping**: Prepare expression data with \code{\link{Mapping}},
+#'    including Entrez ID-based resolution of duplicates.
+#' 3. **Subtyping**: Apply multiple classifiers simultaneously using
+#'    \code{\link{BS_Multi}}, or enable **AUTO mode** for
+#'    cohort-aware method selection.
+#' 4. **Visualisation**: Summarise and interpret subtyping results with
+#'    \code{\link{Vis_Multi}}.
 #'
 #'
-#'   It integrates both nearest-centroid (NC-based) and single-sample predictor
-#'   (SSP-based) approaches, along with an innovative **AUTO mode** feature
-#'   (described below).The package utilizes standardized input and output
-#'   formats, providing a cohesive framework that is fully compatible with other
-#'   R packages in the gene expression profiling field. Additionally, its core
-#'   functions are accessible through an **interactive Shiny app**, making it
-#'   user-friendly for researchers and clinicians with limited R programming
-#'   experience.
-#'
-#' ## **Workflow**
-#' 1. **Data Input**: Load example data or supply your own gene expression dataset as a SummarizedExperiment object.
-#' 2. **Gene Mapping**: Prepare your dataset for subtyping using the \code{\link{Mapping}} function.
-#' 3. **Subtyping**: Run multiple subtyping methods (or leverage AUTO mode) with the \code{\link{BS_Multi}} function.
-#' 4. **Visualization**: Explore and interpret the subtyping results using the \code{\link{Vis_Multi}} function.
-#'
-#'
-#' ## **Key Functions**
-#' - \code{\link{Mapping}}: Prepares gene expression data for subtyping.
-#' - \code{\link{BS_Multi}}: Executes multiple subtyping methods simultaneously, including an **AUTO** mode for method selection based on cohort characteristics.
-#' - \code{\link{Vis_Multi}}: Generates visualizations to facilitate interpretation of the subtyping outcomes.
-#'
+#' ## Key Features
+#' - **Multi-method framework**: Ten published NC- and SSP-based classifiers,
+#'   harmonised under one interface.
+#' - **AUTO mode**: Evaluates cohort composition (e.g., ER/HER2 prevalence,
+#'   subtype purity, subgroup sizes) and disables classifiers with violated
+#'   assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
+#' - **Standardised normalisation**: Upper-quartile log₂-CPM for NC-based
+#'   methods; FPKM for SSP-based methods.
+#' - **Optimised gene mapping**: Entrez ID-based mapping with conflict resolution.
+#' - **Dual accessibility**: A Bioconductor-compliant R API and a local Shiny app
+#'   (iBreastSubtypeR).
 #'
 #' @seealso \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
 #'
@@ -58,52 +71,53 @@ NULL
 #'
 #' @name Mapping
 #' @description Preprocesses and maps gene expression input to prepare for
-#'   downstream subtyping workflows (both NC-based and SSP-based).
+#'   intrinsic subtyping workflows (NC- and SSP-based).
 #'
-#' @param se_obj A `SummarizedExperiment` object with:
-#'   - **Assay data**: A gene expression matrix.
-#'     - If `RawCounts = FALSE`: `assay()` must contain log₂-transformed, normalized expression (e.g., pre-normalized microarray, nCounter, or FPKM RNAseq data).
-#'     - If `RawCounts = TRUE`: `assay()` contains raw RNA-seq read counts; see `RawCounts` parameter.
-#'   - **Row metadata**: Must include:
-#'     - `"probe"`: feature identifiers (e.g., Gene Symbols or Probe IDs)
-#'     - `"ENTREZID"`: matching Entrez Gene IDs
-#'     - When using gene symbols as row names, the feature data should have an additional `SYMBOL` column and renamed as`probe`
-#'   - **Column metadata** (optional): Sample descriptions via `colData()`.
+#' @param se_obj A `SummarizedExperiment` object containing:
+#'   - **Assay data**:
+#'     - If `RawCounts = FALSE`: `assay()` must contain log₂-normalized expression (e.g., pre-normalized microarray/nCounter, or log₂(FPKM+1) RNAseq).
+#'     - If `RawCounts = TRUE`: `assay()` contains raw RNA-seq counts (see `RawCounts`).
+#'   - **Row metadata** (required):
+#'     - `"probe"`: feature identifiers (e.g., gene symbols or probe IDs)
+#'     - `"ENTREZID"`: corresponding Entrez Gene IDs.
+#'     - If row names are gene symbols, provide an additional `SYMBOL` column,
+#'       renamed as `probe`.
+#'   - **Column metadata** (optional): sample-level metadata in `colData()`.
 #'   
 #' @param RawCounts Logical. If `TRUE`, indicates that `assay()` holds raw RNA-seq counts.
-#'   You must supply gene lengths (e.g., in base pairs) in `rowData()` (column name e.g. `"Length"`),
-#'   which will be used to compute:
-#'   - NC-based methods: log₂ CPM using upper-quartile normalization
-#'   - SSP-based methods: linear FPKM (not log-transformed)
+#'   In this case, `rowData()` must also provide gene lengths (column `"Length"`, in base pairs), used for:
+#'   - NC-based methods: log₂-CPM (upper-quartile normalization).
+#'   - SSP-based methods: linear FPKM (not log-transformed).
 #'
-#' @param method A string specifying the method for resolving duplicate probes
-#'   in microarray or RNA-seq data. Options include:
-#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
-#'   - `"mean"`: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-#'   - `"max"`: Retains the probe with the highest expression value, often used for RNA-seq data.
-#'   - `"stdev"`: Selects the probe with the highest standard deviation.
-#'   - `"median"`: Chooses the probe with the highest median expression value.
-#'   
-#' @param impute Logical. If `TRUE`, applies K-Nearest Neighbors (KNN) imputation for missing values.
+#' @param method Strategy for resolving duplicate probes/genes. Options:
+#'   - `"iqr"`: probe with highest interquartile range (short-oligo arrays, e.g., Affymetrix).
+#'   - `"mean"`: probe with highest mean expression (long-oligo arrays, e.g., Agilent/Illumina).
+#'   - `"max"`: probe with highest expression value (often used for RNA-seq).
+#'   - `"stdev"`: probe with highest standard deviation.
+#'   - `"median"`: probe with highest median expression.
+#'     
+#' @param impute Logical. If `TRUE`, applies KNN-based imputation to missing values.
 #'   
 #' @param verbose Logical. If `TRUE`, prints progress messages during execution.
 #'
 #' @return A named list with:
-#'   \item{x_NC}{`SummarizedExperiment` with log₂-transformed data ready for NC-based methods, plus clinical metadata.}
-#'   \item{x_SSP}{`SummarizedExperiment` with exponential-transformed data ready for SSP-based methods, plus clinical metadata.}
+#'   \item{x_NC}{`SummarizedExperiment` with log₂-transformed data prepared for NC-based methods (plus `colData`).}
+#'   \item{x_SSP}{`SummarizedExperiment` with linear-scale data prepared for SSP-based methods (plus `colData`).}
 #'
 #' @details
-#' `Mapping()` can handle multiple input types seamlessly:
-#' - **Raw RNA-seq counts** (need gene lengths) → normalized to CPM or FPKM as appropriate
-#' - **Pre-computed log₂ FPKM** → used directly for NC, back-transformed for SSP
-#' - **Microarray or nCounter data** → expected to be log₂-normalized already, ingested directly or back-transformed for SSP
-#' This enables users to supply a single input type and let BreastSubtypeR manage the normalization pipeline automatically.
+#' `Mapping()` supports multiple input types:
+#' - **Raw RNA-seq counts** (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
+#' - **Precomputed log₂(FPKM+1)**: used directly for NC; back-transformed for SSP.
+#' - **Log₂-normalized microarray/nCounter data**: used directly for NC; back-transformed for SSP.
 #' 
+#' This design allows users to supply a single expression format, while
+#' BreastSubtypeR automatically applies method-specific preprocessing. 
 #'
 #' @examples
 #' \donttest{
 #' library(BreastSubtypeR)
-#' # Using raw counts (with gene lengths in rowData)
+#'
+#' # Using raw RNA-seq counts (with gene lengths)
 #' se_obj <- SummarizedExperiment(
 #'   assays = list(counts = raw_counts_mat),
 #'   rowData = DataFrame(
@@ -114,10 +128,13 @@ NULL
 #' )
 #' res <- Mapping(se_obj, RawCounts = TRUE)
 #'
-#' # Using pre-normalized log2 FPKM
+#' # Using pre-normalized log2(FPKM+1)
 #' se_obj_fpkm <- SummarizedExperiment(
 #'   assays = list(expr = log2_fpkm_mat),
-#'   rowData = DataFrame(probe = rownames(log2_fpkm_mat), ENTREZID = entrez_ids)
+#'   rowData = DataFrame(
+#'     probe = rownames(log2_fpkm_mat),
+#'     ENTREZID = entrez_ids
+#'   )
 #' )
 #' res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
 #' }
@@ -165,38 +182,50 @@ Mapping <- function(
 #' Original Parker Intrinsic Subtyping (BS_parker)
 #'
 #' @name BS_parker
-#' @description This function predicts breast cancer intrinsic subtypes using
-#'   the original Parker et al. (2019) method, along with variations of the original approach.
+#' @description
+#' Implements the original PAM50 nearest-centroid classifier as described by
+#' Parker et al. (2009), along with supported calibration strategies and
+#' variations. This function assigns intrinsic breast cancer subtypes
+#' (Luminal A, Luminal B, HER2-enriched, Basal-like, and optionally Normal-like).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbols) as rows
 #'   and samples as columns.
-#'   - **Column metadata** (`colData`): Optional clinical information.
-#' @param calibration Specifies the calibration method to apply. Options include:
-#'   - `"None"`: No calibration is applied.
-#'   - `"Internal"`: Uses internal calibration strategies (see `internal` argument).
-#'   - `"External"`: Uses external medians (see `external` argument).
-#' @param internal Specifies the internal calibration strategy when `calibration
-#'   = "Internal"`. Options include:
-#'   - `"-1"` (default): Median-centered calibration.
-#'   - `"meanCtr"`: Mean-centered calibration (aligned with `genefu.scale`).
-#'   - `"qCtr"`: Quantile-based calibration (aligned with `genefu.robust`).
-#' @param external Specifies the platform name (i.e., column name) for external
-#'   medians derived from the training cohort.
-#'   - To use user-provided medians, set `"external = "Given.mdns"` and provide values via the
-#'   `medians` argument.
-#' @param medians A matrix or table of user-provided median values, required if
-#'   `external = "Given.mdns"`.
-#'   - The first column should contain 50 genes.
-#'   - The second column should contain the corresponding median values.
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#'   - **Column metadata** (`colData`): Optional sample- or patient-level
+#'     information.
+#'   
+#' @param calibration Calibration strategy for subtype prediction. Options:
+#'   - `"None"`: No calibration.
+#'   - `"Internal"`: Apply internal calibration (see `internal`).
+#'   - `"External"`: Apply calibration using external medians (see `external`).
 #'
-#' @return Returns a list containing intrinsic subtypes assigned using the Parker-based method, or its variations.
+#' @param internal Internal calibration method when `calibration = "Internal"`.  
+#'   Options include:
+#'   - `"-1"` (default): Median-centering (as in Parker et al.).  
+#'   - `"meanCtr"`: Mean-centering (as implemented in `genefu.scale`).  
+#'   - `"qCtr"`: Quantile-based centering (as in `genefu.robust`).  
+#'
+#' @param external Character string specifying the external calibration source.  
+#'   - To use training cohort medians, provide the platform/column name.  
+#'   - To supply user-defined medians, set `external = "Given.mdns"` and pass
+#'     values via `medians`.  
+#'
+#' @param medians A matrix or data.frame of user-provided medians (required if
+#'   `external = "Given.mdns"`).  
+#'   - First column: 50 PAM50 genes.  
+#'   - Second column: Corresponding median expression values.  
+#'
+#' @param Subtype Logical. If `TRUE`, assigns only the four main intrinsic
+#'   subtypes (Luminal A, Luminal B, HER2-enriched, Basal-like),
+#'   excluding Normal-like.  
+#'
+#' @param hasClinical Logical. If `TRUE`, incorporates clinical variables from
+#'   `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'
+#' @return A list containing PAM50 intrinsic subtype calls using the Parker
+#'   classifier and selected calibration strategy.
 #'
 #'
 #' @references
@@ -275,41 +304,49 @@ BS_parker <- function(
 #' Conventional IHC Intrinsic Subtyping (BS_cIHC)
 #'
 #' @name BS_cIHC
-#' @description This function predicts breast cancer intrinsic subtypes using
-#' the conventional estrogen receptor (ER)-balancing via immunohistochemistry (cIHC).
+#' @description
+#' Implements the conventional immunohistochemistry-based (cIHC) intrinsic
+#' subtyping approach, which balances cohorts by estrogen receptor (ER) status
+#' before applying gene-expression–based subtyping. This method is useful for
+#' ER-skewed cohorts where assumptions of nearest-centroid classifiers are
+#' violated.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-#'   as rows and samples as columns.
-#'   - **Column metadata** (`colData`): A clinical information table, which must include:
-#'     - `"PatientID"`: Unique sample or patient identifiers.
-#'     - `"ER"`: Estrogen receptor (ER) status, recorded as `"ER+"` or `"ER-"`.
+#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'     genes (Gene Symbols) as rows and samples as columns.
+#'   - **Column metadata** (`colData`): Must include:
+#'     - `"PatientID"`: Unique sample or patient identifier.  
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
 #'
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
 #'
-#' @param seed An integer used to set the random seed for reproducibility.
-#' @return Returns a data frame containing intrinsic subtypes estimated using the
-#'   conventional IHC (cIHC) method.
+#' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
+#'   variables from `colData(se_obj)`. Required columns:  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'
+#' @param seed Integer. Random seed for reproducibility of ER-balancing.  
+#'
+#' @return A `data.frame` containing intrinsic subtype assignments estimated
+#'   using the conventional IHC (cIHC) approach.  
 #'
 #' @references
-#' - Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A,
-#' et al. *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer*.
-#' Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
+#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.  
+#' *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer.*  
+#' Cell. 2015;163(2):506–519.  
+#' https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'     Subtype = FALSE,
-#'     hasClinical = FALSE
+#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'   Subtype = FALSE,
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
+
 
 BS_cIHC <- function(se_obj,
     Subtype = FALSE,
@@ -346,53 +383,59 @@ BS_cIHC <- function(se_obj,
 }
 
 
-#' Iterative conventional IHC Intrinsic Subtyping (BS_cIHC.itr)
+#' Iterative Conventional IHC Intrinsic Subtyping (BS_cIHC.itr)
 #'
 #' @name BS_cIHC.itr
-#' @description This function predicts breast cancer intrinsic subtypes using an
-#' **iterative** version of conventional estrogen receptor (ER)-balancing via immunohistochemistry (cIHC).
-#' It allows customization of the ER+/ER- ratio to refine subtype classification..
+#' @description
+#' Implements an **iterative** version of the conventional IHC-based intrinsic
+#' subtyping approach. This method repeatedly balances samples by estrogen
+#' receptor (ER) status across multiple iterations, allowing refinement of
+#' subtype calls in ER-skewed cohorts. Users can customise the ER+/ER– ratio to
+#' match specific cohort assumptions (e.g., training distribution).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbol)
-#'   in rows and samples in columns.
-#'   - **Column metadata** (`colData`): Clinical information table.
-#    The column metadata must include:
-#'     - `"PatientID"`: Unique sample or patient identifiers.
-#'     - `"ER"`: Estrogen receptor (ER) status recorded as `"ER+"` or `"ER-"`.
+#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'     genes (Gene Symbols) as rows and samples as columns.
+#'   - **Column metadata** (`colData`): Must include:
+#'     - `"PatientID"`: Unique sample or patient identifier.  
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
 #'
-#' @param iteration Integer. The number of iterations for the ER-balanced procedure
-#'   with the specified ratio. Default: 100.
-#' @param ratio Numeric. Specifies the ER+/ER- ratio for balancing. Options:
-#'   - `1:1`: Equal balancing.
-#'   - `54:64`: Default, based on the ER+/ER- ratio in the UNC232 training cohort.
+#' @param iteration Integer. Number of iterations for the ER-balancing procedure.  
+#'   Default: `100`.  
 #'
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#' @param ratio Numeric. Target ER+/ER– ratio for balancing. Options:  
+#'   - `1:1`: Equal balancing.  
+#'   - `54:64`: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.  
 #'
-#' @param seed An integer used to set the random seed for reproducibility.
-#' @return A list containing:
-#' - Intrinsic subtype predictions.
-#' - Confidence levels for each subtype.
-#' - Percentages of ER+ and ER??? subsets across iterations.
+#' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'
+#' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
+#'   variables from `colData(se_obj)`. Required columns:  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'
+#' @param seed Integer. Random seed for reproducibility.  
+#'
+#' @return A list containing:  
+#'   - `subtypes`: Intrinsic subtype predictions across iterations.  
+#'   - `confidence`: Confidence estimates for each assigned subtype.  
+#'   - `ER_balance`: Proportions of ER+ and ER– subsets observed across iterations.  
 #'
 #' @references
-#' - Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ,
-#' et al. *The genomic and transcriptomic architecture of 2,000 breast tumours
-#' reveals novel subgroups*. Nature. 2012;486(7403).
+#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.  
+#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals
+#' novel subgroups.*  
+#' Nature. 2012;486(7403):346–352.  
 #' https://doi.org/10.1038/nature10983
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC.itr(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'     iteration = 10, ## For final analysis, set iteration = 100
-#'     Subtype = FALSE,
-#'     hasClinical = FALSE
+#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'   iteration = 10,   ## for final analysis, use iteration = 100
+#'   Subtype = FALSE,
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
@@ -439,41 +482,45 @@ BS_cIHC.itr <- function(se_obj,
 #' PCA-PAM50 Intrinsic Subtyping (BS_PCAPAM50)
 #'
 #' @name BS_PCAPAM50
-#' @description This function predicts breast cancer intrinsic subtypes using
-#' the PCA-PAM50 method. This approach integrates **Principal Component Analysis (PCA)**
-#'  to perform estrogen receptor (ER) balancing based on ESR1 gene expression.
+#' @description
+#' Implements the PCA-PAM50 method, which integrates **Principal Component
+#' Analysis (PCA)** of ESR1 expression to adjust for estrogen receptor (ER)
+#' imbalance prior to applying the PAM50 nearest-centroid classifier. This
+#' approach improves subtype consistency, particularly in ER-skewed cohorts.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-#'   as rows and samples as columns.
-#'   - **Column metadata** (`colData`): Clinical information table.
-#    The column metadata must include:
-#'     - `"PatientID"`: Unique sample or patient identifiers.
-#'     - `"ER"`: Estrogen receptor (ER) status, recorded as `"ER+"` or `"ER-"`.
+#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'     genes (Gene Symbols) as rows and samples as columns.
+#'   - **Column metadata** (`colData`): Must include:
+#'     - `"PatientID"`: Unique sample or patient identifier.  
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
 #'
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
 #'
-#' @param seed An integer used to set the random seed for reproducibility.
-#' @return Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-#'   by the PCA-PAM50 method.
+#' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
+#'   variables from `colData(se_obj)`. Required columns:  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'
+#' @param seed Integer. Random seed for reproducibility.  
+#'
+#' @return A character vector of intrinsic subtype predictions assigned to each
+#'   sample using the PCA-PAM50 method.  
 #'
 #' @references
-#' - Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver
-#' CD, et al. *PCA-PAM50 improves consistency between breast cancer intrinsic
-#' and clinical subtyping, reclassifying a subset of luminal A tumors as luminal
-#' B.* Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
+#' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.  
+#' *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical
+#' subtyping, reclassifying a subset of luminal A tumors as luminal B.*  
+#' Scientific Reports. 2019;9(1):1–12.  
+#' https://doi.org/10.1038/s41598-019-44339-4
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_PCAPAM50(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'     Subtype = FALSE,
-#'     hasClinical = FALSE
+#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'   Subtype = FALSE,
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
@@ -565,56 +612,62 @@ BS_PCAPAM50 <- function(se_obj,
 }
 
 
-#' Subgroup-specific gene-centering Intrinsic Subtyping (BS_ssBC)
+#' Subgroup-Specific Gene-Centering Intrinsic Subtyping (BS_ssBC)
 #'
 #' @name BS_ssBC
-#' @description This function predicts breast cancer intrinsic subtypes using
-#'   the **subgroup-specific (ssBC)** method. The ssBC method applies a
-#'   subgroup-specific gene-centering approach to cohorts with a skewed
-#'   distribution of clinicopathological characteristics compared to the
-#'   original training cohort (e.g., an ER+ selected cohort).
+#' @description
+#' Implements the **subgroup-specific gene-centering (ssBC)** method for breast
+#' cancer intrinsic subtyping. The ssBC approach applies precomputed,
+#' subgroup-specific centering values to adjust PAM50 nearest-centroid
+#' classification when the study cohort is skewed relative to the original
+#' training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-#'   as rows and samples as columns.
-#'   - **Column metadata** (`colData`): A clinical information table. If `hasClinical = TRUE`,
-#'     this table must include:
-#'     - `"PatientID"`: Unique identifiers for patients or samples.
-#'     - Additional columns depending on the `s` parameter:
-#'       - `"ER"`: Estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.
-#'       - `"HER2"`: HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.
-#'       - `"TN"`: Triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `s = "TN.v2"`, indicating a triple-negative cohort.
-#' @param s Character.  Specifies which subgroup-specific quantiles to use:
-#'   - `"ER"` and `"TN"`: Original subgroup-specific quantiles published in *Breast Cancer Research* (2015).
-#'   - `"ER.v2"` and `"TN.v2"`: Updated subgroup-specific quantiles published in *Journal of Clinical Oncology* (2020).
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'     genes (Gene Symbols) as rows and samples as columns.  
+#'   - **Column metadata** (`colData`): If `hasClinical = TRUE`, must include:
+#'     - `"PatientID"`: Unique patient/sample identifier.  
+#'     - Depending on the chosen `s` parameter:  
+#'       - `"ER"`: Estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.  
+#'       - `"HER2"`: HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.  
+#'       - `"TN"`: Triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `"TN.v2"`.  
 #'
-#' @return Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-#'   by the ssBC method.
+#' @param s Character. Specifies which subgroup-specific quantiles to use:  
+#'   - `"ER"`, `"TN"`: Original subgroup-specific quantiles (*Breast Cancer Research*, 2015).  
+#'   - `"ER.v2"`, `"TN.v2"`: Updated subgroup-specific quantiles (*Journal of Clinical Oncology*, 2020).  
+#'
+#' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'
+#' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
+#'   variables from `colData(se_obj)`. Required columns:  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'
+#' @return A character vector of intrinsic subtype predictions assigned to each
+#'   sample using the ssBC method.  
 #'
 #' @references
-#' - Zhao X, Rodland EA, Tibshirani R, Plevritis S. *Molecular
-#' subtyping for clinically defined breast cancer subgroups.* Breast Cancer
-#' Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-#' - Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-#' et al. *Survival, pathologic response, and genomics in CALGB 40601
-#' (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-#' without lapatinib in HER2-positive breast cancer.* Journal of Clinical
-#' Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.  
+#' *Molecular subtyping for clinically defined breast cancer subgroups.*  
+#' Breast Cancer Research. 2015;17(1):29.  
+#' https://doi.org/10.1186/s13058-015-0520-4
+#'
+#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.  
+#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a
+#' neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without
+#' lapatinib in HER2-positive breast cancer.*  
+#' Journal of Clinical Oncology. 2020;38(36):4184–4197.  
+#' https://doi.org/10.1200/JCO.20.01276
 #'
 #' @examples
-#' ## ssBC.v2
+#' ## Example: Updated subgroup-specific quantiles (ER.v2)
 #' data("OSLO2EMIT0obj")
 #' res <- BS_ssBC(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'     s = "ER.v2",
-#'     Subtype = FALSE,
-#'     hasClinical = FALSE
+#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'   s = "ER.v2",
+#'   Subtype = FALSE,
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
@@ -671,30 +724,33 @@ BS_ssBC <- function(se_obj,
 #' AIMS Intrinsic Subtyping (BS_AIMS)
 #'
 #' @name BS_AIMS
-#' @description This function predicts breast cancer intrinsic subtypes using
-#' the **AIMS (Absolute assignment of Intrinsic Molecular Subtype)** method.
+#' @description
+#' Implements the **AIMS (Absolute Assignment of Intrinsic Molecular Subtype)**
+#' method for breast cancer intrinsic subtyping. Unlike nearest-centroid (NC)
+#' approaches, AIMS is a single-sample predictor (SSP): it assigns subtypes
+#' independently for each sample using within-sample, pairwise gene expression
+#' rules. This makes it robust to cohort composition and scaling.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A gene expression matrix with genes (EntrezID) as rows and samples as columns.
-#'     Important: The gene expression values should not be gene-centered.
-#'      All expression values must be **positive**.
+#'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
+#'     and samples as columns.  
+#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).  
+#'     - Values should not be gene-centered or globally scaled.  
 #'
-#' @return Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-#'   by the AIMS method.
+#' @return A character vector of intrinsic subtype predictions assigned to each
+#'   sample using the AIMS method.  
 #'
 #' @references
-#' - Paquet ER, Hallett MT. *Absolute assignment of breast cancer
-#' intrinsic molecular subtype.* J Natl Cancer Inst. 2015;107(1).
+#' Paquet ER, Hallett MT.  
+#' *Absolute assignment of breast cancer intrinsic molecular subtype.*  
+#' Journal of the National Cancer Institute. 2015;107(1):dju357.  
 #' https://doi.org/10.1093/jnci/dju357
 #'
 #' @examples
-#' # Load required datasets
+#' ## Example using SummarizedExperiment input
 #' data("OSLO2EMIT0obj")
-#'
-#'
-#' # Perform subtyping
 #' res <- BS_AIMS(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP
+#'   se_obj = OSLO2EMIT0obj$data_input$se_SSP
 #' )
 #'
 #' @export
@@ -739,39 +795,39 @@ BS_AIMS <- function(se_obj) {
 #' Intrinsic Subtyping using SSPBC (BS_sspbc)
 #'
 #' @name BS_sspbc
-#' @description This function predicts breast cancer intrinsic subtypes using
-#' SSPBC (Single Sample Predictor for Breast Cancer). SSPBC is
-#' based on a refined version of the original AIMS methodology, utilizing a large,
-#' uniformly accrued population-based cohort (SCAN-B) for training. This method supports
-#' RNA sequencing data and provides flexibility in selecting the prediction model.
+#' @description
+#' Implements **SSPBC (Single Sample Predictor for Breast Cancer)**, a
+#' refinement of the original AIMS methodology trained on the large,
+#' population-based SCAN-B RNA-seq cohort. SSPBC provides robust
+#' single-sample predictions, independent of cohort composition, and supports
+#' multiple model variants for different applications.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A gene expression matrix with genes (EntrezID) as rows and samples as columns.
-#'     Important: The gene expression values should not be gene-centered.
-#'      All expression values must be **positive**.
+#'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
+#'     and samples as columns.  
+#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).  
+#'     - Values should not be gene-centered or globally scaled.  
 #'
-#' @param ssp.name Specifies the model to use. Options are:
-#' - "ssp.pam50": For PAM50-based predictions.
-#' - "ssp.subtype": For predicting Prosigna-like subtypes (four subtypes, **excluding** the Normal-like subtype).
+#' @param ssp.name Character. Specifies the SSPBC model to use:  
+#'   - `"ssp.pam50"`: Predicts PAM50-based intrinsic subtypes.  
+#'   - `"ssp.subtype"`: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).  
 #'
-#' @return Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-#'   by the SSPBC method.
+#' @return A character vector of intrinsic subtype predictions for each sample,
+#'   as estimated by the SSPBC method.  
 #'
 #' @references
-#' - Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-#' et al. *RNA sequencing-based single sample predictors of molecular subtype and
-#' risk of recurrence for clinical assessment of early-stage breast cancer*. NPJ
-#' Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
+#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.  
+#' *RNA sequencing-based single sample predictors of molecular subtype and risk of
+#' recurrence for clinical assessment of early-stage breast cancer.*  
+#' NPJ Breast Cancer. 2022;8(1):27.  
+#' https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
-#'
-#' # Load required dataset
+#' ## Example using SSPBC with the PAM50 model
 #' data("OSLO2EMIT0obj")
-#'
-#' # Perform subtyping with the SSPBC method
 #' res <- BS_sspbc(
-#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP,
-#'     ssp.name = "ssp.pam50"
+#'   se_obj = OSLO2EMIT0obj$data_input$se_SSP,
+#'   ssp.name = "ssp.pam50"
 #' )
 #'
 #' @export
@@ -806,103 +862,92 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' Intrinsic Subtyping with Multiple Approaches (BS_Multi)
 #'
 #' @name BS_Multi
-#' @description This function predicts breast cancer intrinsic subtypes using multiple methods.
-#' Users can either specify the subtyping approaches directly or enable automatic selection ("AUTO")
-#' based on the ER/HER2 distribution of the test cohort.
+#' @description
+#' Executes multiple intrinsic molecular subtyping methods in parallel.  
+#' Users can either specify a set of classifiers directly, or enable the
+#' **AUTO mode**, which dynamically selects methods based on cohort composition
+#' (e.g., ER/HER2 distribution, subtype purity, subgroup sizes).  
+#' AUTO reduces misclassification in skewed or subtype-specific cohorts by
+#' disabling methods whose assumptions are violated, but does not perform
+#' consensus voting—subtypes are still returned per method.
 #'
-#' @param data_input The output from the `Mapping()` function, containing
-#'   processed gene expression data prepared for subtyping analysis.
-#' @param methods A character vector specifying the subtyping methods to be
-#'   used. Available options:
-#'   - "parker.original": Original PAM50 by Parker et al., 2009 (Parker et al., 2009)
-#'   - "genefu.scale": PAM50 implementation as in the genefu R package (scaled version) (Gendoo et al., 2016)
-#'   - "genefu.robust": PAM50 implementation as in the genefu R package (robust version) (Gendoo et al., 2016)
-#'   - "cIHC": Conventional estrogen receptor (ER)-balancing using immunohistochemistry (cIHC) (Ciriello et al., 2015)
-#'   - "cIHC.itr": Iterative version of cIHC (Curtis et al., 2012)
-#'   - "PCAPAM50": PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression) (Raj-Kumar et al., 2019)
-#'   - "ssBC": Subgroup-specific gene-centering PAM50 (Zhao et al., 2015)
-#'   - "ssBC.v2": Updated subgroup-specific gene-centering PAM50 with refined quantiles (Fernandez-Martinez et al., 2020)
-#'   - "AIMS": Absolute Intrinsic Molecular Subtyping (AIMS) method (Paquet & Hallett, 2015)
-#'   - "sspbc": Single-Sample Predictors for Breast Cancer (AIMS adaptation) (Staaf et al., 2022)
-#'   - "AUTO": Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort.
+#' @param data_input The output from the [`Mapping()`] function, containing
+#'   processed gene expression data prepared for subtyping.
 #'
-#'   Notes:
-#'   - If "AUTO" is selected, it must be the sole value in the vector.
-#'   - If "AUTO" is not selected, at least **two** methods must be specified; otherwise, an error will occur.
-#' @param Subtype Logical (`TRUE` or `FALSE`). If `TRUE`, the function predicts four subtypes,
-#'   **excluding** the Normal-like subtype.
-#' @param hasClinical Logical (`TRUE` or `FALSE`). If `TRUE`, the function incorporates clinical data from
-#'   the phenotype (`pheno`) table. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` for <= 2cm, `1` for > 2cm).
-#'   - `"NODE"`: Lymph node status (`0` for negative, `1` or higher for positive nodes; this column must be numeric).
+#' @param methods Character vector specifying the subtyping methods to run.
+#'   Available options include:
+#'   - `"parker.original"`: Original PAM50 (Parker et al., 2009).  
+#'   - `"genefu.scale"`: PAM50 (scaled version; Gendoo et al., 2016).  
+#'   - `"genefu.robust"`: PAM50 (robust version; Gendoo et al., 2016).  
+#'   - `"cIHC"`: Conventional ER-balancing with immunohistochemistry (Ciriello et al., 2015).  
+#'   - `"cIHC.itr"`: Iterative ER-balancing (Curtis et al., 2012).  
+#'   - `"PCAPAM50"`: PCA-based PAM50 using ESR1 balancing (Raj-Kumar et al., 2019).  
+#'   - `"ssBC"`: Subgroup-specific gene-centering (Zhao et al., 2015).  
+#'   - `"ssBC.v2"`: Updated subgroup-specific centering (Fernandez-Martinez et al., 2020).  
+#'   - `"AIMS"`: Absolute Intrinsic Molecular Subtyping (Paquet & Hallett, 2015).  
+#'   - `"sspbc"`: SSPBC, a large-cohort SSP trained on SCAN-B (Staaf et al., 2022).  
+#'   - `"AUTO"`: Cohort-aware selection of compatible methods (must be the only entry).  
 #'
-#' @return Returns a list of intrinsic subtypes estimated by the selected methods.
+#'   **Notes:**  
+#'   - If `"AUTO"` is selected, it must be the sole value in `methods`.  
+#'   - Otherwise, at least **two** methods must be specified.  
 #'
+#' @param Subtype Logical. If `TRUE`, returns four subtypes (Luminal A, Luminal B,
+#'   HER2-enriched, Basal-like), excluding Normal-like.  
 #'
+#' @param hasClinical Logical. If `TRUE`, incorporates clinical data from
+#'   `colData(se_obj)`. Required columns:  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive; must be numeric).  
+#'
+#' @return A list containing per-method subtype assignments for each sample.
 #'
 #' @references
-#' - Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
-#' *Supervised risk predictor of breast cancer based on intrinsic subtypes*.
-#' Journal of Clinical Oncology. 2009;27(8).
-#' https://doi.org/10.1200/JCO.2008.18.1370
+#' Yang Q, Hartman J, Sifakis EG.  
+#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
+#' NAR Genomics and Bioinformatics. In press, 2025. Selected as Editor’s Choice.
+#' 
+#' Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.  
+#' *Supervised risk predictor of breast cancer based on intrinsic subtypes.*  
+#' J Clin Oncol. 2009;27(8):1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
 #'
-#' - Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et
-#' al. *Genefu: An R/Bioconductor package for computation of gene
-#' expression-based signatures in breast cancer*. Bioinformatics. 2016;32(7).
-#' https://doi.org/10.1093/bioinformatics/btv693
+#' Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.  
+#' *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer.*  
+#' Bioinformatics. 2016;32(7):1097-1099. https://doi.org/10.1093/bioinformatics/btv693
 #'
-#' - Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A,
-#' et al. *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer*.
-#' Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
+#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.  
+#' *Comprehensive molecular portraits of invasive lobular breast cancer.*  
+#' Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
 #'
-#' - Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ,
-#' et al. *The genomic and transcriptomic architecture of 2,000 breast tumours
-#' reveals novel subgroups*. Nature. 2012;486(7403).
-#' https://doi.org/10.1038/nature10983
+#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.  
+#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*  
+#' Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
 #'
-#' - Zhao X, Rodland EA, Tibshirani R, Plevritis S. *Molecular
-#' subtyping for clinically defined breast cancer subgroups.* Breast Cancer
-#' Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
+#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.  
+#' *Molecular subtyping for clinically defined breast cancer subgroups.*  
+#' Breast Cancer Res. 2015;17(1):29. https://doi.org/10.1186/s13058-015-0520-4
 #'
-#' - Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-#' et al. *Survival, pathologic response, and genomics in CALGB 40601
-#' (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-#' without lapatinib in HER2-positive breast cancer.* Journal of Clinical
-#' Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
+#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.  
+#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*  
+#' J Clin Oncol. 2020;38(36):4184-4197. https://doi.org/10.1200/JCO.20.01276
 #'
-#' - Zhao X, Rodland EA, Tibshirani R, Plevritis S. *Molecular
-#' subtyping for clinically defined breast cancer subgroups.* Breast Cancer
-#' Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
+#' Paquet ER, Hallett MT.  
+#' *Absolute assignment of breast cancer intrinsic molecular subtype.*  
+#' J Natl Cancer Inst. 2015;107(1):dju357. https://doi.org/10.1093/jnci/dju357
 #'
-#' - Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-#' et al. *Survival, pathologic response, and genomics in CALGB 40601
-#' (Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-#' without lapatinib in HER2-positive breast cancer.* Journal of Clinical
-#' Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
-#'
-#' - Paquet ER, Hallett MT. *Absolute assignment of breast cancer
-#' intrinsic molecular subtype.* J Natl Cancer Inst. 2015;107(1).
-#' https://doi.org/10.1093/jnci/dju357
-#'
-#' - Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-#' et al. *RNA sequencing-based single sample predictors of molecular subtype
-#' and risk of recurrence for clinical assessment of early-stage breast cancer*.
-#' NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-#'
+#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.  
+#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*  
+#' NPJ Breast Cancer. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
-#' # Load required dataset
+#' ## Example: run multiple methods
 #' data("OSLO2EMIT0obj")
-#'
-#' # Define methods to use for consensus subtyping
 #' methods <- c("parker.original", "genefu.scale", "genefu.robust")
-#'
-#' # Perform subtyping
 #' res.test <- BS_Multi(
-#'     data_input = OSLO2EMIT0obj$data_input,
-#'     methods = methods,
-#'     Subtype = FALSE,
-#'     hasClinical = FALSE
+#'   data_input = OSLO2EMIT0obj$data_input,
+#'   methods = methods,
+#'   Subtype = FALSE,
+#'   hasClinical = FALSE
 #' )
 #'
 #' @export
