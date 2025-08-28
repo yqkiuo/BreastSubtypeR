@@ -4,7 +4,7 @@
 
 <!-- badges: end -->
 
-[![Bioconductor](https://www.bioconductor.org/shields/version/BreastSubtypeR.svg)](https://bioconductor.org) [![License: GPL-3](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+[![Bioconductor](https://www.bioconductor.org/shields/version/BreastSubtypeR.svg)](https://bioconductor.org/packages/BreastSubtypeR) [![License: GPL-3](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
 
 **BreastSubtypeR** — assumption-aware, multi-method intrinsic molecular subtyping for breast cancer (R / Bioconductor)
 
