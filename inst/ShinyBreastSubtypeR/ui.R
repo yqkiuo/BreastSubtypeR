@@ -51,9 +51,19 @@ ui <- bslib::page_fluid(
                 )
             ),
             helpText(
-              "Gene expression file (CSV or tab-delimited). Rows should be uniquely identifiable features (e.g., probes, probe IDs, transcript IDs, or gene symbols that correspond to row names in the expression matrix), and columns should be samples." 
+              "Gene expression file (CSV/TSV):",
+              tags$ul(
+                tags$li("Rows = genes (symbols, Entrez, or Ensembl IDs)"),
+                tags$li("Columns = samples")
+              ),
+              "Data must be normalized (see BreastSubtypeR publication):",
+              tags$ul(
+                tags$li("log₂-transformed microarray or nCounter data (e.g., RMA-processed)"),
+                tags$li("log₂(FPKM+1) values from RNA-seq (SSP-based methods)"),
+                tags$li("log₂-CPM from RNA-seq after upper-quartile normalization (NC-based methods)")
+              ),
+              "Raw counts are not recommended unless processed through BreastSubtypeR’s normalization pipeline (see ?Mapping())."
             )
-            
             
         ),
 
@@ -129,13 +139,13 @@ ui <- bslib::page_fluid(
             "BSmethod",
             "Select subtyping method",
             choices = list(
-                "PAM50.parker" = "PAM50.parker",
-                "cIHC" = "cIHC",
-                "cIHC.itr" = "cIHC.itr",
-                "PCAPAM50" = "PCAPAM50",
-                "ssBC" = "ssBC",
-                "AIMS" = "AIMS",
-                "sspbc" = "sspbc"
+                "PAM50.parker (NC)" = "PAM50.parker",
+                "cIHC (NC)" = "cIHC",
+                "cIHC.itr (NC)" = "cIHC.itr",
+                "PCAPAM50 (NC)" = "PCAPAM50",
+                "ssBC (NC)" = "ssBC",
+                "AIMS (SSP)" = "AIMS",
+                "sspbc (SSP)" = "sspbc"
             ),
             selected = "PAM50.parker"
         ),
