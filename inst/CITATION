@@ -18,7 +18,7 @@ paper <- bibentry(
   journal = "NAR Genomics and Bioinformatics",
   year    = "2025",
   note    = "Editor's Choice",
-  doi     = "INSERT_DOI_HERE"
+  doi     = "in press"
 )
 
 # Package manual

@@ -2,7 +2,7 @@
 
 ## Highlights
 - Our manuscript describing **BreastSubtypeR** has been accepted in *NAR Genomics and Bioinformatics* (2025) and selected as **Editor’s Choice**.  
-  Citation: Yang Q, Hartman J, Sifakis EG. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.* NAR Genomics and Bioinformatics, In press 2025.  
+  Citation: Yang Q, Hartman J, Sifakis EG. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.* NAR Genomics and Bioinformatics, 2025.  
 
 ## New Features and Bug Fixes
 This release enhances stability, adds new input support, and improves documentation. Key updates include:
