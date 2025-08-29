@@ -260,7 +260,7 @@ domapping <- function(se_obj,
     return(result)
 }
 
-#' Function for consensus subtype
+#' Function implementing AUTO decision logic
 #' @noRd
 get_methods <- function(pheno) {
     #### AUTO mode
@@ -287,11 +287,14 @@ get_methods <- function(pheno) {
         n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-")
 
         # Set thresholds
-        n_ER_threshold <- 10
-        n_ERHER2_threshold <- 5
-        per_ratio <- 0.2
-        upper_ratio <- 0.69
-        lower_ratio <- 0.39
+        n_ERpos_threshold = 15 # simulations-based cut-off
+        n_ERneg_threshold = 18 # simulations-based cut-off
+        n_ERposHER2pos_threshold = round(n_ERpos_threshold/2) # simulations ongoing (available on the next release)
+        n_ERposHER2neg_threshold = round(n_ERpos_threshold/2) # simulations ongoing (available on the next release)
+        n_ERnegHER2pos_threshold = round(n_ERneg_threshold/2) # simulations ongoing (available on the next release)
+        n_ERnegHER2neg_threshold = round(n_ERneg_threshold/2) # simulations ongoing (available on the next release)
+        upper_ratio = 0.69 # simulations-based cut-off
+        lower_ratio = 0.39 # simulations-based cut-off
 
         ## main panel
         if ("TN" %in% colnames(pheno)) {
@@ -324,11 +327,11 @@ get_methods <- function(pheno) {
                 message("Running methods: ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC.v2", "AIMS", "sspbc")
             }
-        } else if (n_ERpos < n_ER_threshold && n_ERneg < n_ER_threshold) {
+        } else if (n_ERpos < n_ERpos_threshold && n_ERneg < n_ERneg_threshold) {
             message("A small number of ER-/ER+ samples has been detected.")
             message("Running methods: AIMS & sspbc")
             methods <- c("AIMS", "sspbc")
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg < n_ER_threshold) {
+        } else if (n_ERpos >= n_ERpos_threshold && n_ERneg < n_ERneg_threshold) {
             if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
                 message("Running methods for ER+ samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
@@ -342,7 +345,7 @@ get_methods <- function(pheno) {
                         ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
             }
-        } else if (n_ERpos < n_ER_threshold && n_ERneg >= n_ER_threshold) {
+        } else if (n_ERpos < n_ERpos_threshold && n_ERneg >= n_ERneg_threshold) {
             if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
                 message("Running methods for ER- samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
@@ -356,7 +359,7 @@ get_methods <- function(pheno) {
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
             }
-        } else if (n_ERpos >= n_ER_threshold && n_ERneg >= n_ER_threshold) {
+        } else if (n_ERpos >= n_ERpos_threshold && n_ERneg >= n_ERneg_threshold) {
             ## for other NC-based methods
             ratio_ER <- n_ERpos / (n_ERneg + n_ERpos)
 
@@ -416,9 +419,18 @@ get_methods <- function(pheno) {
                 "ERposHER2neg"
             )
 
-            er_idx <- ERHER2_counts[seq(1, 2)] > n_ER_threshold
+            er_idx <- c(
+              ERpos = ERHER2_counts["ERpos"] > n_ERpos_threshold,
+              ERneg = ERHER2_counts["ERneg"] > n_ERneg_threshold
+            )
             samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
-            erher2_idx <- ERHER2_counts[seq(3, 6)] > n_ERHER2_threshold
+            
+            erher2_idx <- c(
+              ERposHER2pos = ERHER2_counts["ERposHER2pos"] > n_ERposHER2pos_threshold,
+              ERposHER2neg = ERHER2_counts["ERposHER2neg"] > n_ERposHER2neg_threshold,
+              ERnegHER2pos = ERHER2_counts["ERnegHER2pos"] > n_ERnegHER2pos_threshold,
+              ERnegHER2neg = ERHER2_counts["ERnegHER2neg"] > n_ERnegHER2neg_threshold
+            )
             samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
 
             if (cohort.select != "HER2pos" && cohort.select != "TNBC") {
