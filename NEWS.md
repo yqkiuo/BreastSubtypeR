@@ -1,8 +1,8 @@
-# BreastSubtypeR 1.1.1
+# BreastSubtypeR 1.1.2
 
 ## Bug Fixes and Maintenance
 This patch release addresses minor issues identified after the initial 1.0.0 release while preserving all core functionality. Key fixes include:
-- Resolved input validation edge cases in the subtyping pipeline
+- Improved robustness when handling different input data types, ensuring accurate subtyping for both normalized (e.g., TPM, FPKM) and unnormalized (e.g., raw count) gene expression matrices
 - Enhanced handling of cohorts with extreme ER+ ratios in AUTO mode
 - Corrected data type handling for raw counts input
 - Updated documentation typos and parameter descriptions
