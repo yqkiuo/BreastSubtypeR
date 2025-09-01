@@ -4,7 +4,6 @@
 This patch release addresses minor issues identified after the initial 1.0.0 release while preserving all core functionality. Key fixes include:
 - Improved robustness when handling different input data types, ensuring accurate subtyping for both normalized (e.g., TPM, FPKM) and unnormalized (e.g., raw count) gene expression matrices
 - Enhanced handling of cohorts with extreme ER+ ratios in AUTO mode
-- Corrected data type handling for raw counts input
 - Updated documentation typos and parameter descriptions
 
 All core features remain fully functional:
