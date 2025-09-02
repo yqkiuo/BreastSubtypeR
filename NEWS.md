@@ -4,6 +4,12 @@
 - Our manuscript describing **BreastSubtypeR** has been accepted in *NAR Genomics and Bioinformatics* (2025) and selected as **Editor’s Choice**.  
   Citation: Yang Q, Hartman J, Sifakis EG. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.* NAR Genomics and Bioinformatics, 2025.  
 
+## Bug Fixes and Maintenance
+This patch release addresses minor issues identified after the initial 1.0.0 release while preserving all core functionality. Key fixes include:
+- Improved robustness when handling different input data types, ensuring accurate subtyping for both normalized (e.g., TPM, FPKM) and unnormalized (e.g., raw count) gene expression matrices
+- Enhanced handling of cohorts with extreme ER+ ratios in AUTO mode
+- Updated documentation typos and parameter descriptions
+
 ## New Features and Bug Fixes
 This release enhances stability, adds new input support, and improves documentation. Key updates include:
 - **New:** Support for raw RNA-seq counts (requires user-supplied gene lengths)  
