@@ -38,11 +38,11 @@ experience.
 \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
 }
 \author{
-\strong{Maintainer}: Qiao Yang \email{yq.kiuo@gmail.com} (\href{https://orcid.org/0000-0002-4098-3246}{ORCID}) [funder]
+\strong{Maintainer}: Qiao Yang \email{yq.kiuo@gmail.com} (\href{https://orcid.org/0000-0002-4098-3246}{ORCID})
 
 Authors:
 \itemize{
-  \item Emmanouil Sifakis \email{emmanouil.sifakis@ki.se}
+  \item Emmanouil Sifakis \email{emmanouil.sifakis@ki.se} (\href{https://orcid.org/0000-0001-9919-4471}{ORCID})
 }
 
 }
