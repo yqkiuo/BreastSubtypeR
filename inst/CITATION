@@ -1,0 +1,38 @@
+## inst/CITATION
+
+pkg <- utils::packageDescription("BreastSubtypeR")
+pkgVersion <- pkg$Version
+pkgYear <- if (!is.null(pkg$Date)) substr(pkg$Date, 1, 4) else format(Sys.Date(), "%Y")
+
+citHeader("To cite BreastSubtypeR, please use the following references.\n")
+
+# Journal article
+paper <- bibentry(
+  bibtype = "Article",
+  author = c(
+    person(given = "Qiao",  family = "Yang"),
+    person(given = "Johan", family = "Hartman"),
+    person(given = "Emmanouil", family = "Sifakis")
+  ),
+  title   = "BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research",
+  journal = "NAR Genomics and Bioinformatics",
+  year    = "2025",
+  note    = "Editor's Choice",
+  doi     = "in press"
+)
+
+# Package manual
+pkgCite <- bibentry(
+  bibtype = "Manual",
+  title   = sprintf("BreastSubtypeR: R package version %s", pkgVersion),
+  author  = c(
+    person(given = "Qiao",      family = "Yang"),
+    person(given = "Emmanouil", family = "Sifakis")
+  ),
+  year    = pkgYear,
+  url     = "https://github.com/yqkiuo/BreastSubtypeR"
+)
+
+citFooter("\nPlease also cite R itself and the packages on which BreastSubtypeR depends.")
+
+invisible()  # <-- do NOT return c(paper, pkgCite)

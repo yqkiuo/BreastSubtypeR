@@ -7,50 +7,48 @@
 iBreastSubtypeR()
 }
 \value{
-A table with subtyping and ROR score
+Launches the interactive Shiny application. The app provides subtyping calls
+and ROR scores, downloadable as text files.
 }
 \description{
-Starts an interactive BreastSubtypeR shiny web app.
+Launches the \strong{iBreastSubtypeR} Shiny application, a graphical interface for the BreastSubtypeR package.
 
-BreastSubtypeR integrates intrinsic molecular subtyping methods for breast
-cancer, including nearest-centroid (NC-based) and single-sample predictor
-(SSP-based) approaches. It employs standardized input and output formats,
-providing a unified framework that is highly compatible with other R
-packages in the gene expression profiling field.
+The app allows users to run intrinsic molecular subtyping of breast cancer
+using both nearest-centroid (NC-based) and single-sample predictor (SSP-based)
+methods. It standardizes input and output handling, providing a reproducible
+framework compatible with downstream R/Bioconductor tools.
+\subsection{Workflow}{
 
-The \code{iBreastSubtypeR()} function launches an interactive Shiny web
-application. This app enables users to configure the arguments of subtyping
-functions and execute subtyping on their local computer. For detailed
-descriptions of the arguments, including their default and alternative
-values, please refer to the manual pages of the respective functions.
+\strong{Step 1 – Data mapping}
+\itemize{
+\item Load input data from the current R session or upload expression, clinical,
+and feature annotation files (CSV/text format).
+\item Run the \code{Mapping()} step by clicking \emph{Map Now}. Once complete, a message
+confirms: \emph{"You may now proceed to Step 2."}
+}
 
-Step 1:
+\strong{Step 2 – Subtyping analysis}
+\itemize{
+\item Select one or more subtyping methods (including \code{AUTO}) and configure
+parameters.
+\item Run the analysis. Upon completion, a message confirms: \emph{"Analysis is complete."}
+\item Two diagnostic visualizations are displayed. Results can be downloaded as a
+text file. Users may re-run other methods directly without repeating Step 1.
+}
+}
 
-The input data can be loaded from the user's workspace or by selecting a
-CSV/text file for the expression data, a CSV/text file for clinical
-information, and a CSV/text file for feature annotations.
-
-After loading the necessary files, users can click the "Map Now" button
-once and wait for the notification. If the Mapping() function runs
-successfully, a message will appear stating, "You may now proceed to Step
-2."
-
-Step 2:
-
-Users can select the desired subtyping method and adjust the relevant
-parameters to conduct their analysis. Once the analysis is complete, a
-message will indicate, "Analysis is complete." Two visualizations will be
-displayed, and you will have the option to download the results as a text
-file. If you wish to continue your analysis, you can directly run another
-method without needing to repeat Step 1.
+\subsection{Notes}{
+\itemize{
+\item See \code{?BS_Multi} and \code{?Mapping} for detailed parameter descriptions.
+\item iBreastSubtypeR is intended for local use; no data are uploaded externally.
+}
+}
 }
 \examples{
-
-library(BreastSubtypeR)
-
-# This will open your browser with the BreastSubtypeR shiny web app
 \donttest{
-iBreastSubtypeR()
+  library(BreastSubtypeR)
+  # Opens the BreastSubtypeR Shiny app in your browser
+  iBreastSubtypeR()
 }
 
 }
