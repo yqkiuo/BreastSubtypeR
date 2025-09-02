@@ -15,7 +15,7 @@ Version: 1.1.2
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
-	          role = c("aut", "cre"), 
+	          role = c("aut", "cre", "fnd"), 
             email="yq.kiuo@gmail.com", 
             comment = c(ORCID = "0000-0002-4098-3246")),
     person(given = "Emmanouil", family = "Sifakis",
