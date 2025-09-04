@@ -29,6 +29,16 @@ server <- function(input, output) {
             } else {
                 stop("Unsupported file type")
             }
+            
+            # Store the RawCounts parameter based on user confirmation
+            reactive_files$RawCounts <- input$is_raw_counts
+            
+            # If RawCounts is TRUE, check if gene lengths are available in annotation data
+            if ( isTRUE( reactive_files$RawCounts)) {
+                showNotification("Raw counts mode selected - will check for gene lengths in annotation data", type = "message")
+            } else {
+                showNotification("Normalized data mode selected", type = "message")
+            }
 
             incProgress(0.4, detail = "Loading clinical data...")
             inFile <- input$clinic
@@ -54,6 +64,29 @@ server <- function(input, output) {
             } else {
                 stop("Unsupported file type")
             }
+            
+            
+            # Additional check: if RawCounts is TRUE, verify that annotation data contains gene lengths
+            req(reactive_files$RawCounts, reactive_files$anno)
+            if ( isTRUE(reactive_files$RawCounts) && !"Length" %in% colnames(reactive_files$anno)) {
+                showModal(modalDialog(
+                    title = "Warning: Gene lengths not found",
+                    "Raw counts mode is selected but the annotation data does not contain a 'Length' column. 
+                Gene lengths are required for proper normalization of raw counts.",
+                    easyClose = TRUE,
+                    footer = tagList(
+                        modalButton("Continue anyway"),
+                        actionButton("switch_to_normalized", "Switch to normalized data mode")
+                    )
+                    ))
+            }
+            
+            # Additional observer to handle the switch button
+            observeEvent(input$switch_to_normalized, {
+                reactive_files$RawCounts <- FALSE
+                removeModal()
+                showNotification("Switched to normalized data mode", type = "warning")
+            })
 
             ## Run Mapping function
             samples <- intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID)

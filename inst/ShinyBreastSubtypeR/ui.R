@@ -50,19 +50,25 @@ ui <- bslib::page_fluid(
                     ".txt"
                 )
             ),
+            
+            # Add the radio button here for raw counts confirmation
+            radioButtons("is_raw_counts", "Gene expression data type:",
+                         choices = list("Normalized data" = FALSE, "Raw counts" = TRUE),
+                         selected = FALSE),
+            
             helpText(
               "Gene expression file (CSV/TSV):",
               tags$ul(
                 tags$li("Rows = genes (symbols, Entrez, or Ensembl IDs)"),
                 tags$li("Columns = samples")
               ),
-              "Data must be normalized (see BreastSubtypeR publication):",
+              "Data can be normalized or raw counts (see BreastSubtypeR publication):",
               tags$ul(
                 tags$li("log₂-transformed microarray or nCounter data (e.g., RMA-processed)"),
                 tags$li("log₂(FPKM+1) values from RNA-seq (SSP-based methods)"),
-                tags$li("log₂-CPM from RNA-seq after upper-quartile normalization (NC-based methods)")
-              ),
-              "Raw counts are not recommended unless processed through BreastSubtypeR’s normalization pipeline (see ?Mapping())."
+                tags$li("log₂-CPM from RNA-seq after upper-quartile normalization (NC-based methods)"),
+                tags$li("Raw RNA-seq counts (requires gene lengths in annotation)")
+              )
             )
             
         ),
