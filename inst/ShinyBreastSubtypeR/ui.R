@@ -1,7 +1,22 @@
 # Define UI for iBreastSubtypeR
 ui <- bslib::page_fluid(
-  titlePanel("Interactive Breast Cancer Intrinsic Molecular Subtyping"),
   
+  # --- Global CSS fixes ---
+  tags$head(tags$style(HTML("
+    /* Keep dropdowns visible above cards */
+    .bslib-card, .card, .card-body { overflow: visible !important; }
+  .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 9999 !important; }  /* was 2000/4000 */
+    /* Center the top heading */
+    .app-title { text-align: center; margin: 16px 0 8px; }
+    .app-title h2 { margin: 0; }
+  "))),
+  
+  # --- Centered heading ---
+  tags$div(class = "app-title",
+           tags$h2("Interactive Breast Cancer Intrinsic Molecular Subtyping")
+  ),
+  
+  # --- Welcome / hero card ---
   bslib::card(
     tags$div(
       style = "display: flex; align-items: center;",
@@ -11,9 +26,13 @@ ui <- bslib::page_fluid(
       ),
       tags$div(
         style = "flex: 3; text-align: center;",
-        tags$div(style = "margin-bottom: 10px;", bslib::card_header("Welcome to iBreastSubtypeR!")),
+        tags$div(style = "margin-bottom: 10px;",
+                 bslib::card_header("Welcome to iBreastSubtypeR!")
+        ),
         "iBreastSubtypeR provides an interactive interface for intrinsic molecular subtyping of breast cancer using nearest-centroid (NC) and single-sample predictor (SSP) methods. It standardizes I/O handling and presents results compatible with R/Bioconductor workflows.",
-        tags$div(style = "margin-top: 10px;", bslib::card_footer("Enjoy your subtyping journey!"))
+        tags$div(style = "margin-top: 10px;",
+                 bslib::card_footer("Enjoy your subtyping journey!")
+        )
       )
     )
   ),
@@ -73,9 +92,10 @@ ui <- bslib::page_fluid(
   h3("Step 2 · Choose method & parameters"),
   
   bslib::card(
-    selectInput(
+    style = "overflow: visible;", 
+    selectizeInput(
       "BSmethod", "Subtyping method",
-      choices = list(
+      choices = c(
         "PAM50.parker (NC)" = "PAM50.parker",
         "cIHC (NC)"         = "cIHC",
         "cIHC.itr (NC)"     = "cIHC.itr",
@@ -84,7 +104,12 @@ ui <- bslib::page_fluid(
         "AIMS (SSP)"        = "AIMS",
         "sspbc (SSP)"       = "sspbc"
       ),
-      selected = "PAM50.parker"
+      selected = "PAM50.parker",
+      width = "100%",
+      options = list(
+        openOnFocus   = TRUE,
+        dropdownParent = "body"   # <— render menu at body level (no clipping)
+      )
     ),
     
     # One checkbox for ROR-enabled methods
@@ -93,54 +118,71 @@ ui <- bslib::page_fluid(
       checkboxInput("hasClinical", "Use clinical variables (ROR)", value = FALSE)
     ),
     
-    # PAM50.parker options
+    # PAM50.parker options (calibration row with side-by-side controls)
     conditionalPanel(
       condition = "input.BSmethod == 'PAM50.parker'",
-      bslib::layout_column_wrap(
-        selectInput(
-          "calibration", "Calibration strategy",
-          choices = list("None" = "None", "External" = "External", "Internal" = "Internal"),
-          selected = "Internal"
-        )
-      ),
       bslib::card(
-        conditionalPanel(
-          condition = "input.calibration == 'External'",
-          bslib::layout_column_wrap(
-            selectInput(
-              "external", "External reference set",
-              choices = list(
-                "Given.mdns" = "Given.mdns",
-                "RNAseq.V2" = "RNAseq.V2",
-                "RNAseq.V1" = "RNAseq.V1",
-                "GC.4x44Kcustom" = "GC.4x44Kcustom",
-                "Agilent_244K" = "Agilent_244K",
-                "commercial_1x44k_postMeanCollapse_WashU" = "commercial_1x44k_postMeanCollapse_WashU",
-                "commercial_4x44k_postMeanCollapse_WashU_v2" = "commercial_4x44k_postMeanCollapse_WashU_v2",
-                "htp1.5_WU_update" = "htp1.5_WU_update",
-                "arrayTrain_postMeanCollapse" = "arrayTrain_postMeanCollapse"
-              ),
-              selected = "RNAseq.V2"
-            )
-          )
-        ),
-        conditionalPanel(
-          condition = "input.calibration == 'External' && input.external == 'Given.mdns'",
-          fileInput(
-            "medians", "Upload Given.mdns file",
-            accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
-          )
-        ),
-        conditionalPanel(
-          condition = "input.calibration == 'Internal'",
-          selectInput(
-            "internal", "Internal calibration method",
-            choices = list(
-              "Parker (median-centering)"            = "medianCtr",
-              "genefu (mean scaling)"                = "meanCtr",
-              "genefu (quantile/robust centering)"   = "qCtr"
+        style = "overflow: visible;",
+        
+        bslib::layout_columns(
+          col_widths = c(4, 8),
+          
+          # Left: calibration strategy (selectize to avoid overlay issues)
+          selectizeInput(
+            "calibration", "Calibration strategy",
+            choices = c("None" = "None", "External" = "External", "Internal" = "Internal"),
+            selected = "Internal", width = "100%",
+            options = list(openOnFocus = TRUE)
+          ),
+          
+          # Right: dynamic options (external/internal) rendered inline
+          div(
+            style = "position: relative; overflow: visible;",
+            
+            # External options
+            conditionalPanel(
+              condition = "input.calibration == 'External'",
+              tagList(
+                selectizeInput(
+                  "external", "External reference set",
+                  choices = c(
+                    "Given.mdns" = "Given.mdns",
+                    "RNAseq.V2" = "RNAseq.V2",
+                    "RNAseq.V1" = "RNAseq.V1",
+                    "GC.4x44Kcustom" = "GC.4x44Kcustom",
+                    "Agilent_244K" = "Agilent_244K",
+                    "commercial_1x44k_postMeanCollapse_WashU" = "commercial_1x44k_postMeanCollapse_WashU",
+                    "commercial_4x44k_postMeanCollapse_WashU_v2" = "commercial_4x44k_postMeanCollapse_WashU_v2",
+                    "htp1.5_WU_update" = "htp1.5_WU_update",
+                    "arrayTrain_postMeanCollapse" = "arrayTrain_postMeanCollapse"
+                  ),
+                  selected = "RNAseq.V2", width = "100%",
+                  options = list(placeholder = "Choose a reference set…", openOnFocus = TRUE)
+                ),
+                conditionalPanel(
+                  condition = "input.external == 'Given.mdns'",
+                  fileInput(
+                    "medians", "Upload Given.mdns file",
+                    accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
+                  )
+                )
+              )
             ),
-            selected = "medianCtr"
+            
+            # Internal options
+            conditionalPanel(
+              condition = "input.calibration == 'Internal'",
+              selectizeInput(
+                "internal", "Internal calibration method",
+                choices = c(
+                  "Parker (median-centering)"          = "medianCtr",
+                  "genefu (mean scaling)"              = "meanCtr",
+                  "genefu (quantile/robust centering)" = "qCtr"
+                ),
+                selected = "medianCtr", width = "100%",
+                options = list(placeholder = "Pick a calibration…", openOnFocus = TRUE)
+              )
+            )
           )
         )
       )
@@ -155,7 +197,8 @@ ui <- bslib::page_fluid(
     # cIHC.itr controls
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC.itr'",
-      bslib::layout_column_wrap(
+      bslib::layout_columns(
+        col_widths = c(6, 6),
         numericInput("iteration", label = "Iterations", value = 100, min = 10, step = 10),
         numericInput("ratio", label = "ER+ training ratio", value = 54/64, min = 0, max = 1, step = 0.01)
       )
@@ -212,20 +255,20 @@ ui <- bslib::page_fluid(
       12, align = "center",
       div(
         style = "margin-top: 20px; margin-bottom: 20px;",
-            downloadButton(
-              "download",
-              HTML("Download results<br>(.tsv)"),
-              style = "
-        width: 220px;
-        height: auto;
-        padding: 10px 16px;
-        white-space: normal;
-        line-height: 1.2;
-        background-color: #FF69B4;
-        color: white;
-        border: none;
-      "
-            )
+        downloadButton(
+          "download",
+          HTML("Download results<br>(.tsv)"),
+          style = "
+            width: 220px;
+            height: auto;
+            padding: 10px 16px;
+            white-space: normal;
+            line-height: 1.2;
+            background-color: #FF69B4;
+            color: white;
+            border: none;
+          "
+        )
       )
     )
   )
