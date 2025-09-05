@@ -8,121 +8,130 @@ server <- function(input, output) {
         deleteFile = FALSE
     )
 
-    #### upload data ####
+#### upload data ####
 
-    # Reactive values to store uploaded data and results
-    reactive_files <- shiny::reactiveValues(GEX = NULL, clinic = NULL, anno = NULL, data_input = NULL, output_res = NULL)
+reactive_files <- shiny::reactiveValues(GEX = NULL, clinic = NULL, anno = NULL,
+                                        RawCounts = NULL, data_input = NULL, output_res = NULL)
 
-    shiny::observeEvent(input$map, {
-        req(input$GEX, input$clinic, input$anno) # Ensure files are uploaded
-
-        withProgress(message = "Running Mapping...", value = 0, {
-            # Update progress bar for each step
-            incProgress(0.2, detail = "Loading gene expression data...")
-            inFile <- input$GEX
-            fileExt <- tools::file_ext(inFile$name)
-
-            reactive_files$GEX <- if (fileExt == "csv") {
-                read.csv(inFile$datapath, header = TRUE, row.names = 1, sep = ",")
-            } else if (fileExt == "txt") {
-                read.table(inFile$datapath, header = TRUE, row.names = 1, sep = "\t", fill = TRUE, stringsAsFactors = FALSE)
-            } else {
-                stop("Unsupported file type")
-            }
-            
-            # Store the RawCounts parameter based on user confirmation
-            reactive_files$RawCounts <- input$is_raw_counts
-            
-            # If RawCounts is TRUE, check if gene lengths are available in annotation data
-            if ( isTRUE( reactive_files$RawCounts)) {
-                showNotification("Raw counts mode selected - will check for gene lengths in annotation data", type = "message")
-            } else {
-                showNotification("Normalized data mode selected", type = "message")
-            }
-
-            incProgress(0.4, detail = "Loading clinical data...")
-            inFile <- input$clinic
-            fileExt <- tools::file_ext(inFile$name)
-
-            reactive_files$clinic <- if (fileExt == "csv") {
-                read.csv(inFile$datapath, header = TRUE, row.names = NULL, sep = ",")
-            } else if (fileExt == "txt") {
-                read.table(inFile$datapath, header = TRUE, row.names = NULL, sep = "\t", fill = TRUE, stringsAsFactors = FALSE)
-            } else {
-                stop("Unsupported file type")
-            }
-            rownames(reactive_files$clinic) <- reactive_files$clinic$PatientID
-
-            incProgress(0.6, detail = "Loading feature annotation data...")
-            inFile <- input$anno
-            fileExt <- tools::file_ext(inFile$name)
-
-            reactive_files$anno <- if (fileExt == "csv") {
-                read.csv(inFile$datapath, header = TRUE, row.names = NULL, sep = ",")
-            } else if (fileExt == "txt") {
-                read.table(inFile$datapath, header = TRUE, row.names = NULL, sep = "\t", fill = TRUE, stringsAsFactors = FALSE)
-            } else {
-                stop("Unsupported file type")
-            }
-            
-            
-            # Additional check: if RawCounts is TRUE, verify that annotation data contains gene lengths
-            req(reactive_files$RawCounts, reactive_files$anno)
-            if ( isTRUE(reactive_files$RawCounts) && !"Length" %in% colnames(reactive_files$anno)) {
-                showModal(modalDialog(
-                    title = "Warning: Gene lengths not found",
-                    "Raw counts mode is selected but the annotation data does not contain a 'Length' column. 
-                Gene lengths are required for proper normalization of raw counts.",
-                    easyClose = TRUE,
-                    footer = tagList(
-                        modalButton("Continue anyway"),
-                        actionButton("switch_to_normalized", "Switch to normalized data mode")
-                    )
-                    ))
-            }
-            
-            # Additional observer to handle the switch button
-            observeEvent(input$switch_to_normalized, {
-                reactive_files$RawCounts <- FALSE
-                removeModal()
-                showNotification("Switched to normalized data mode", type = "warning")
-            })
-
-            ## Run Mapping function
-            samples <- intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID)
-            probeID <- intersect(rownames(reactive_files$GEX), reactive_files$anno$probe)
-            rownames(reactive_files$anno) = reactive_files$anno$probe
-            
-            incProgress(0.8, detail = "Running Mapping function...")
-            tryCatch(
-                {
-                    # Redirect console output to a variable
-                    se_obj = SummarizedExperiment::SummarizedExperiment(assays = list(counts = reactive_files$GEX[probeID, samples]),
-                                                  rowData = reactive_files$anno[probeID,],
-                                                  colData = reactive_files$clinic[samples,]
-                                                  )
-                    
-                    output_text <- capture.output({
-                        data_input <- Mapping(se_obj = se_obj, impute = TRUE, verbose = TRUE)
-
-                        cat("Step 1 is complete.", sep = "\n")
-                        cat("You may now proceed to Step 2.", sep = "\n")
-                    })
-
-                    # Store results
-                    reactive_files$data_input <- data_input
-
-                    # Display output text as notification
-                    showNotification(HTML(paste(output_text, collapse = "<br>")), type = "message", duration = NULL)
-                },
-                error = function(e) {
-                    showNotification(paste("Error:", e$message), type = "error", duration = NULL)
-                }
-            )
-
-            incProgress(1, detail = "Completed.")
-        })
+shiny::observeEvent(input$map, {
+  req(input$GEX, input$clinic, input$anno) # Ensure files are uploaded
+  
+  withProgress(message = "Running Mapping...", value = 0, {
+    incProgress(0.2, detail = "Loading gene expression data...")
+    
+    # --- helper to read csv/tsv with safe defaults ---
+    .read_table <- function(inFile) {
+      ext <- tools::file_ext(inFile$name)
+      sep <- if (tolower(ext) == "csv") "," else "\t"
+      utils::read.table(inFile$datapath, header = TRUE, sep = sep,
+                        row.names = NULL, check.names = FALSE,
+                        quote = "", comment.char = "", stringsAsFactors = FALSE, fill = TRUE)
+    }
+    
+    # GEX
+    gex_df <- .read_table(input$GEX)
+    
+    # If the first column is gene IDs (no header for that column), set rownames from it
+    # Case 1: you wrote a header with ONLY sample IDs → the first data column is gene IDs
+    if (!any(grepl("^probe$", names(gex_df), ignore.case = TRUE))) {
+      # treat column 1 as rownames if it looks like gene IDs (non-numeric)
+      if (!is.numeric(gex_df[[1]])) {
+        rn <- gex_df[[1]]; gex_df[[1]] <- NULL
+        rownames(gex_df) <- rn
+      }
+    } else {
+      # If a 'probe' column exists in GEX by mistake, use it as rownames
+      rownames(gex_df) <- gex_df$probe
+      gex_df$probe <- NULL
+    }
+    # Coerce to numeric matrix
+    gex_mat <- as.matrix(sapply(gex_df, function(x) suppressWarnings(as.numeric(x))))
+    rownames(gex_mat) <- rownames(gex_df)
+    if (anyNA(gex_mat)) {
+      # NA can appear if there were stray characters; warn but continue
+      showNotification("Warning: NAs introduced while coercing GEX to numeric.", type = "warning")
+    }
+    reactive_files$GEX <- gex_mat
+    
+    # RawCounts flag from UI
+    reactive_files$RawCounts <- isTRUE(input$is_raw_counts)
+    if (reactive_files$RawCounts) {
+      showNotification("Raw counts mode selected.", type = "message")
+    } else {
+      showNotification("Normalized data mode selected.", type = "message")
+    }
+    
+    # Clinical
+    incProgress(0.45, detail = "Loading clinical data...")
+    clinic_df <- .read_table(input$clinic)
+    if (!"PatientID" %in% names(clinic_df)) {
+      stop("Clinical file must contain a 'PatientID' column.")
+    }
+    rownames(clinic_df) <- clinic_df$PatientID
+    reactive_files$clinic <- clinic_df
+    
+    # Annotation
+    incProgress(0.65, detail = "Loading feature annotation...")
+    anno_df <- .read_table(input$anno)
+    if (!all(c("probe","ENTREZID") %in% names(anno_df))) {
+      stop("Annotation file must contain 'probe' and 'ENTREZID' columns.")
+    }
+    if (reactive_files$RawCounts && !"Length" %in% names(anno_df)) {
+      showModal(modalDialog(
+        title = "Warning: Gene lengths not found",
+        "Raw counts mode is selected but the annotation data does not contain a 'Length' column. Gene lengths are required for proper normalization.",
+        easyClose = TRUE,
+        footer = tagList(modalButton("Continue anyway"),
+                         actionButton("switch_to_normalized", "Switch to normalized data mode"))
+      ))
+    }
+    rownames(anno_df) <- anno_df$probe
+    reactive_files$anno <- anno_df
+    
+    observeEvent(input$switch_to_normalized, {
+      reactive_files$RawCounts <- FALSE
+      removeModal()
+      showNotification("Switched to normalized data mode", type = "warning")
     })
+    
+    ## Align identities and validate overlaps
+    incProgress(0.8, detail = "Aligning samples and features...")
+    
+    samples <- intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID)
+    if (length(samples) == 0) {
+      stop("No overlapping sample IDs between GEX columns and clinical 'PatientID'. Check headers.")
+    }
+    probeID <- intersect(rownames(reactive_files$GEX), reactive_files$anno$probe)
+    if (length(probeID) == 0) {
+      stop("No overlapping probes between GEX rownames and annotation 'probe'.")
+    }
+    
+    # Build SE — IMPORTANT: use drop=FALSE to avoid vector collapse (dim(X) error)
+    se_obj <- SummarizedExperiment::SummarizedExperiment(
+      assays = list(counts = reactive_files$GEX[probeID, samples, drop = FALSE]),
+      rowData = S4Vectors::DataFrame(reactive_files$anno[probeID, , drop = FALSE]),
+      colData = S4Vectors::DataFrame(reactive_files$clinic[samples, , drop = FALSE])
+    )
+    
+    # Run Mapping with the correct RawCounts flag
+    tryCatch({
+      output_text <- capture.output({
+        data_input <- Mapping(se_obj = se_obj,
+                              RawCounts = reactive_files$RawCounts,
+                              impute = TRUE, verbose = TRUE)
+        cat("Step 1 is complete.\nYou may now proceed to Step 2.\n")
+      })
+      reactive_files$data_input <- data_input
+      showNotification(HTML(paste(output_text, collapse = "<br>")),
+                       type = "message", duration = NULL)
+    }, error = function(e) {
+      showNotification(paste("Error in Mapping:", e$message), type = "error", duration = NULL)
+    })
+    
+    incProgress(1, detail = "Completed.")
+  })
+})
+    
 
     #### perform analysis ####
 
