@@ -18,7 +18,13 @@
 
 **BreastSubtypeR** consolidates established gene-expression–based intrinsic subtyping methods into a single, reproducible R/Bioconductor package and provides a local Shiny app (`iBreastSubtypeR`) for users without programming experience.
 
-Key goals: - reduce method misapplication across heterogeneous research cohorts, - enable direct cross-method benchmarking and exploration of discordant calls, - provide method-specific preprocessing and robust probe-to-gene mapping, - support privacy-preserving local analyses via a Shiny GUI.
+------------------------------------------------------------------------
+
+## Key goals
+-   Reduce method misapplication across heterogeneous research cohorts.
+-   Enable direct cross-method benchmarking and exploration of discordant calls.
+-   Provide method-specific preprocessing and robust probe-to-gene mapping.
+-   Support privacy-preserving local analyses via a Shiny GUI.
 
 ------------------------------------------------------------------------
 
