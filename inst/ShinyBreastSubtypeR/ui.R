@@ -1,14 +1,20 @@
 # Define UI for iBreastSubtypeR
 ui <- bslib::page_fluid(
   
-  # --- Global CSS fixes ---
+  # --- Global CSS fixes & minor polish ---
   tags$head(tags$style(HTML("
     /* Keep dropdowns visible above cards */
     .bslib-card, .card, .card-body { overflow: visible !important; }
-  .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 9999 !important; }  /* was 2000/4000 */
+    .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 9999 !important; }
     /* Center the top heading */
     .app-title { text-align: center; margin: 16px 0 8px; }
     .app-title h2 { margin: 0; }
+    /* Styled info box for help panels */
+    .method-help {
+      margin: 6px 0 12px; padding: 10px 12px;
+      border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
+    }
+    .method-help ul { margin-bottom: 0; }
   "))),
   
   # --- Centered heading ---
@@ -56,18 +62,18 @@ ui <- bslib::page_fluid(
         choices  = c("Normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
         selected = "norm", inline = TRUE
       ),
-      uiOutput("gex_help")
+      uiOutput("gex_help")     # "Requirements" panel (mode-aware)
     ),
     
-    # 2) Clinical
+    # 2) Clinical data (renamed)
     bslib::card(
-      bslib::card_header("2) Clinical metadata"),
+      bslib::card_header("2) Clinical data"),
       fileInput(
         "clinic",
         "Upload clinical table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("clin_help")
+      uiOutput("clin_help")    # "Clinical data requirements"
     ),
     
     # 3) Feature annotation
@@ -78,7 +84,7 @@ ui <- bslib::page_fluid(
         "Upload annotation table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("anno_help")
+      uiOutput("anno_help")    # "Annotation requirements"
     )
   ),
   
@@ -92,54 +98,62 @@ ui <- bslib::page_fluid(
   h3("Step 2 · Choose method & parameters"),
   
   bslib::card(
-    style = "overflow: visible;", 
+    style = "overflow: visible;",
+    
+    # Subtyping method + AUTO
     selectizeInput(
       "BSmethod", "Subtyping method",
       choices = c(
-        "PAM50.parker (NC)" = "PAM50.parker",
-        "cIHC (NC)"         = "cIHC",
-        "cIHC.itr (NC)"     = "cIHC.itr",
-        "PCAPAM50 (NC)"     = "PCAPAM50",
-        "ssBC (NC)"         = "ssBC",
-        "AIMS (SSP)"        = "AIMS",
-        "sspbc (SSP)"       = "sspbc"
+        "Run all (AUTO Mode)" = "AUTO Mode",
+        "PAM50 (parker.original | genefu.scale | genefu.robust)" = "PAM50",
+        "cIHC"     = "cIHC",
+        "cIHC.itr" = "cIHC.itr",
+        "PCAPAM50" = "PCAPAM50",
+        "ssBC"     = "ssBC",
+        "AIMS"     = "AIMS",
+        "sspbc"    = "sspbc"
       ),
-      selected = "PAM50.parker",
+      selected = "AUTO Mode",
       width = "100%",
-      options = list(
-        openOnFocus   = TRUE,
-        dropdownParent = "body"   # <— render menu at body level (no clipping)
-      )
+      options = list(openOnFocus = TRUE, dropdownParent = "body")
     ),
     
-    # One checkbox for ROR-enabled methods
+    # Global 4 vs 5 classes (AIMS always 5)
+    radioButtons(
+      "k_subtypes", "Subtype classes",
+      choices = c("5 classes (includes Normal-like)" = "5",
+                  "4 classes (excludes Normal-like)" = "4"),
+      selected = "5", inline = TRUE
+    ),
+    
+    # Live per-method help (with citations)
+    uiOutput("method_help"),
+    
+    # ROR checkbox (NC methods + AUTO)
     conditionalPanel(
-      condition = "input.BSmethod == 'PAM50.parker' || input.BSmethod == 'cIHC' || input.BSmethod == 'cIHC.itr' || input.BSmethod == 'PCAPAM50' || input.BSmethod == 'ssBC'",
+      condition = "input.BSmethod == 'AUTO Mode' || input.BSmethod == 'PAM50' || input.BSmethod == 'cIHC' || input.BSmethod == 'cIHC.itr' || input.BSmethod == 'PCAPAM50' || input.BSmethod == 'ssBC'",
       checkboxInput("hasClinical", "Use clinical variables (ROR)", value = FALSE)
     ),
     
-    # PAM50.parker options (calibration row with side-by-side controls)
+    # PAM50 calibration row with side-by-side controls
     conditionalPanel(
-      condition = "input.BSmethod == 'PAM50.parker'",
+      condition = "input.BSmethod == 'PAM50'",
       bslib::card(
         style = "overflow: visible;",
-        
         bslib::layout_columns(
           col_widths = c(4, 8),
           
-          # Left: calibration strategy (selectize to avoid overlay issues)
           selectizeInput(
             "calibration", "Calibration strategy",
             choices = c("None" = "None", "External" = "External", "Internal" = "Internal"),
             selected = "Internal", width = "100%",
-            options = list(openOnFocus = TRUE)
+            options = list(openOnFocus = TRUE, dropdownParent = "body")
           ),
           
-          # Right: dynamic options (external/internal) rendered inline
           div(
             style = "position: relative; overflow: visible;",
             
-            # External options
+            # External
             conditionalPanel(
               condition = "input.calibration == 'External'",
               tagList(
@@ -147,17 +161,17 @@ ui <- bslib::page_fluid(
                   "external", "External reference set",
                   choices = c(
                     "Given.mdns" = "Given.mdns",
-                    "RNAseq.V2" = "RNAseq.V2",
-                    "RNAseq.V1" = "RNAseq.V1",
+                    "RNAseq.V2"  = "RNAseq.V2",
+                    "RNAseq.V1"  = "RNAseq.V1",
                     "GC.4x44Kcustom" = "GC.4x44Kcustom",
-                    "Agilent_244K" = "Agilent_244K",
-                    "commercial_1x44k_postMeanCollapse_WashU" = "commercial_1x44k_postMeanCollapse_WashU",
+                    "Agilent_244K"   = "Agilent_244K",
+                    "commercial_1x44k_postMeanCollapse_WashU"    = "commercial_1x44k_postMeanCollapse_WashU",
                     "commercial_4x44k_postMeanCollapse_WashU_v2" = "commercial_4x44k_postMeanCollapse_WashU_v2",
                     "htp1.5_WU_update" = "htp1.5_WU_update",
                     "arrayTrain_postMeanCollapse" = "arrayTrain_postMeanCollapse"
                   ),
                   selected = "RNAseq.V2", width = "100%",
-                  options = list(placeholder = "Choose a reference set…", openOnFocus = TRUE)
+                  options = list(placeholder = "Choose a reference set…", openOnFocus = TRUE, dropdownParent = "body")
                 ),
                 conditionalPanel(
                   condition = "input.external == 'Given.mdns'",
@@ -169,18 +183,18 @@ ui <- bslib::page_fluid(
               )
             ),
             
-            # Internal options
+            # Internal
             conditionalPanel(
               condition = "input.calibration == 'Internal'",
               selectizeInput(
                 "internal", "Internal calibration method",
                 choices = c(
-                  "Parker (median-centering)"          = "medianCtr",
-                  "genefu (mean scaling)"              = "meanCtr",
-                  "genefu (quantile/robust centering)" = "qCtr"
+                  "parker.original (median centering)"   = "medianCtr",
+                  "genefu.scale (mean centering)"        = "meanCtr",
+                  "genefu.robust (quantile centering)"   = "qCtr"
                 ),
                 selected = "medianCtr", width = "100%",
-                options = list(placeholder = "Pick a calibration…", openOnFocus = TRUE)
+                options = list(placeholder = "Pick a calibration…", openOnFocus = TRUE, dropdownParent = "body")
               )
             )
           )
@@ -188,13 +202,8 @@ ui <- bslib::page_fluid(
       )
     ),
     
-    # cIHC (no extra controls)
-    conditionalPanel(
-      condition = "input.BSmethod == 'cIHC'",
-      div()
-    ),
-    
-    # cIHC.itr controls
+    # cIHC / PCAPAM50 / AIMS (no extra UI)
+    conditionalPanel(condition = "input.BSmethod == 'cIHC'", div()),
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC.itr'",
       bslib::layout_columns(
@@ -203,14 +212,7 @@ ui <- bslib::page_fluid(
         numericInput("ratio", label = "ER+ training ratio", value = 54/64, min = 0, max = 1, step = 0.01)
       )
     ),
-    
-    # PCAPAM50 (no extra controls)
-    conditionalPanel(
-      condition = "input.BSmethod == 'PCAPAM50'",
-      div()
-    ),
-    
-    # ssBC controls
+    conditionalPanel(condition = "input.BSmethod == 'PCAPAM50'", div()),
     conditionalPanel(
       condition = "input.BSmethod == 'ssBC'",
       bslib::layout_column_wrap(
@@ -221,25 +223,8 @@ ui <- bslib::page_fluid(
         )
       )
     ),
-    
-    # AIMS (no extra controls)
-    conditionalPanel(
-      condition = "input.BSmethod == 'AIMS'",
-      div()
-    ),
-    
-    # sspbc controls
-    conditionalPanel(
-      condition = "input.BSmethod == 'sspbc'",
-      bslib::layout_column_wrap(
-        selectInput(
-          "Subtype",
-          "Subtype method (TRUE = 4 subtypes; FALSE = 5 subtypes)",
-          choices = list("5 subtypes" = "FALSE", "4 subtypes" = "TRUE"),
-          selected = "FALSE"
-        )
-      )
-    ),
+    conditionalPanel(condition = "input.BSmethod == 'AIMS'", div()),
+    conditionalPanel(condition = "input.BSmethod == 'sspbc'", div()),
     
     bslib::card(
       actionButton("run", "Run subtyping", icon = icon("play-circle"))
