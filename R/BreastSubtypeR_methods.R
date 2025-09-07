@@ -12,7 +12,9 @@
 #' @importFrom utils data installed.packages read.delim write.table
 #' @importFrom graphics barplot mtext par
 #' @importFrom grDevices dev.off pdf
-#'
+#' @importFrom stats prcomp cor cor.test dist quantile median
+#' @importFrom methods is
+#' 
 NULL
 
 #' BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research
@@ -101,8 +103,8 @@ NULL
 #' @param verbose Logical. If `TRUE`, prints progress messages during execution.
 #'
 #' @return A named list with:
-#'   \item{x_NC}{`SummarizedExperiment` with log₂-transformed data prepared for NC-based methods (plus `colData`).}
-#'   \item{x_SSP}{`SummarizedExperiment` with linear-scale data prepared for SSP-based methods (plus `colData`).}
+#'   \item{se_NC}{`SummarizedExperiment` holding log2-transformed data prepared for NC-based methods (assay name: `counts`).}
+#'   \item{se_SSP}{`SummarizedExperiment` holding linear-scale data prepared for SSP-based methods (assay name: `counts`).}
 #'
 #' @details
 #' `Mapping()` supports multiple input types:
@@ -194,16 +196,17 @@ Mapping <- function(
 #'   - **Column metadata** (`colData`): Optional sample- or patient-level
 #'     information.
 #'   
-#' @param calibration Calibration strategy for subtype prediction. Options:
-#'   - `"None"`: No calibration.
-#'   - `"Internal"`: Apply internal calibration (see `internal`).
-#'   - `"External"`: Apply calibration using external medians (see `external`).
+#' @param calibration Character. One of:
+#'   - `"None"`: no centering/scaling.
+#'   - `"Internal"`: center by a method derived from the current cohort (see `internal`).
+#'   - `"External"`: center by medians from an external cohort (see `external`).
 #'
-#' @param internal Internal calibration method when `calibration = "Internal"`.  
-#'   Options include:
-#'   - `"-1"` (default): Median-centering (as in Parker et al.).  
-#'   - `"meanCtr"`: Mean-centering (as implemented in `genefu.scale`).  
-#'   - `"qCtr"`: Quantile-based centering (as in `genefu.robust`).  
+#' @param internal Internal calibration method used when `calibration = "Internal"`.  
+#'   Accepts:
+#'   - `NA` or `"medianCtr"` (identical): gene-wise median centering (as in Parker et al.).  
+#'   - `"meanCtr"`: gene-wise z-scoring (mean 0, sd 1; as implemented in `genefu.scale`).  
+#'   - `"qCtr"`: robust centering (quantile rescale with mq = 0.05; as in `genefu.robust`).
+#'   Defaults to `NA` (median centering).
 #'
 #' @param external Character string specifying the external calibration source.  
 #'   - To use training cohort medians, provide the platform/column name.  
@@ -244,7 +247,7 @@ Mapping <- function(
 #' res <- BS_parker(
 #'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     calibration = "Internal",
-#'     internal = "-1",
+#'     internal = NA,                     # NA ≡ "medianCtr"
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
@@ -263,24 +266,48 @@ BS_parker <- function(
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
     }
-
-    ## maintain parameter
-    if (internal == "-1") {
-        internal <- "medianCtr"
-    }
+  
+    ## --- robust calibration handling & legacy -1 guard ---
+    # tolerate NULL/NA/missing and unnamed vectors
+      if (missing(calibration) || is.null(calibration) || is.na(calibration)) {
+          calibration <- "None"
+        } else if (length(calibration) > 1L) {
+          calibration <- calibration[1L]
+        }
+    
+    # legacy semantics: internal == -1 or "-1" means *no* adjustment
+      if (!missing(internal) && !is.null(internal) && !all(is.na(internal))) {
+        if (any(internal %in% c(-1, "-1"))) {
+          calibration <- "None"
+          internal <- NULL
+        }
+      }
+    
+    # Default Parker behavior: internal = NA → median centering
+      if (identical(calibration, "Internal") &&
+         (length(internal) == 0L || all(is.na(internal)))) {
+          internal <- "medianCtr"
+        }
 
     ## Extract data from SummarizedExperiment
     gene_expr <- assay(se_obj)
     pheno <- colData(se_obj) %>% data.frame()
 
     # Handle clinical metadata if required
-    if (ncol(pheno) == 0) {
-        pheno <- NULL
-    } else {
-        if (!"PatientID" %in% colnames(pheno)) {
-            stop("The `colData` of `se_obj` must include a `PatientID` column when `hasClinical = TRUE`.")
+    if (hasClinical) {
+          req <- c("PatientID","TSIZE","NODE")
+          miss <- setdiff(req, colnames(pheno))
+           if (length(miss)) {
+               stop("When hasClinical = TRUE, colData(se_obj) must include: ",
+                    paste(req, collapse=", "),
+                    ". Missing: ", paste(miss, collapse=", "), ".")
+           }
+      if (!is.numeric(pheno$NODE)) {
+            stop("colData(se_obj)$NODE must be numeric (0 for negative, >=1 for positive).")
         }
-        rownames(pheno) <- pheno$PatientID
+      rownames(pheno) <- pheno$PatientID
+    } else {
+      pheno <- NULL
     }
 
     arguments <- rlang::dots_list(
@@ -294,7 +321,7 @@ BS_parker <- function(
         hasClinical = hasClinical,
         .homonyms = "last"
     )
-
+    
     call <- rlang::call2(makeCalls.parker, !!!arguments)
     res_parker <- eval(call)
 
@@ -363,9 +390,16 @@ BS_cIHC <- function(se_obj,
     pheno <- colData(se_obj) %>% data.frame()
 
     if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns.")
     }
     rownames(pheno) <- pheno$PatientID
+    
+    if (hasClinical) {
+          req <- c("TSIZE","NODE")
+          miss <- setdiff(req, colnames(pheno))
+          if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
+          if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+    }
 
     arguments <- rlang::dots_list(
         mat = gene_expr,
@@ -457,10 +491,17 @@ BS_cIHC.itr <- function(se_obj,
     pheno <- colData(se_obj) %>% data.frame()
 
     if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns.")
     }
     rownames(pheno) <- pheno$PatientID
 
+    if (hasClinical) {
+      req <- c("TSIZE","NODE")
+      miss <- setdiff(req, colnames(pheno))
+      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
+      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+    }
+    
     arguments <- rlang::dots_list(
         mat = gene_expr,
         df.cln = pheno,
@@ -540,10 +581,17 @@ BS_PCAPAM50 <- function(se_obj,
     pheno <- colData(se_obj) %>% data.frame()
 
     if (!all(c("PatientID", "ER") %in% colnames(pheno))) {
-        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns when 'hasClinical = TRUE'.")
+        stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns.")
     }
     rownames(pheno) <- pheno$PatientID
 
+    if (hasClinical) {
+      req <- c("TSIZE","NODE")
+      miss <- setdiff(req, colnames(pheno))
+      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
+      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+    }
+    
     samples <- pheno$PatientID
 
     if ("ER" %in% colnames(pheno)) {
@@ -687,10 +735,17 @@ BS_ssBC <- function(se_obj,
     # Extract clinical metadata if hasClinical is TRUE
     pheno <- colData(se_obj) %>% data.frame()
     if (!"PatientID" %in% colnames(pheno)) {
-        stop("The 'colData' of 'se_obj' must include a 'PatientID' column when 'hasClinical = TRUE'.")
+        stop("The 'colData' of 'se_obj' must include a 'PatientID' column.")
     }
     rownames(pheno) <- pheno$PatientID
 
+    if (hasClinical) {
+      req <- c("TSIZE","NODE")
+      miss <- setdiff(req, colnames(pheno))
+      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
+      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+    }
+    
     # Additional checks based on `s`
     required_columns <- switch(s,
         "ER" = c("ER"),
@@ -789,6 +844,7 @@ BS_AIMS <- function(se_obj) {
     call <- rlang::call2(applyAIMS_AIMS, !!!arguments)
 
     res_AIMS <- eval(call)
+    return(res_AIMS)
 }
 
 
@@ -857,6 +913,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 
     call <- rlang::call2(applySSP, !!!arguments)
     res_sspbc <- eval(call)
+    return(res_sspbc)
 }
 
 #' Intrinsic Subtyping with Multiple Approaches (BS_Multi)
@@ -977,6 +1034,9 @@ BS_Multi <- function(
 
     ## extract pheno table
     pheno <- colData(data_input$se_NC) %>% data.frame()
+        if (!"PatientID" %in% colnames(pheno)) {
+          stop("colData(se_NC) must have a 'PatientID' column.")
+        }
     rownames(pheno) <- pheno$PatientID
 
     # Check ER and HER2 columns in pheno
@@ -1009,7 +1069,7 @@ BS_Multi <- function(
                 BS_parker(
                     data_input$se_NC,
                     calibration = "Internal",
-                    internal = "-1",
+                    internal = "medianCtr",              # default to medianCtr in BS_parker()
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
@@ -1286,4 +1346,5 @@ BS_Multi <- function(
     } else {
         res <- list(res_subtypes = res_subtypes, results = results)
     }
+    return(res)
 }

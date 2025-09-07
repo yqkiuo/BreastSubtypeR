@@ -68,53 +68,43 @@ overlapSets <- function(x, y) {
 #'   user selves, this parameter should be "Given.mdns", not platform name.
 #' @noRd
 docalibration <- function(y,
-    medians.all,
-    calibration = c("None", "Internal", "External"),
-    internal = NA,
-    external = NA) {
-    calibration <- match.arg(calibration)
-
-    mq <- 0.05 ## presetting in genefu robust model
-    switch(calibration,
-        "None" = {
-            message("No calibration")
-        },
-        "Internal" = {
-            # Define allowed internal methods
-            allowed_methods <- c("medianCtr", "meanCtr", "qCtr")
-
-            if (internal %in% allowed_methods) {
-                # Perform standard internal calibration
-                if (internal == "medianCtr") {
-                    y <- medianCtr(y)
-                } else if (internal == "meanCtr") {
-                    y <- t(scale(t(y), center = TRUE, scale = TRUE))
-                } else if (internal == "qCtr") {
-                    y <- t(apply(y, 1, function(x) {
-                        return((rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2)
-                    }))
-                }
-            } else if (!is.na(internal) && internal %in% colnames(medians.all)) {
-                # Use the column from medians.all for calibration
-                medians <- medians.all
-                tm <- overlapSets(medians, y)
-                y <- (tm$y - tm$x[, internal])
-            } else {
-                stop("Invalid internal calibration method. Choose '-1', 'meanCtr', 'qCtr', or a valid column name from medians.all.")
-            }
-        },
-        "External" = {
-            ## external
-            medians <- medians.all
-            ## print(paste("calibration to:",external))
-            ## pre-prepared medians and givenmedians
-            tm <- overlapSets(medians, y)
-            y <- (tm$y - tm$x[, external])
-        }
-    )
-
+                          medians.all,
+                          calibration = c("None", "Internal", "External"),
+                          internal = NA,
+                          external = NA) {
+  
+  calibration <- match.arg(calibration)
+  mq <- 0.05  # preset for robust (genefu)
+  
+  if (calibration == "None") {
+    message("No calibration")
     return(as.matrix(y))
+  }
+  
+  if (calibration == "Internal") {
+    # Treat NA exactly as "medianCtr"
+    if (length(internal) == 0L || is.na(internal) || identical(internal, "medianCtr")) {
+      y <- medianCtr(y)
+    } else if (identical(internal, "meanCtr")) {
+      y <- t(scale(t(y), center = TRUE, scale = TRUE))
+    } else if (identical(internal, "qCtr")) {
+      y <- t(apply(y, 1, function(x) (rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2))
+    } else if (internal %in% colnames(medians.all)) {
+      tm <- overlapSets(medians.all, y)
+      y <- (tm$y - tm$x[, internal])
+    } else {
+      stop("Invalid internal calibration '", internal,
+           "'. Use NA/'medianCtr', 'meanCtr', 'qCtr', or a column of medians.")
+    }
+    return(as.matrix(y))
+  }
+  
+  # External
+  tm <- overlapSets(medians.all, y)
+  y <- (tm$y - tm$x[, external])
+  return(as.matrix(y))
 }
+
 
 
 #' Function for standardization
@@ -164,6 +154,10 @@ sspPredict <- function(x,
     temp <- overlapSets(dataMatrix, tdataMatrix)
     dataMatrix <- temp$x
     tdataMatrix <- temp$y
+    
+    dataMatrix_main  <- dataMatrix
+    tdataMatrix_main <- tdataMatrix
+    
     sfeatureNames <- row.names(dataMatrix)
 
     # standardize both sets
@@ -256,32 +250,38 @@ sspPredict <- function(x,
     genes.ex <- c("BIRC5", "CCNB1", "GRB7", "MYBL2")
 
     # parse the test file - same as train file but no rows of classes
-    tdataMatrix <- y[which(!(rownames(y) %in% genes.ex)), ]
-
+    # tdataMatrix <- y[which(!(rownames(y) %in% genes.ex)), ]
+    tdataMatrix <- tdataMatrix_main[!(rownames(tdataMatrix_main) %in% genes.ex), , drop = FALSE]
+    
     # dimnames(tdataMatrix)[[2]]=paste("x",seq(1,471))
     temp <- overlapSets(dataMatrix, tdataMatrix)
-    dataMatrix <- temp$x
-    tdataMatrix <- temp$y
+    # dataMatrix <- temp$x
+    # tdataMatrix <- temp$y
+    dataMatrix_four  <- temp$x[, 1:4, drop = FALSE]    # omit Normal-like
+    tdataMatrix_four <- temp$y
 
     ## omitting normal
-    dataMatrix <- dataMatrix[, seq(1, 4, 1)] ## omitting normal
-    nGenes <- dim(dataMatrix)[1]
-    centroids.RORSubtype <- dataMatrix
-    nClasses <- dim(centroids.RORSubtype)[2] ## four subtypes
-    classLevels <- dimnames(centroids.RORSubtype)[[2]]
-
+    # dataMatrix <- dataMatrix[, seq(1, 4, 1)] ## omitting normal
+    # nGenes <- dim(dataMatrix)[1]
+    # centroids.RORSubtype <- dataMatrix
+    # nClasses <- dim(centroids.RORSubtype)[2] ## four subtypes
+    # classLevels <- dimnames(centroids.RORSubtype)[[2]]
+    centroids.RORSubtype <- dataMatrix_four
+    nClasses <- ncol(centroids.RORSubtype)
+    classLevels <- colnames(centroids.RORSubtype)
+    
     dist.RORSubtype <- matrix(
         ncol = nClasses, nrow = dim(tdataMatrix)[2],
         dimnames = list(colnames(tdataMatrix), colnames(centroids.RORSubtype))
     )
     for (j in seq(1, nClasses, 1)) {
-        if (distm == "euclidean") {
-            idx <- seq_len(ncol(tdataMatrix))
-            combined_matrix <- cbind(centroids.RORSubtype[, j], tdataMatrix)
-            dist.RORSubtype[, j] <- dist(t(combined_matrix))[idx]
-        }
+      if (distm == "euclidean") {
+        combined_matrix <- cbind(centroids.RORSubtype[, j], tdataMatrix_four)
+        distances_vec <- dist(t(combined_matrix))
+        dist.RORSubtype[, j] <- distances_vec[seq_len(ncol(tdataMatrix_four))]
+      }
         if (distm == "correlation" | distm == "pearson") {
-            dist.RORSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
+              dist.RORSubtype[, j] <- apply(tdataMatrix_four, 2, function(x) {
                 -cor(
                     centroids.RORSubtype[, j],
                     x,
@@ -291,7 +291,7 @@ sspPredict <- function(x,
             })
         }
         if (distm == "spearman") {
-            dist.RORSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
+          dist.RORSubtype[, j] <- apply(tdataMatrix_four, 2, function(x) {
                 -cor(
                     centroids.RORSubtype[, j],
                     x,
@@ -303,26 +303,44 @@ sspPredict <- function(x,
     }
 
     ## return
+    # if (Subtype) {
+    #     res <- list(
+    #         predictions = prediction,
+    #         predictions.FourSubtype = prediction.Subtype,
+    #         testData = as.matrix(y),
+    #         distances = distances,
+    #         dist.RORSubtype = dist.RORSubtype,
+    #         dist.FourSubtype = dist.FourSubtype,
+    #         centroids = centroids
+    #     )
+    # } else {
+    #     res <- list(
+    #         predictions = prediction,
+    #         testData = as.matrix(y),
+    #         distances = distances,
+    #         dist.RORSubtype = dist.RORSubtype,
+    #         centroids = centroids
+    #     )
+    # }
     if (Subtype) {
-        res <- list(
-            predictions = prediction,
-            predictions.FourSubtype = prediction.Subtype,
-            testData = as.matrix(y),
-            distances = distances,
-            dist.RORSubtype = dist.RORSubtype,
-            dist.FourSubtype = dist.FourSubtype,
-            centroids = centroids
-        )
-    } else {
-        res <- list(
-            predictions = prediction,
-            testData = as.matrix(y),
-            distances = distances,
-            dist.RORSubtype = dist.RORSubtype,
-            centroids = centroids
-        )
-    }
-
+       res <- list(
+       predictions            = prediction,
+       predictions.FourSubtype= prediction.Subtype,
+       testData               = as.matrix(tdataMatrix_main),   # aligned to centroids
+       distances              = distances,
+       dist.RORSubtype        = dist.RORSubtype,               # 4-class distances
+       centroids              = dataMatrix_main                # aligned 5-class centroids
+       )
+     } else {
+       res <- list(
+         predictions            = prediction,
+         testData               = as.matrix(tdataMatrix_main),   # aligned to centroids
+         distances              = distances,
+         dist.RORSubtype        = dist.RORSubtype,               # present but may be unused
+         centroids              = dataMatrix_main
+         )
+      }
+    
     return(res)
 }
 
@@ -407,15 +425,14 @@ RORgroup <- function(out,
     cplthreshold <- -0.2
     cphthreshold <- 0.2
 
-    # for combined + proliferation model + Subtype with negative node status
-    cpl.Subtype.NODE <- 40
+    # thresholds for combined + proliferation + Subtype
+    # node-negative
+    cpl.Subtype.NODE.0 <- 40
     cph.Subtype.NODE.0 <- 60
-
-    # for combined + proliferation model + Subtype with node status
-    ## first 4 or more nodes would be assigned as high-risk
+    # node-positive (1–3 nodes)
     cpl.Subtype.NODE <- 15
     cph.Subtype.NODE <- 40
-
+    ## >= 4 nodes would be assigned as high-risk
 
     ## ER and HER2 score
     # out$testData = mat
@@ -440,15 +457,34 @@ RORgroup <- function(out,
 
     ## confidence
     call.conf <- c()
-    for (j in seq_len(length(out$predictions))) {
-        centroid_col <- which(colnames(out$centroids) == out$predictions[j])
-        call.conf[j] <- 1 - cor.test(out$testData[, j],
-            out$centroids[, centroid_col],
-            method = "spearman",
-            exact = FALSE
-        )$p.value
-    }
+    # for (j in seq_len(length(out$predictions))) {
+    #     centroid_col <- which(colnames(out$centroids) == out$predictions[j])
+    #     call.conf[j] <- 1 - cor.test(out$testData[, j],
+    #         out$centroids[, centroid_col],
+    #         method = "spearman",
+    #         exact = FALSE
+    #     )$p.value
+    # }
 
+    for (j in seq_len(length(out$predictions))) {
+          centroid_col <- which(colnames(out$centroids) == out$predictions[j])
+          x <- out$testData[, j, drop = TRUE]
+          y <- out$centroids[, centroid_col, drop = TRUE]
+          common <- intersect(names(x), rownames(out$centroids))
+          # if names are NULL, fall back to positional intersection with rownames
+            if (length(common) > 0L) {
+              xi <- x[common]; yi <- y[common]
+            } else {
+              # assume already aligned; trim to min length to avoid accidental mismatch
+              n <- min(length(x), length(y))
+              xi <- x[seq_len(n)]; yi <- y[seq_len(n)]
+            }
+            ok <- is.finite(xi) & is.finite(yi)
+            pv <- tryCatch({
+              if (sum(ok) >= 3L) cor.test(xi[ok], yi[ok], method="spearman", exact=FALSE)$p.value else 1
+            }, error = function(e) 1)
+          call.conf[j] <- 1 - pv
+        }
     call.conf <- round(call.conf, 2)
     call.conf <- data.frame(
         "Confidence" = call.conf,
@@ -579,16 +615,16 @@ RORgroup <- function(out,
                     if (length(pts.NODE.0) > 0) {
                         tmp <- cmbWprolif.Subtype[pts.NODE.0]
                         cprskg.Subtype[pts.NODE.0][tmp > cph.Subtype.NODE.0] <- "high"
-                        which.med <- tmp > cpl.Subtype.NODE & tmp < cph.Subtype.NODE.0
+                        which.med <- tmp > cpl.Subtype.NODE.0 & tmp < cph.Subtype.NODE.0
                         cprskg.Subtype[pts.NODE.0][which.med] <- "med"
-                        cprskg.Subtype[pts.NODE.0][tmp < cpl.Subtype.NODE] <- "low"
+                        cprskg.Subtype[pts.NODE.0][tmp < cpl.Subtype.NODE.0] <- "low"
                     }
                 }
 
                 ## check if NA NODE
                 ## grouping by NA NODE
                 patients.NA <- rownames(Clinical)[is.na(Clinical$NODE) |
-                    is.na(Clinical$T)]
+                    is.na(Clinical$TSIZE)]
 
                 if (length(patients.NA) > 0) {
                     cprskg.Subtype[patients.NA] <- NA
@@ -600,10 +636,10 @@ RORgroup <- function(out,
                     check.names = FALSE
                 )
             } else {
-                message("NODE infor is missing.")
+                message("NODE info is missing.")
             }
         } else {
-            message("TSIZE infor is missing.")
+            message("TSIZE info is missing.")
         }
 
 
@@ -636,13 +672,14 @@ RORgroup <- function(out,
             row.names = names(out$predictions.FourSubtype)
         )
         outtable <- cbind(outtable, Call.Subtype)
-        outtable <- outtable %>% dplyr::select(
-            .data$patientID,
-            colnames(distance),
-            Call,
-            Call.Subtype,
-            everything()
-        )
+        ord <- c(
+                "patientID",
+                colnames(distance),
+                "Call",
+                "Call.Subtype",
+                setdiff(colnames(outtable), c("patientID", colnames(distance), "Call", "Call.Subtype"))
+            )
+        outtable <- outtable[, ord, drop = FALSE]
     }
 
     return(outtable)
@@ -661,7 +698,7 @@ RORgroup <- function(out,
 #' Function for calling PAM50 subtypes by Parker et al.-based methods Here, we
 #' integrated Parker et al.-based methods and genefu PAM50 implementation
 #' @param mat gene expression matrix, log of normalized
-#' @param df.cln clicnical information table with PatientID and IHC column
+#' @param df.cln clinical information table with PatientID and IHC column
 #' @param calibration How to do calibration, "None"(default) means no
 #'   calibration for gene expression matrix. When setting calibration =None, you
 #'   dont need to set internal and external parameters.  "Internal" means
@@ -761,7 +798,7 @@ makeCalls.parker <- function(mat,
 
 
     ## calculate and grouping
-    out.ROR <- RORgroup(out, df.cln, hasClinical = hasClinical)
+    out.ROR <- RORgroup(out, df.cln, Subtype = Subtype, hasClinical = hasClinical)
 
     return(list(
         BS.all = Int.sbs,
@@ -776,7 +813,7 @@ makeCalls.parker <- function(mat,
 
 #' Function to form an ER-balanced subset and derive its median
 #' @param mat gene expression matrix
-#' @param df.cln clicnical information table with PatientID
+#' @param df.cln clinical information table with PatientID
 #' @param calibration The calibration method to use. Options are "None",
 #'   "Internal", or "External". If "Internal" is selected, see the "internal"
 #'   parameter for further details. If "External" is selected, see the
@@ -910,7 +947,7 @@ makeCalls_ihc <- function(mat,
 
 #' Function for iterative ER-balanced subset gene centering
 #' @param mat gene expression matrix
-#' @param df.cln clicnical information table with PatientID and IHC column
+#' @param df.cln clinical information table with PatientID and IHC column
 #' @param iterative Times to do iterative ER balanced procedure with certain
 #'   ratio.
 #' @param ratio The options are either 1:1 or 54 (ER+) : 64 (ER-) (default). The
@@ -1101,7 +1138,7 @@ makeCalls_ihc.iterative <- function(mat,
             score.ROR = out.ROR,
             outList = out,
             BS.itr.keep = Call_subtypes,
-            BS.itr.keep = Call_subtypes.Subtype
+            BS.itr.keep.Subtype = Call_subtypes.Subtype
         )
     } else {
         res <- list(
@@ -1515,7 +1552,7 @@ makeCalls.ssBC <- function(
         TN_samples <- rownames(df.cln)[which(df.cln$TN == "TN")]
         samples_selected <- list(TNBC = TN_samples)
     } else {
-        stop("Please enter valid varaible for s ")
+        stop("Please enter valid variable for s ")
     }
 
     res <- mapply(
@@ -1631,13 +1668,13 @@ makeCalls.ssBC <- function(
     }
 
     if (Subtype) {
-        ## subtype table
         Int.sbs <- data.frame(
             PatientID = names(predictions),
             BS = predictions,
-            BS.Subtypeype = predictions.FourSubtype,
-            row.names = names(predictions)
-        )
+            BS.Subtype = predictions.FourSubtype,
+            row.names = names(predictions),
+            check.names = FALSE
+          )
 
         ## out list
         out <- list(
@@ -1716,7 +1753,7 @@ makeCalls.ssBC <- function(
             Int.sbs_ex <- data.frame(
                 PatientID = sample_ex,
                 BS = NA,
-                BS.Subtypeype = NA,
+                BS.Subtype = NA,
                 row.names = sample_ex
             )
             Int.sbs <- rbind(Int.sbs, Int.sbs_ex)
