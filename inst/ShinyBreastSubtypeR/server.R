@@ -1,6 +1,4 @@
-# ---- server.R ----
-
-# Optional: safe CSS unit helper (kept if you want to use it in the UI later)
+# --- Safe CSS unit helper (optional, harmless if unused) ---
 safeCssUnit <- function(x, fallback = "auto") {
   if (is.null(x) || (length(x) == 0)) return(fallback)
   tryCatch(
@@ -8,6 +6,38 @@ safeCssUnit <- function(x, fallback = "auto") {
     error = function(e) {
       if (is.numeric(x) && is.finite(x)) paste0(x, "px") else fallback
     }
+  )
+}
+
+# --- bslib::callout() compatibility shim (works with older bslib) ---
+bs_callout <- function(title, body, color = c("info","success","warning","danger","secondary")) {
+  color <- match.arg(color)
+  # use bslib::callout if available
+  has_callout <- FALSE
+  if (requireNamespace("bslib", quietly = TRUE)) {
+    ns <- asNamespace("bslib")
+    has_callout <- exists("callout", envir = ns, inherits = FALSE)
+    if (has_callout) {
+      return(get("callout", envir = ns)(
+        title = title,
+        body,
+        color = color
+      ))
+    }
+  }
+  # fallback: Bootstrap 5 alert box
+  cl <- switch(color,
+               "success"   = "alert alert-success",
+               "warning"   = "alert alert-warning",
+               "danger"    = "alert alert-danger",
+               "secondary" = "alert alert-secondary",
+               "info"      = "alert alert-info"
+  )
+  shiny::tags$div(
+    class = cl,
+    role = "alert",
+    shiny::tags$div(shiny::tags$b(title)),
+    body
   )
 }
 
@@ -108,11 +138,10 @@ server <- function(input, output, session) {
             HTML("<ul>
               <li><b>Minimum:</b> <code>PatientID</code> (matches GEX columns).</li>
               <li><b>Method-specific:</b> 
-                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code> (<code>ER+</code>/<code>ER-</code>). 
-                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>, coded <code>HER2+</code>/<code>HER2-</code>) or <code>TN</code> (coded <code>TN</code>/<code>nonTN</code>) depending on subgroup.
-                <b>AUTO Mode requires both <code>ER</code> and <code>HER2</code>.</b>
+                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code> (values <code>ER+</code>/<code>ER-</code>). 
+                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>, values <code>HER2+</code>/<code>HER2-</code>) or <code>TN</code> (values <code>TN</code>/<code>nonTN</code>) depending on subgroup.
               </li>
-              <li><b>Additional (for ROR):</b> <code>TSIZE</code> (0 = ≤ 2 cm; 1 = > 2 cm) and <code>NODE</code> (0 = negative; ≥ 1 = positive; numeric).</li>
+              <li><b>Additional (for ROR):</b> <code>TSIZE</code> (0 = ≤ 2 cm; 1 = > 2 cm) and <code>NODE</code> (0 = negative; ≥ 1 = positive).</li>
              </ul>")
         )
       )
@@ -124,9 +153,8 @@ server <- function(input, output, session) {
             HTML("<ul>
               <li><b>Minimum:</b> <code>PatientID</code>.</li>
               <li><b>Method-specific:</b> 
-                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code>. 
-                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>) or <code>TN</code>. 
-                <b>AUTO Mode requires both <code>ER</code> and <code>HER2</code>.</b>
+                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code> (values <code>ER+</code>/<code>ER-</code>). 
+                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>) or <code>TN</code> depending on subgroup.
               </li>
               <li><b>Optional for ROR (NC methods):</b> include <code>TSIZE</code> and <code>NODE</code>.</li>
              </ul>")
@@ -162,7 +190,36 @@ server <- function(input, output, session) {
     }
   })
   
-  # --- method descriptions (with AUTO note updated) ---
+  output$calib_help <- renderUI({
+    if (!identical(input$BSmethod, "PAM50")) return(NULL)
+    tagList(
+      div(class = "method-help",
+          tags$b("Calibration notes (PAM50)"),
+          tags$ul(
+            tags$li(HTML("<b>None</b>: no centering (only if your data already match the training scale).")),
+            tags$li(
+              HTML("<b>Internal</b>: cohort-based centering; choose one of:"),
+              tags$ul(
+                tags$li(HTML("<code>medianCtr</code> — Parker original: gene-wise <i>median</i> centering.")),
+                tags$li(HTML("<code>meanCtr</code> — genefu.scale: gene-wise z-score (mean 0, sd 1).")),
+                tags$li(HTML("<code>qCtr</code> — genefu.robust: quantile re-centering (mq ≈ 0.05)."))
+              )
+            ),
+            tags$li(
+              HTML("<b>External</b>: center to medians from a training cohort/platform."),
+              tags$ul(
+                tags$li(HTML("<i>Given.mdns</i>: upload your own medians file with <b>two columns</b>: PAM50 gene <b>symbols</b> (col 1) and their median <b>log2</b> expression (col 2). Exactly 50 unique genes, case-sensitive, no duplicates.")),
+                tags$li(HTML("<i>Presets</i> (e.g., <code>RNAseq.V2</code>, <code>Agilent_244K</code>) load built-in medians; pick the one matching your platform/pipeline."))
+              )
+            )
+          )
+      )
+    )
+  })
+  
+  
+  
+  # --- method descriptions ---
   output$method_help <- renderUI({
     m <- input$BSmethod
     if (is.null(m)) return(NULL)
@@ -175,9 +232,9 @@ server <- function(input, output, session) {
              "AUTO Mode (cohort-aware selection)",
              list(
                "Category" = "NC-/SSP-based",
-               "IHC Input Requirement" = "ER and HER2 status (both required for AUTO).",
+               "IHC Input Requirement" = "ER status and/or HER2, or TN status",
                "Description" = "Evaluates cohort diagnostics (e.g., receptor-status distribution, subtype purity, subgroup sizes) and programmatically disables classifiers whose assumptions are likely violated — reducing misclassification in skewed or small cohorts.",
-               "Notes" = "AUTO may include PAM50 variants (parker.original, genefu.scale, genefu.robust), cIHC / cIHC.itr, PCAPAM50, ssBC/ssBC.v2, AIMS, sspbc as appropriate.",
+               "Notes" = "AUTO may include PAM50 variants, cIHC / cIHC.itr, PCAPAM50, ssBC/ssBC.v2, AIMS, sspbc as appropriate.",
                "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
              )
            ),
@@ -240,7 +297,7 @@ server <- function(input, output, session) {
              list(
                "Category" = "SSP-based",
                "IHC Input Requirement" = "Not required",
-               "Description" = "RNA-seq single-sample predictors for subtypes and ROR; 5-class vs 4-class via model choice.",
+               "Description" = "RNA-seq single-sample predictors based on AIMS; 5-class vs 4-class via model choice.",
                "Key ref" = "Staaf et al., 2022 npj Breast Cancer."
              )
            ),
@@ -251,19 +308,19 @@ server <- function(input, output, session) {
   # Tiny toasts
   observeEvent(input$k_subtypes, ignoreInit = TRUE, {
     showNotification(sprintf("Subtype classes: %s",
-                             if (k_is_4class()) "4 (Normal-like excluded)" else "5 (includes Normal-like)"),
-                     type = "message", duration = 2
-    )
+                             if (k_is_4class()) "4 (Normal-like excluded)" else "5 (includes Normal-like)"
+    ),
+    type = "message", duration = 2)
   })
   observeEvent(input$hasClinical, ignoreInit = TRUE, {
     showNotification(sprintf("Use clinical variables (ROR): %s",
-                             if (isTRUE(input$hasClinical)) "ON" else "OFF"),
-                     type = "message", duration = 2
-    )
+                             if (isTRUE(input$hasClinical)) "ON" else "OFF"
+    ),
+    type = "message", duration = 2)
   })
   
   # --- data upload + Mapping ---
-  observeEvent(input$map, {
+  shiny::observeEvent(input$map, {
     req(input$GEX, input$clinic, input$anno)
     withProgress(message = "Running Mapping...", value = 0, {
       incProgress(0.2, detail = "Loading gene expression data...")
@@ -367,108 +424,123 @@ server <- function(input, output, session) {
     })
   })
   
+  # --- persistent AUTO preflight status (panel in UI) ---
+  auto_requirements <- reactive({
+    if (!identical(input$BSmethod, "AUTO Mode")) return(list(show = FALSE))
+    di <- reactive_files$data_input
+    if (is.null(di) || is.null(di$se_NC)) {
+      return(list(show = TRUE, ready = FALSE, msg = "Run Step 1 (Preprocess & map) first."))
+    }
+    pheno <- as.data.frame(SummarizedExperiment::colData(di$se_NC))
+    msgs <- character(0)
+    miss <- setdiff(c("ER","HER2"), names(pheno))
+    if (length(miss)) msgs <- c(msgs, paste0("Missing columns: ", paste(miss, collapse = ", ")))
+    if ("ER" %in% names(pheno)) {
+      badER <- setdiff(na.omit(unique(pheno$ER)), c("ER+","ER-"))
+      if (length(badER)) msgs <- c(msgs, paste0("Invalid ER values: ", paste(badER, collapse = ", ")))
+    }
+    if ("HER2" %in% names(pheno)) {
+      badH <- setdiff(na.omit(unique(pheno$HER2)), c("HER2+","HER2-"))
+      if (length(badH)) msgs <- c(msgs, paste0("Invalid HER2 values: ", paste(badH, collapse = ", ")))
+    }
+    list(show = TRUE, ready = length(msgs) == 0, msg = if (length(msgs)) paste(msgs, collapse = "; ") else "OK")
+  })
+  
+  output$auto_preflight <- renderUI({
+    chk <- auto_requirements()
+    if (!isTRUE(chk$show)) return(NULL)
+    if (isTRUE(chk$ready)) {
+      bs_callout(
+        title = "AUTO preflight: ready",
+        body  = "ER and HER2 present with valid coding (ER+/ER-, HER2+/HER2-). You can run AUTO.",
+        color = "success"
+      )
+    } else {
+      bs_callout(
+        title = "AUTO preflight: action needed",
+        body  = HTML(sprintf(
+          "<p><b>Fix these before running AUTO:</b></p>
+           <ul>
+             <li>%s</li>
+           </ul>
+           <p>Or pick a single method from the dropdown.</p>", chk$msg)),
+        color = "danger"
+      )
+    }
+  })
+  
   # --- run subtyping (AUTO + single methods) ---
-  observeEvent(input$run, {
+  shiny::observeEvent(input$run, {
     req(reactive_files$data_input)
     
     se_NC  <- reactive_files$data_input$x_NC  %||% reactive_files$data_input$se_NC
     se_SSP <- reactive_files$data_input$x_SSP %||% reactive_files$data_input$se_SSP
     want_4 <- k_is_4class()
     
-    # ---------- AUTO Mode (strict precheck: require ER & HER2; otherwise skip) ----------
+    # ---------- AUTO Mode ----------
     if (identical(input$BSmethod, "AUTO Mode")) {
-      want_clin <- isTRUE(input$hasClinical)
-      chk <- .validate_has_clinical(se_NC, want_clin)
-      se_NC    <- chk$se
-      use_clin <- want_clin && chk$use
-      
-      # propagate any TSIZE/NODE fixes back into data_input for BS_Multi()
-      if (!is.null(se_NC)) {
-        di <- reactive_files$data_input
-        di$se_NC <- se_NC
-        reactive_files$data_input <- di
-      }
-      
-      # ---- Preflight checks for AUTO (ER & HER2 must exist and be usable) ----
-      cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
-      
-      needed <- c("ER", "HER2")
-      missing_cols <- setdiff(needed, names(cd))
-      
-      empty_cols <- character(0)
-      for (nm in intersect(needed, names(cd))) {
-        vals <- as.character(cd[[nm]])
-        if (all(is.na(vals) | !nzchar(vals))) empty_cols <- c(empty_cols, nm)
-      }
-      
-      bad_ER   <- if ("ER"   %in% names(cd))   setdiff(na.omit(unique(as.character(cd$ER))),   c("ER+","ER-"))     else character(0)
-      bad_HER2 <- if ("HER2" %in% names(cd)) setdiff(na.omit(unique(as.character(cd$HER2))), c("HER2+","HER2-")) else character(0)
-      
-      if (length(missing_cols) || length(empty_cols) || length(bad_ER) || length(bad_HER2)) {
-        bits <- c(
-          if (length(missing_cols)) sprintf("missing column(s): %s", paste(missing_cols, collapse = ", ")),
-          if (length(empty_cols))   sprintf("empty/NA column(s): %s", paste(empty_cols,   collapse = ", ")),
-          if (length(bad_ER))       sprintf("ER values must be ER+/ER- (found: %s)",     paste(bad_ER,   collapse = ", ")),
-          if (length(bad_HER2))     sprintf("HER2 values must be HER2+/HER2- (found: %s)", paste(bad_HER2, collapse = ", "))
-        )
-        msg <- paste(bits, collapse = " · ")
-        
+      # Gate AUTO with preflight
+      chk <- auto_requirements()
+      if (!isTRUE(chk$ready)) {
         showNotification(
-          paste("AUTO Mode cannot run —", msg),
+          HTML(sprintf(
+            "AUTO requires <code>ER</code> and <code>HER2</code> coded as ER+/ER- and HER2+/HER2-. Issue: %s.",
+            chk$msg
+          )),
           type = "error", duration = 10
         )
-        
         showModal(modalDialog(
           title = "AUTO Mode requirements not met",
           div(HTML(sprintf(
             "<p><b>AUTO</b> requires both <code>ER</code> and <code>HER2</code> in the clinical data.</p>
-             <ul>
-               <li>ER must be coded <code>ER+</code> / <code>ER-</code>.</li>
-               <li>HER2 must be coded <code>HER2+</code> / <code>HER2-</code>.</li>
-             </ul>
-             <p><b>Issue:</b> %s</p>
-             <p>You can either fix the clinical file and re-run, or choose a single method from the dropdown.</p>", msg
+         <ul>
+           <li>ER must be coded <code>ER+</code> / <code>ER-</code>.</li>
+           <li>HER2 must be coded <code>HER2+</code> / <code>HER2-</code>.</li>
+         </ul>
+         <p><b>Issue:</b> %s</p>
+         <p>You can either fix the clinical file and re-run, or choose a single method from the dropdown.</p>", chk$msg
           ))),
           easyClose = TRUE,
           footer = tagList(modalButton("OK"))
         ))
-        
         return(invisible(NULL))
       }
       
-      # ---- Run AUTO via BS_Multi (package handles method gating) ----
+      # IMPORTANT: ROR is disabled in AUTO (checkbox hidden in UI)
+      want_4   <- k_is_4class()
+      use_clin <- FALSE
+      
       withProgress(message = "Performing analysis (AUTO Mode)...", value = 0, {
         incProgress(0.5, detail = "BS_Multi() running...")
-        result_auto <- tryCatch(
-          {
-            BreastSubtypeR::BS_Multi(
-              data_input  = reactive_files$data_input,
-              methods     = "AUTO",
-              Subtype     = want_4,
-              hasClinical = use_clin
-            )
-          },
-          error = function(e) {
-            showNotification(paste("AUTO Mode failed:", e$message), type = "error", duration = 10)
-            return(NULL)
-          }
+        result_auto <- BreastSubtypeR::BS_Multi(
+          data_input  = reactive_files$data_input,
+          methods     = "AUTO",
+          Subtype     = want_4,     # TRUE -> 4-class; FALSE -> 5-class
+          hasClinical = use_clin
         )
         
-        if (is.null(result_auto)) return(invisible(NULL))
+        # >>> choose the correct table <<<
+        tab <- if (isTRUE(want_4)) {
+          result_auto$res_subtypes.Subtype   # 4-class table
+        } else {
+          result_auto$res_subtypes           # 5-class table
+        }
         
-        df_out <- result_auto$res_subtypes
-        df_out <- cbind(PatientID = rownames(df_out), df_out, row.names = NULL)
+        # Export/plot using the chosen table
+        df_out <- cbind(PatientID = rownames(tab), tab, row.names = NULL)
         reactive_files$output_res <- df_out
         
         output$download <- downloadHandler(
-          filename = function() "results-AUTO.txt",
+          filename = function() sprintf("results-AUTO-%s.txt", if (want_4) "4class" else "5class"),
           content  = function(file) write.table(reactive_files$output_res, file, sep = "\t", quote = FALSE, row.names = FALSE)
         )
         
         output$plotSection <- renderUI({
           bslib::layout_columns(col_width = 2, bslib::card(plotOutput("multi_plot", height = 480)))
         })
-        output$multi_plot <- renderPlot({ BreastSubtypeR::Vis_Multi(result_auto$res_subtypes) })
+        output$multi_plot <- renderPlot({
+          BreastSubtypeR::Vis_Multi(tab)     # plot the chosen (4- or 5-class) table
+        })
         
         incProgress(1, detail = "AUTO Mode complete.")
       })
@@ -478,11 +550,11 @@ server <- function(input, output, session) {
     # ---------- Single methods ----------
     is_nc_method <- input$BSmethod %in% c("PAM50","cIHC","cIHC.itr","PCAPAM50","ssBC")
     want_clin <- isTRUE(input$hasClinical)
-    chk <- .validate_has_clinical(if (is_nc_method) se_NC else NULL, want_clin)
-    se_NC    <- chk$se
-    use_clin <- want_clin && chk$use
+    chkclin <- .validate_has_clinical(if (is_nc_method) se_NC else NULL, want_clin)
+    se_NC    <- chkclin$se
+    use_clin <- want_clin && chkclin$use
     if (want_clin && !use_clin && is_nc_method) {
-      showNotification(paste("Clinical variables disabled —", chk$msg), type = "warning", duration = 5)
+      showNotification(paste("Clinical variables disabled —", chkclin$msg), type = "warning", duration = 5)
     }
     
     showNotification(sprintf("Running %s | Subtype=%s | ROR=%s",
@@ -515,10 +587,43 @@ server <- function(input, output, session) {
               read.table(inFile$datapath, header = TRUE, row.names = NULL, sep = "\t",
                          fill = TRUE, stringsAsFactors = FALSE)
             }
-            args$external <- "Given.mdns"; args$medians  <- medians
+            
+            ## --- Optional lightweight validation for custom medians ---
+            try({
+              data_env <- new.env(parent = emptyenv())
+              data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
+              pam50_syms <- as.character(
+                data_env$BreastSubtypeRobj$genes.signature$Gene.Symbol[
+                  data_env$BreastSubtypeRobj$genes.signature$PAM50 == "Yes"
+                ])
+              
+              genes_in <- as.character(medians[[1]])
+              vals_in  <- suppressWarnings(as.numeric(medians[[2]]))
+              missing  <- setdiff(pam50_syms, genes_in)
+              dupes    <- genes_in[duplicated(genes_in)]
+              
+              if (length(missing))
+                showNotification(sprintf("Given.mdns is missing %d PAM50 genes (e.g., %s)...",
+                                         length(missing), paste(head(missing, 6), collapse = ", ")),
+                                 type = "warning", duration = 8)
+              
+              if (length(dupes))
+                showNotification(sprintf("Given.mdns has duplicated gene symbols (e.g., %s). Keep one per gene.",
+                                         paste(head(unique(dupes), 6), collapse = ", ")),
+                                 type = "warning", duration = 8)
+              
+              if (any(!is.finite(vals_in)))
+                showNotification("Given.mdns contains non-numeric or NA median values (2nd column).",
+                                 type = "warning", duration = 8)
+            }, silent = TRUE)
+            ## --- end validation ---
+            
+            args$external <- "Given.mdns"
+            args$medians  <- medians
           } else {
             args$external <- input$external
           }
+          
         } else if (identical(cal, "None")) {
           args$calibration <- "None"
         }
@@ -559,7 +664,6 @@ server <- function(input, output, session) {
       
       if (input$BSmethod == "ssBC") {
         req(se_NC)
-        
         cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
         need_cols <- switch(input$s,
                             "ER"    = c("ER"),
@@ -601,7 +705,6 @@ server <- function(input, output, session) {
       }
       
       if (input$BSmethod == "AIMS") {
-        # AIMS always 5-class, the UI already forces "5"
         req(se_SSP)
         incProgress(0.55, detail = "BS_AIMS...")
         data("BreastSubtypeRobj", package = "BreastSubtypeR")
@@ -661,11 +764,11 @@ server <- function(input, output, session) {
         )
       }
       
-      # ---------- Save & download ----------
+      # ---------- Save & download (export both labels when present) ----------
       if (!is.null(out) && nrow(out) > 0) {
         download_tbl <- data.frame(PatientID = out$PatientID, Subtype = out$Subtype, check.names = FALSE)
         if (!is.null(res$BS.all)) {
-          if ("BS" %in% names(res$BS.all))         download_tbl$BS_5class <- res$BS.all$BS
+          if ("BS" %in% names(res$BS.all))        download_tbl$BS_5class <- res$BS.all$BS
           if ("BS.Subtype" %in% names(res$BS.all)) download_tbl$BS_4class <- res$BS.all$BS.Subtype
         }
         reactive_files$output_res <- download_tbl
@@ -703,6 +806,3 @@ server <- function(input, output, session) {
     })
   })
 }
-
-# --- IMPORTANT: return the server function when this file is sourced ---
-server

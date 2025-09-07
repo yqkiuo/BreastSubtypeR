@@ -1,5 +1,4 @@
-# --- ui.R ---
-
+# Define UI for iBreastSubtypeR
 app_theme <- bslib::bs_theme(
   version = 5,
   base_font    = bslib::font_google("Inter"),
@@ -12,23 +11,23 @@ ui <- bslib::page_fluid(
   
   # --- Global CSS fixes & minor polish ---
   tags$head(tags$style(HTML("
-  /* Keep dropdowns visible above cards, but below modals */
-  .bslib-card, .card, .card-body { overflow: visible !important; }
-  .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 1040 !important; } /* < modal */
-  .modal-backdrop { z-index: 1050 !important; }
-  .modal { z-index: 1060 !important; }
+    /* Keep dropdowns visible above cards, but below modals */
+    .bslib-card, .card, .card-body { overflow: visible !important; }
+    .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 1040 !important; } /* < modal */
+    .modal-backdrop { z-index: 1050 !important; }
+    .modal { z-index: 1060 !important; }
 
-  /* Center the top heading */
-  .app-title { text-align: center; margin: 16px 0 8px; }
-  .app-title h2 { margin: 0; }
+    /* Center the top heading */
+    .app-title { text-align: center; margin: 16px 0 8px; }
+    .app-title h2 { margin: 0; }
 
-  /* Styled info box for help panels */
-  .method-help {
-    margin: 6px 0 12px; padding: 10px 12px;
-    border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
-  }
-  .method-help ul { margin-bottom: 0; }
-"))),
+    /* Styled info box for help panels */
+    .method-help {
+      margin: 6px 0 12px; padding: 10px 12px;
+      border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
+    }
+    .method-help ul { margin-bottom: 0; }
+  "))),
   
   # --- Centered heading ---
   tags$div(class = "app-title",
@@ -75,7 +74,7 @@ ui <- bslib::page_fluid(
         choices  = c("Normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
         selected = "norm", inline = TRUE
       ),
-      uiOutput("gex_help")
+      uiOutput("gex_help")     # "Requirements" panel (mode-aware)
     ),
     
     # 2) Clinical data
@@ -86,7 +85,7 @@ ui <- bslib::page_fluid(
         "Upload clinical table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("clin_help")
+      uiOutput("clin_help")    # "Clinical data requirements"
     ),
     
     # 3) Feature annotation
@@ -97,7 +96,7 @@ ui <- bslib::page_fluid(
         "Upload annotation table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("anno_help")
+      uiOutput("anno_help")    # "Feature annotation requirements"
     )
   ),
   
@@ -131,6 +130,9 @@ ui <- bslib::page_fluid(
       options = list(openOnFocus = TRUE, dropdownParent = "body")
     ),
     
+    # --- NEW: persistent AUTO preflight panel ---
+    uiOutput("auto_preflight"),  # appears only when AUTO Mode is selected
+    
     # Global 4 vs 5 classes (AIMS always 5)
     radioButtons(
       "k_subtypes", "Subtype classes",
@@ -144,7 +146,7 @@ ui <- bslib::page_fluid(
     
     # ROR checkbox (NC methods + AUTO)
     conditionalPanel(
-      condition = "input.BSmethod == 'AUTO Mode' || input.BSmethod == 'PAM50' || input.BSmethod == 'cIHC' || input.BSmethod == 'cIHC.itr' || input.BSmethod == 'PCAPAM50' || input.BSmethod == 'ssBC'",
+      condition = "input.BSmethod == 'PAM50' || input.BSmethod == 'cIHC' || input.BSmethod == 'cIHC.itr' || input.BSmethod == 'PCAPAM50' || input.BSmethod == 'ssBC'",
       checkboxInput("hasClinical", "Use clinical variables (ROR)", value = FALSE)
     ),
     
@@ -171,7 +173,7 @@ ui <- bslib::page_fluid(
               condition = "input.calibration == 'External'",
               tagList(
                 selectizeInput(
-                  "external", "External reference set",
+                  "external", "External calibration method",
                   choices = c(
                     "Given.mdns" = "Given.mdns",
                     "RNAseq.V2"  = "RNAseq.V2",
@@ -202,9 +204,9 @@ ui <- bslib::page_fluid(
               selectizeInput(
                 "internal", "Internal calibration method",
                 choices = c(
-                  "parker.original (median centering)"   = "medianCtr",
-                  "genefu.scale (mean centering)"        = "meanCtr",
-                  "genefu.robust (quantile centering)"   = "qCtr"
+                  "medianCtr (parker.original)"   = "medianCtr",
+                  "meanCtr (genefu.scale)"        = "meanCtr",
+                  "qCtr (genefu.robust)"   = "qCtr"
                 ),
                 selected = "medianCtr", width = "100%",
                 options = list(placeholder = "Pick a calibration…", openOnFocus = TRUE, dropdownParent = "body")
@@ -214,8 +216,11 @@ ui <- bslib::page_fluid(
         )
       )
     ),
+
+    uiOutput("calib_help"),
     
-    # cIHC / PCAPAM50 / AIMS (no extra UI)
+    
+    # cIHC / PCAPAM50 / AIMS (no extra UI blocks)
     conditionalPanel(condition = "input.BSmethod == 'cIHC'", div()),
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC.itr'",
@@ -239,8 +244,6 @@ ui <- bslib::page_fluid(
     conditionalPanel(condition = "input.BSmethod == 'AIMS'", div()),
     conditionalPanel(condition = "input.BSmethod == 'sspbc'", div()),
     
-    # --- Preflight badges + Run button ---
-    uiOutput("preflight"),
     bslib::card(
       actionButton("run", "Run subtyping", icon = icon("play-circle"))
     )
