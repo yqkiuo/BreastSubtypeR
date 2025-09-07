@@ -1,4 +1,5 @@
-# Define server logic
+# --- server.R ---
+
 # Safe CSS unit helper
 safeCssUnit <- function(x, fallback = "auto") {
   if (is.null(x) || (length(x) == 0)) return(fallback)
@@ -10,13 +11,29 @@ safeCssUnit <- function(x, fallback = "auto") {
   )
 }
 
-
 server <- function(input, output, session) {
   # --- helpers ---
   raw_mode     <- reactive({ identical(input$is_raw_counts, "raw") })
   `%||%`       <- function(a, b) if (!is.null(a)) a else b
   has_clinical <- reactive({ isTRUE((input$hasClinical %||% FALSE)) })
   k_is_4class  <- reactive({ identical(input$k_subtypes, "4") })
+  
+  # Ensure AUTO-mode IHC columns exist (ER/HER2/TN) to prevent BS_Multi() crash
+  .ensure_auto_ihc_cols <- function(se) {
+    if (is.null(se)) return(list(se = NULL, added = character()))
+    cd <- as.data.frame(SummarizedExperiment::colData(se))
+    added <- character(0)
+    for (nm in c("ER", "HER2", "TN")) {
+      if (!nm %in% names(cd)) {
+        cd[[nm]] <- NA_character_
+        added <- c(added, nm)
+      } else {
+        if (!is.character(cd[[nm]])) cd[[nm]] <- as.character(cd[[nm]])
+      }
+    }
+    SummarizedExperiment::colData(se)[, c("ER","HER2","TN")] <- cd[, c("ER","HER2","TN")]
+    list(se = se, added = added)
+  }
   
   # Dynamically restrict subtype choices for AIMS (AIMS = 5-class only)
   observeEvent(input$BSmethod, {
@@ -27,7 +44,6 @@ server <- function(input, output, session) {
         selected = "5"
       )
     } else {
-      # restore both choices, keep previous selection if valid
       prev <- isolate(input$k_subtypes) %||% "5"
       if (!prev %in% c("4","5")) prev <- "5"
       updateRadioButtons(
@@ -61,6 +77,91 @@ server <- function(input, output, session) {
     GEX = NULL, clinic = NULL, anno = NULL,
     RawCounts = NULL, data_input = NULL, output_res = NULL
   )
+  
+  # ---------- Preflight status (badges) ----------
+  preflight_info <- reactive({
+    clin <- reactive_files$clinic
+    method <- input$BSmethod %||% "AUTO Mode"
+    subgroup <- input$s %||% "ER.v2"
+    use_ror <- has_clinical()
+    
+    # helper to count filled cells
+    filled_n <- function(nm) {
+      if (is.null(clin) || !nm %in% names(clin)) return(0L)
+      x <- clin[[nm]]
+      sum(!is.na(x) & nzchar(as.character(x)))
+    }
+    total <- if (is.null(clin)) 0L else nrow(clin)
+    
+    must <- character(0)
+    rec  <- character(0)
+    
+    if (method == "AUTO Mode") {
+      must <- c("ER","HER2")         # to avoid AUTO reductions/crash
+      rec  <- c("TN")
+    } else if (method == "ssBC") {
+      must <- switch(subgroup,
+                     "ER"    = c("ER"),
+                     "ER.v2" = c("ER","HER2"),
+                     "TN"    = c("TN"),
+                     "TN.v2" = c("TN"),
+                     character(0))
+    } else {
+      # NC family specifics
+      if (method %in% c("cIHC","cIHC.itr","PCAPAM50")) must <- union(must, "ER")
+      if (use_ror && method %in% c("PAM50","cIHC","cIHC.itr","PCAPAM50","ssBC")) {
+        must <- union(must, c("TSIZE","NODE"))
+      } else {
+        rec <- union(rec, c("TSIZE","NODE"))
+      }
+    }
+    
+    list(
+      total = total,
+      must  = setNames(sapply(must, filled_n), must),
+      rec   = setNames(sapply(rec,  filled_n), rec)
+    )
+  })
+  
+  output$preflight <- renderUI({
+    info <- preflight_info()
+    if (length(info$must) + length(info$rec) == 0) return(NULL)
+    
+    mk_badge <- function(name, nfilled, total, level = c("must","rec")) {
+      level <- match.arg(level)
+      ok <- nfilled > 0
+      cls <- if (ok) "ok" else if (level == "must") "err" else "warn"
+      symbol <- if (ok) "\u2713" else "\u2717"   # ✓ / ✗
+      title <- if (total > 0) paste0(nfilled, "/", total, " filled") else "no clinical table loaded"
+      tags$span(
+        class = paste("pf-badge", cls),
+        title = title,
+        paste0(name, " ", symbol)
+      )
+    }
+    
+    badges <- tagList(
+      lapply(names(info$must), function(nm) mk_badge(nm, info$must[[nm]], info$total, "must")),
+      lapply(names(info$rec),  function(nm) mk_badge(nm, info$rec[[nm]],  info$total, "rec"))
+    )
+    
+    # Guidance text if any required fields are missing
+    missing_required <- any(unlist(info$must) == 0)
+    tip <- NULL
+    if (missing_required && (input$BSmethod %||% "") == "AUTO Mode") {
+      tip <- tags$div(class = "text-muted", style = "font-size:12px;",
+                      "AUTO will run with reduced checks until these required fields are provided.")
+    } else if (missing_required && (input$BSmethod %||% "") == "ssBC") {
+      tip <- tags$div(class = "text-muted", style = "font-size:12px;",
+                      "Fill required field(s) for the selected ssBC subgroup.")
+    }
+    
+    tags$div(class = "pf-row",
+             tags$span(class = "pf-label", "Preflight:"),
+             badges,
+             tip
+    )
+  })
   
   # --- dynamic help panels ---
   output$gex_help <- renderUI({
@@ -176,7 +277,7 @@ server <- function(input, output, session) {
                "Category" = "NC-/SSP-based",
                "IHC Input Requirement" = "ER status and/or HER2, or TN status",
                "Description" = "Evaluates cohort diagnostics (e.g., receptor-status distribution, subtype purity, subgroup sizes) and programmatically disables classifiers whose assumptions are likely violated — reducing misclassification in skewed or small cohorts.",
-               "Notes" = "AUTO may include PAM50 variants, cIHC / cIHC.itr, PCAPAM50, ssBC/ssBC.v2, AIMS, sspbc as appropriate.",
+               "Notes" = "If ER/HER2 are missing, placeholders are added so AUTO can run in reduced mode; provide real values to enable all checks.",
                "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
              )
            ),
@@ -381,11 +482,24 @@ server <- function(input, output, session) {
       se_NC    <- chk$se
       use_clin <- want_clin && chk$use
       
-      # make sure TSIZE/NODE numeric fixes actually flow into BS_Multi()
+      # propagate TSIZE/NODE fixes
       if (!is.null(se_NC)) {
         di <- reactive_files$data_input
         di$se_NC <- se_NC
         reactive_files$data_input <- di
+      }
+      
+      # ensure ER/HER2/TN columns exist to prevent get_methods() crash
+      ensured <- .ensure_auto_ihc_cols(se_NC)
+      se_NC <- ensured$se
+      if (length(ensured$added)) {
+        di <- reactive_files$data_input; di$se_NC <- se_NC; reactive_files$data_input <- di
+        showNotification(
+          paste0("AUTO Mode: missing clinical column(s) added: ",
+                 paste(ensured$added, collapse = ", "),
+                 ". AUTO will run with reduced checks until you provide real values."),
+          type = "warning", duration = 8
+        )
       }
       
       withProgress(message = "Performing analysis (AUTO Mode)...", value = 0, {
@@ -393,7 +507,7 @@ server <- function(input, output, session) {
         result_auto <- BreastSubtypeR::BS_Multi(
           data_input  = reactive_files$data_input,
           methods     = "AUTO",
-          Subtype     = want_4,     # 4 vs 5 passed here
+          Subtype     = want_4,
           hasClinical = use_clin
         )
         
@@ -580,7 +694,6 @@ server <- function(input, output, session) {
       # ---------- Build a single Subtype column for plotting ----------
       out <- NULL
       if (!is.null(res) && !is.null(res$BS.all) && nrow(res$BS.all) > 0) {
-        # Prefer BS.Subtype (4-class) when requested and available; otherwise use BS or Subtype
         labcol <- if (want_4 && "BS.Subtype" %in% names(res$BS.all)) {
           "BS.Subtype"
         } else if ("BS" %in% names(res$BS.all)) {
@@ -596,7 +709,6 @@ server <- function(input, output, session) {
           check.names = FALSE
         )
       } else if (!is.null(res) && !is.null(res$cl) && is.matrix(res$cl) && ncol(res$cl) >= 1) {
-        # AIMS path (cl matrix)
         out <- data.frame(
           PatientID = rownames(res$cl),
           Subtype   = res$cl[, 1, drop = TRUE],
@@ -604,17 +716,13 @@ server <- function(input, output, session) {
         )
       }
       
-      # ---------- Save & download (export both labels when present) ----------
+      # ---------- Save & download ----------
       if (!is.null(out) && nrow(out) > 0) {
-        # Start with selected label
         download_tbl <- data.frame(PatientID = out$PatientID, Subtype = out$Subtype, check.names = FALSE)
-        
-        # If the model returned both 5-class and 4-class, include them as well
         if (!is.null(res$BS.all)) {
-          if ("BS" %in% names(res$BS.all))        download_tbl$BS_5class <- res$BS.all$BS
+          if ("BS" %in% names(res$BS.all))         download_tbl$BS_5class <- res$BS.all$BS
           if ("BS.Subtype" %in% names(res$BS.all)) download_tbl$BS_4class <- res$BS.all$BS.Subtype
         }
-        
         reactive_files$output_res <- download_tbl
       } else {
         reactive_files$output_res <- data.frame()
@@ -637,7 +745,6 @@ server <- function(input, output, session) {
         } else {
           req(se_NC);  SummarizedExperiment::assay(se_NC)
         }
-        # keep rownames for both NC and SSP heatmaps
         output$pie1  <- renderPlot(BreastSubtypeR::Vis_pie(out))
         output$heat2 <- renderPlot(BreastSubtypeR::Vis_heatmap(as.matrix(mat), out = out))
         output$plotSection <- renderUI({

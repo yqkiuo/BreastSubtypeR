@@ -1,4 +1,5 @@
-# Define UI for iBreastSubtypeR
+# --- ui.R ---
+
 app_theme <- bslib::bs_theme(
   version = 5,
   base_font    = bslib::font_google("Inter"),
@@ -23,6 +24,14 @@ ui <- bslib::page_fluid(
       border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
     }
     .method-help ul { margin-bottom: 0; }
+
+    /* Preflight badges */
+    .pf-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px 0; }
+    .pf-label { font-size: 12px; opacity: 0.8; }
+    .pf-badge { font-size: 12px; border-radius: 999px; padding: 3px 8px; font-weight: 600; border: 1px solid transparent; }
+    .pf-badge.ok   { background: #e6f4ea; color: #137333; border-color: #c6e7cd; }  /* green */
+    .pf-badge.warn { background: #fff4e5; color: #8a5300; border-color: #ffe8cc; }  /* amber */
+    .pf-badge.err  { background: #fdecea; color: #b3261e; border-color: #f9c9c5; }  /* red */
   "))),
   
   # --- Centered heading ---
@@ -70,10 +79,10 @@ ui <- bslib::page_fluid(
         choices  = c("Normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
         selected = "norm", inline = TRUE
       ),
-      uiOutput("gex_help")     # "Requirements" panel (mode-aware)
+      uiOutput("gex_help")
     ),
     
-    # 2) Clinical data (renamed)
+    # 2) Clinical data
     bslib::card(
       bslib::card_header("2) Clinical data"),
       fileInput(
@@ -81,7 +90,7 @@ ui <- bslib::page_fluid(
         "Upload clinical table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("clin_help")    # "Clinical data requirements"
+      uiOutput("clin_help")
     ),
     
     # 3) Feature annotation
@@ -92,7 +101,7 @@ ui <- bslib::page_fluid(
         "Upload annotation table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("anno_help")    # "Feature annotation requirements"
+      uiOutput("anno_help")
     )
   ),
   
@@ -134,7 +143,7 @@ ui <- bslib::page_fluid(
       selected = "5", inline = TRUE
     ),
     
-    # Live per-method help (with citations)
+    # Live per-method help
     uiOutput("method_help"),
     
     # ROR checkbox (NC methods + AUTO)
@@ -234,6 +243,8 @@ ui <- bslib::page_fluid(
     conditionalPanel(condition = "input.BSmethod == 'AIMS'", div()),
     conditionalPanel(condition = "input.BSmethod == 'sspbc'", div()),
     
+    # --- Preflight badges + Run button ---
+    uiOutput("preflight"),
     bslib::card(
       actionButton("run", "Run subtyping", icon = icon("play-circle"))
     )
