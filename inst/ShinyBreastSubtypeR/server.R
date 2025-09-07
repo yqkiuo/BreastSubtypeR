@@ -1,4 +1,16 @@
 # Define server logic
+# Safe CSS unit helper
+safeCssUnit <- function(x, fallback = "auto") {
+  if (is.null(x) || (length(x) == 0)) return(fallback)
+  tryCatch(
+    shiny::validateCssUnit(x),
+    error = function(e) {
+      if (is.numeric(x) && is.finite(x)) paste0(x, "px") else fallback
+    }
+  )
+}
+
+
 server <- function(input, output, session) {
   # --- helpers ---
   raw_mode     <- reactive({ identical(input$is_raw_counts, "raw") })
@@ -50,7 +62,7 @@ server <- function(input, output, session) {
     RawCounts = NULL, data_input = NULL, output_res = NULL
   )
   
-  # --- dynamic help panels (unchanged from your version) ---
+  # --- dynamic help panels ---
   output$gex_help <- renderUI({
     badge <- function(txt) tags$span(
       txt, style = "font-size:12px; padding:2px 6px; background:#f1f3f5; border-radius:12px; margin-left:6px;"
@@ -58,7 +70,7 @@ server <- function(input, output, session) {
     if (raw_mode()) {
       tagList(
         div(class = "method-help",
-            tags$b("Input requirements"), badge("Selected: Raw counts"),
+            tags$b("Expression matrix requirements"), badge("Selected: Raw counts"),
             tags$br(),
             tags$ul(
               tags$li(tags$b("Format:"), " genes × samples ", tags$em("integer raw counts (RNA-seq)"), "."),
@@ -73,7 +85,7 @@ server <- function(input, output, session) {
     } else {
       tagList(
         div(class = "method-help",
-            tags$b("Input requirements"), badge("Selected: Normalized (log2)"),
+            tags$b("Expression matrix requirements"), badge("Selected: Normalized (log2)"),
             tags$br(),
             tags$ul(
               tags$li(tags$b("Format:"), " genes × samples ", tags$em("log2-normalized expression"), "."),
@@ -95,7 +107,11 @@ server <- function(input, output, session) {
             tags$b("Clinical data requirements"),
             tags$br(),
             HTML("<ul>
-              <li><b>Required:</b> <code>PatientID</code> (matches GEX columns) and <code>ER</code> coded as <code>ER+</code> or <code>ER-</code>.</li>
+              <li><b>Minimum:</b> <code>PatientID</code> (matches GEX columns).</li>
+              <li><b>Method-specific:</b> 
+                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code> (values <code>ER+</code>/<code>ER-</code>). 
+                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>, values <code>HER2+</code>/<code>HER2-</code>) or <code>TN</code> (values <code>TN</code>/<code>nonTN</code>) depending on subgroup.
+              </li>
               <li><b>Additional (for ROR):</b> <code>TSIZE</code> (0 = ≤ 2 cm; 1 = > 2 cm) and <code>NODE</code> (0 = negative; ≥ 1 = positive).</li>
              </ul>")
         )
@@ -106,8 +122,12 @@ server <- function(input, output, session) {
             tags$b("Clinical data requirements"),
             tags$br(),
             HTML("<ul>
-              <li><b>Required:</b> <code>PatientID</code> and <code>ER</code> (ER+/ER-).</li>
-              <li><b>Optional:</b> include <code>TSIZE</code> and <code>NODE</code> if you plan to compute ROR (NC methods).</li>
+              <li><b>Minimum:</b> <code>PatientID</code>.</li>
+              <li><b>Method-specific:</b> 
+                cIHC / cIHC.itr / PCAPAM50 need <code>ER</code> (values <code>ER+</code>/<code>ER-</code>). 
+                ssBC requires <code>ER</code> (and <code>HER2</code> for <code>ER.v2</code>) or <code>TN</code> depending on subgroup.
+              </li>
+              <li><b>Optional for ROR (NC methods):</b> include <code>TSIZE</code> and <code>NODE</code>.</li>
              </ul>")
         )
       )
@@ -118,7 +138,7 @@ server <- function(input, output, session) {
     if (raw_mode()) {
       tagList(
         div(class = "method-help",
-            tags$b("Annotation requirements"),
+            tags$b("Feature annotation requirements"),
             tags$br(),
             HTML("<ul>
               <li><code>probe</code> — matches GEX row names.</li>
@@ -130,7 +150,7 @@ server <- function(input, output, session) {
     } else {
       tagList(
         div(class = "method-help",
-            tags$b("Annotation requirements"),
+            tags$b("Feature annotation requirements"),
             tags$br(),
             HTML("<ul>
               <li><code>probe</code> — matches GEX row names.</li>
@@ -141,7 +161,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # --- method descriptions (your restored citations) ---
+  # --- method descriptions ---
   output$method_help <- renderUI({
     m <- input$BSmethod
     if (is.null(m)) return(NULL)
@@ -154,10 +174,10 @@ server <- function(input, output, session) {
              "AUTO Mode (cohort-aware selection)",
              list(
                "Category" = "NC-/SSP-based",
-               "IHC Input Requirement" = "IHC ER and/or HER2, or TN status",
+               "IHC Input Requirement" = "ER status and/or HER2, or TN status",
                "Description" = "Evaluates cohort diagnostics (e.g., receptor-status distribution, subtype purity, subgroup sizes) and programmatically disables classifiers whose assumptions are likely violated — reducing misclassification in skewed or small cohorts.",
                "Notes" = "AUTO may include PAM50 variants, cIHC / cIHC.itr, PCAPAM50, ssBC/ssBC.v2, AIMS, sspbc as appropriate.",
-               "Key refs" = "Yang et al., 2025 NAR Genom Bioinform."
+               "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
              )
            ),
            "PAM50" = .p(
@@ -173,7 +193,7 @@ server <- function(input, output, session) {
              "cIHC",
              list(
                "Category" = "NC-based",
-               "IHC Input Requirement" = "IHC ER status",
+               "IHC Input Requirement" = "ER status",
                "Description" = "Conventional ER-balancing using IHC prior to PAM50-style classification.",
                "Key refs" = "Ciriello et al., 2015 Cell; Raj-Kumar et al., 2019 Sci Rep."
              )
@@ -182,16 +202,16 @@ server <- function(input, output, session) {
              "cIHC.itr",
              list(
                "Category" = "NC-based",
-               "IHC Input Requirement" = "IHC ER status",
+               "IHC Input Requirement" = "ER status",
                "Description" = "Iterative ER-balancing variant.",
-               "Key refs" = "Curtis et al., 2012 Nature."
+               "Key ref" = "Curtis et al., 2012 Nature."
              )
            ),
            "PCAPAM50" = .p(
              "PCAPAM50",
              list(
                "Category" = "NC-based",
-               "IHC Input Requirement" = "IHC ER status → ESR1 axis",
+               "IHC Input Requirement" = "ER status (IHC) → ESR1 axis",
                "Description" = "PCA on ESR1 to achieve ER-aware centering before PAM50; improves consistency with IHC.",
                "Key ref" = "Raj-Kumar et al., 2019 Sci Rep."
              )
@@ -200,7 +220,7 @@ server <- function(input, output, session) {
              "ssBC",
              list(
                "Category" = "NC-based",
-               "IHC Input Requirement" = "IHC ER and/or HER2, or TN status",
+               "IHC Input Requirement" = "ER needed for ER/ER.v2 (plus HER2 for ER.v2); TN needed for TN/TN.v2.",
                "Description" = "Subgroup-specific gene-centering PAM50.",
                "Key ref" = "Zhao et al., 2015 Breast Cancer Res."
              )
@@ -255,16 +275,18 @@ server <- function(input, output, session) {
                           quote = "", comment.char = "", stringsAsFactors = FALSE, fill = TRUE)
       }
       
-      # GEX
+      # GEX (robust first-column handling)
       gex_df <- .read_table(input$GEX)
-      if (!any(grepl("^probe$", names(gex_df), ignore.case = TRUE))) {
-        if (!is.numeric(gex_df[[1]])) {
-          rn <- gex_df[[1]]; gex_df[[1]] <- NULL; rownames(gex_df) <- rn
-        }
+      if (any(grepl("^probe$", names(gex_df), ignore.case = TRUE))) {
+        probe_col <- grep("^probe$", names(gex_df), ignore.case = TRUE)[1]
+        rownames(gex_df) <- gex_df[[probe_col]]
+        gex_df[[probe_col]] <- NULL
       } else {
-        rownames(gex_df) <- gex_df$probe; gex_df$probe <- NULL
+        rn <- gex_df[[1]]
+        gex_df[[1]] <- NULL
+        rownames(gex_df) <- as.character(rn)
       }
-      gex_mat <- as.matrix(sapply(gex_df, function(x) suppressWarnings(as.numeric(x))))
+      gex_mat <- as.matrix(suppressWarnings(sapply(gex_df, function(x) as.numeric(x))))
       rownames(gex_mat) <- rownames(gex_df)
       if (anyNA(gex_mat)) {
         showNotification("Warning: NAs introduced while coercing GEX to numeric.", type = "warning")
@@ -359,6 +381,13 @@ server <- function(input, output, session) {
       se_NC    <- chk$se
       use_clin <- want_clin && chk$use
       
+      # make sure TSIZE/NODE numeric fixes actually flow into BS_Multi()
+      if (!is.null(se_NC)) {
+        di <- reactive_files$data_input
+        di$se_NC <- se_NC
+        reactive_files$data_input <- di
+      }
+      
       withProgress(message = "Performing analysis (AUTO Mode)...", value = 0, {
         incProgress(0.5, detail = "BS_Multi() running...")
         result_auto <- BreastSubtypeR::BS_Multi(
@@ -367,13 +396,14 @@ server <- function(input, output, session) {
           Subtype     = want_4,     # 4 vs 5 passed here
           hasClinical = use_clin
         )
-        reactive_files$output_res <- result_auto$res_subtypes
+        
+        df_out <- result_auto$res_subtypes
+        df_out <- cbind(PatientID = rownames(df_out), df_out, row.names = NULL)
+        reactive_files$output_res <- df_out
         
         output$download <- downloadHandler(
           filename = function() "results-AUTO.txt",
-          content  = function(file) {
-            write.table(reactive_files$output_res, file, row.names = FALSE, sep = "\t", quote = FALSE)
-          }
+          content  = function(file) write.table(reactive_files$output_res, file, sep = "\t", quote = FALSE, row.names = FALSE)
         )
         
         output$plotSection <- renderUI({
@@ -430,6 +460,8 @@ server <- function(input, output, session) {
           } else {
             args$external <- input$external
           }
+        } else if (identical(cal, "None")) {
+          args$calibration <- "None"
         }
         incProgress(0.55, detail = "BS_parker...")
         res <- do.call(BreastSubtypeR::BS_parker, args)
@@ -456,12 +488,54 @@ server <- function(input, output, session) {
       if (input$BSmethod == "PCAPAM50") {
         req(se_NC)
         incProgress(0.55, detail = "BS_PCAPAM50...")
-        res <- BreastSubtypeR::BS_PCAPAM50(se_obj = se_NC, Subtype = want_4, hasClinical = use_clin)
-        output_res <- res$score.ROR
+        res <- tryCatch(
+          BreastSubtypeR::BS_PCAPAM50(se_obj = se_NC, Subtype = want_4, hasClinical = use_clin),
+          error = function(e) {
+            showNotification("PCAPAM50 failed on this dataset; skipping (see console for details).", type = "warning", duration = 6)
+            NULL
+          }
+        )
+        output_res <- if (is.null(res)) data.frame() else res$score.ROR
       }
       
       if (input$BSmethod == "ssBC") {
         req(se_NC)
+        
+        cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
+        need_cols <- switch(input$s,
+                            "ER"    = c("ER"),
+                            "ER.v2" = c("ER","HER2"),
+                            "TN"    = c("TN"),
+                            "TN.v2" = c("TN"))
+        miss <- setdiff(need_cols, names(cd))
+        if (length(miss)) {
+          showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "), "| missing:", paste(miss, collapse=", ")),
+                           type = "error", duration = 7)
+          return(invisible(NULL))
+        }
+        # value sanity checks
+        if (input$s %in% c("ER","ER.v2")) {
+          badER <- setdiff(na.omit(unique(cd$ER)), c("ER+","ER-"))
+          if (length(badER)) showNotification(
+            sprintf("ER values should be 'ER+' or 'ER-'. Found: %s", paste(badER, collapse=", ")),
+            type="warning", duration=7
+          )
+        }
+        if (input$s == "ER.v2") {
+          badH <- setdiff(na.omit(unique(cd$HER2)), c("HER2+","HER2-"))
+          if (length(badH)) showNotification(
+            sprintf("HER2 values should be 'HER2+' or 'HER2-'. Found: %s", paste(badH, collapse=", ")),
+            type="warning", duration=7
+          )
+        }
+        if (input$s %in% c("TN","TN.v2")) {
+          badTN <- setdiff(na.omit(unique(cd$TN)), c("TN","nonTN"))
+          if (length(badTN)) showNotification(
+            sprintf("TN values should be 'TN' or 'nonTN'. Found: %s", paste(badTN, collapse=", ")),
+            type="warning", duration=7
+          )
+        }
+        
         incProgress(0.55, detail = "BS_ssBC...")
         res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
         output_res <- res$score.ROR
@@ -563,8 +637,7 @@ server <- function(input, output, session) {
         } else {
           req(se_NC);  SummarizedExperiment::assay(se_NC)
         }
-        if (input$BSmethod %in% c("sspbc", "AIMS")) rownames(mat) <- NULL
-        
+        # keep rownames for both NC and SSP heatmaps
         output$pie1  <- renderPlot(BreastSubtypeR::Vis_pie(out))
         output$heat2 <- renderPlot(BreastSubtypeR::Vis_heatmap(as.matrix(mat), out = out))
         output$plotSection <- renderUI({

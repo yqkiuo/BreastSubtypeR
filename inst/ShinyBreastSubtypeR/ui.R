@@ -1,5 +1,13 @@
 # Define UI for iBreastSubtypeR
+app_theme <- bslib::bs_theme(
+  version = 5,
+  base_font    = bslib::font_google("Inter"),
+  heading_font = bslib::font_google("Poppins"),
+  primary = "#FF69B4" # matches download button
+)
+
 ui <- bslib::page_fluid(
+  theme = app_theme,
   
   # --- Global CSS fixes & minor polish ---
   tags$head(tags$style(HTML("
@@ -84,7 +92,7 @@ ui <- bslib::page_fluid(
         "Upload annotation table",
         accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")
       ),
-      uiOutput("anno_help")    # "Annotation requirements"
+      uiOutput("anno_help")    # "Feature annotation requirements"
     )
   ),
   
@@ -218,7 +226,7 @@ ui <- bslib::page_fluid(
       bslib::layout_column_wrap(
         selectInput(
           "s", "Subgroup",
-          choices = list("ER" = "ER", "ER.v2" = "ER.v2", "TN" = "TN"),
+          choices = list("ER" = "ER", "ER.v2" = "ER.v2", "TN" = "TN", "TN.v2" = "TN.v2"),
           selected = "ER.v2"
         )
       )
