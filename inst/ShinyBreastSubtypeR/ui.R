@@ -12,27 +12,23 @@ ui <- bslib::page_fluid(
   
   # --- Global CSS fixes & minor polish ---
   tags$head(tags$style(HTML("
-    /* Keep dropdowns visible above cards */
-    .bslib-card, .card, .card-body { overflow: visible !important; }
-    .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 9999 !important; }
-    /* Center the top heading */
-    .app-title { text-align: center; margin: 16px 0 8px; }
-    .app-title h2 { margin: 0; }
-    /* Styled info box for help panels */
-    .method-help {
-      margin: 6px 0 12px; padding: 10px 12px;
-      border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
-    }
-    .method-help ul { margin-bottom: 0; }
+  /* Keep dropdowns visible above cards, but below modals */
+  .bslib-card, .card, .card-body { overflow: visible !important; }
+  .selectize-control, .selectize-dropdown, .dropdown-menu { z-index: 1040 !important; } /* < modal */
+  .modal-backdrop { z-index: 1050 !important; }
+  .modal { z-index: 1060 !important; }
 
-    /* Preflight badges */
-    .pf-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px 0; }
-    .pf-label { font-size: 12px; opacity: 0.8; }
-    .pf-badge { font-size: 12px; border-radius: 999px; padding: 3px 8px; font-weight: 600; border: 1px solid transparent; }
-    .pf-badge.ok   { background: #e6f4ea; color: #137333; border-color: #c6e7cd; }  /* green */
-    .pf-badge.warn { background: #fff4e5; color: #8a5300; border-color: #ffe8cc; }  /* amber */
-    .pf-badge.err  { background: #fdecea; color: #b3261e; border-color: #f9c9c5; }  /* red */
-  "))),
+  /* Center the top heading */
+  .app-title { text-align: center; margin: 16px 0 8px; }
+  .app-title h2 { margin: 0; }
+
+  /* Styled info box for help panels */
+  .method-help {
+    margin: 6px 0 12px; padding: 10px 12px;
+    border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px;
+  }
+  .method-help ul { margin-bottom: 0; }
+"))),
   
   # --- Centered heading ---
   tags$div(class = "app-title",
