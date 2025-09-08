@@ -1,72 +1,78 @@
-# --- Safe CSS unit helper (optional, harmless if unused) ---
+# --- Safe CSS unit helper (optional) ---
 safeCssUnit <- function(x, fallback = "auto") {
   if (is.null(x) || (length(x) == 0)) return(fallback)
-  tryCatch(
-    shiny::validateCssUnit(x),
-    error = function(e) {
-      if (is.numeric(x) && is.finite(x)) paste0(x, "px") else fallback
-    }
-  )
+  tryCatch(shiny::validateCssUnit(x),
+           error = function(e) if (is.numeric(x) && is.finite(x)) paste0(x, "px") else fallback)
 }
 
-# --- bslib::callout() compatibility shim (works with older bslib) ---
+# --- bslib::callout shim ---
 bs_callout <- function(title, body, color = c("info","success","warning","danger","secondary")) {
   color <- match.arg(color)
-  # use bslib::callout if available
-  has_callout <- FALSE
   if (requireNamespace("bslib", quietly = TRUE)) {
     ns <- asNamespace("bslib")
-    has_callout <- exists("callout", envir = ns, inherits = FALSE)
-    if (has_callout) {
-      return(get("callout", envir = ns)(
-        title = title,
-        body,
-        color = color
-      ))
+    if (exists("callout", envir = ns, inherits = FALSE)) {
+      return(get("callout", envir = ns)(title = title, body, color = color))
     }
   }
-  # fallback: Bootstrap 5 alert box
-  cl <- switch(color,
-               "success"   = "alert alert-success",
-               "warning"   = "alert alert-warning",
-               "danger"    = "alert alert-danger",
-               "secondary" = "alert alert-secondary",
-               "info"      = "alert alert-info"
-  )
-  shiny::tags$div(
-    class = cl,
-    role = "alert",
-    shiny::tags$div(shiny::tags$b(title)),
-    body
-  )
+  cl <- switch(color, "success"="alert alert-success","warning"="alert alert-warning",
+               "danger"="alert alert-danger","secondary"="alert alert-secondary","info"="alert alert-info")
+  shiny::tags$div(class = cl, role = "alert", shiny::tags$div(shiny::tags$b(title)), body)
 }
 
 server <- function(input, output, session) {
-  # --- helpers ---
+  
+  # --- small helpers ---
   raw_mode     <- reactive({ identical(input$is_raw_counts, "raw") })
   `%||%`       <- function(a, b) if (!is.null(a)) a else b
   has_clinical <- reactive({ isTRUE((input$hasClinical %||% FALSE)) })
   k_is_4class  <- reactive({ identical(input$k_subtypes, "4") })
   
-  # Dynamically restrict subtype choices for AIMS (AIMS = 5-class only)
-  observeEvent(input$BSmethod, {
-    if (identical(input$BSmethod, "AIMS")) {
-      updateRadioButtons(
-        session, "k_subtypes",
-        choices = c("5 classes (includes Normal-like)" = "5"),
-        selected = "5"
-      )
-    } else {
-      prev <- isolate(input$k_subtypes) %||% "5"
-      if (!prev %in% c("4","5")) prev <- "5"
-      updateRadioButtons(
-        session, "k_subtypes",
-        choices = c("5 classes (includes Normal-like)" = "5",
-                    "4 classes (excludes Normal-like)" = "4"),
-        selected = prev
-      )
+  # Build a safe data.frame with PatientID prepended (avoid cbind(..., check.names=...))
+  .build_out_df <- function(ids, tab) {
+    tab <- as.data.frame(tab, stringsAsFactors = FALSE, check.names = FALSE)
+    data.frame(
+      PatientID = ids,
+      tab,
+      row.names = NULL,
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+  }
+  
+  # Build Calls-only and Full metrics for single-method results
+  .build_single_exports <- function(res, want_4) {
+    stopifnot(!is.null(res$BS.all), "PatientID" %in% names(res$BS.all))
+    calls_col <- if (want_4 && "BS.Subtype" %in% names(res$BS.all)) "BS.Subtype"
+    else if ("BS" %in% names(res$BS.all)) "BS"
+    else setdiff(names(res$BS.all), "PatientID")[1]
+    nm <- if (want_4) "Call_4class" else "Call_5class"
+    
+    calls_tbl <- data.frame(PatientID = res$BS.all$PatientID,
+                            stringsAsFactors = FALSE, check.names = FALSE)
+    calls_tbl[[nm]] <- res$BS.all[[calls_col]]
+    
+    full_tbl <- as.data.frame(res$BS.all, stringsAsFactors = FALSE, check.names = FALSE)
+    if ("BS" %in% names(full_tbl))        { full_tbl$Call_5class <- full_tbl$BS;         full_tbl$BS <- NULL }
+    if ("BS.Subtype" %in% names(full_tbl)){ full_tbl$Call_4class <- full_tbl$BS.Subtype; full_tbl$BS.Subtype <- NULL }
+    
+    if (!is.null(res$score.ROR) && nrow(res$score.ROR) > 0) {
+      sr <- as.data.frame(res$score.ROR, stringsAsFactors = FALSE, check.names = FALSE)
+      if (!"PatientID" %in% names(sr)) {
+        if ("sample" %in% names(sr)) names(sr)[names(sr) == "sample"] <- "PatientID" else sr$PatientID <- rownames(sr)
+      }
+      keep <- setdiff(names(sr), names(full_tbl))
+      if (length(keep)) {
+        full_tbl <- merge(full_tbl, sr[, c("PatientID", keep), drop = FALSE],
+                          by = "PatientID", all.x = TRUE, sort = FALSE)
+      }
     }
-  }, ignoreInit = FALSE)
+    list(calls = calls_tbl, full = full_tbl)
+  }
+  
+  # Named-list badges
+  badge <- function(txt) tags$span(
+    txt, style = "font-size:12px; padding:2px 6px; background:#f1f3f5; border-radius:12px; margin-left:6px;"
+  )
   
   .validate_has_clinical <- function(se, want) {
     out <- list(use = FALSE, se = se, msg = NULL)
@@ -74,28 +80,22 @@ server <- function(input, output, session) {
     cd <- as.data.frame(SummarizedExperiment::colData(se))
     missing <- setdiff(c("TSIZE","NODE"), names(cd))
     if (length(missing) > 0) { out$msg <- paste("missing column(s):", paste(missing, collapse = ", ")); return(out) }
-    for (nm in c("TSIZE","NODE")) {
-      if (!is.numeric(cd[[nm]])) cd[[nm]] <- suppressWarnings(as.numeric(cd[[nm]]))
-    }
+    for (nm in c("TSIZE","NODE")) if (!is.numeric(cd[[nm]])) cd[[nm]] <- suppressWarnings(as.numeric(cd[[nm]]))
     SummarizedExperiment::colData(se)$TSIZE <- cd$TSIZE
     SummarizedExperiment::colData(se)$NODE  <- cd$NODE
-    if (any(!is.finite(cd$TSIZE)) || any(!is.finite(cd$NODE))) {
-      out$msg <- "non-numeric or NA in TSIZE/NODE"; return(out)
-    }
+    if (any(!is.finite(cd$TSIZE)) || any(!is.finite(cd$NODE))) { out$msg <- "non-numeric or NA in TSIZE/NODE"; return(out) }
     out$use <- TRUE; out$se <- se; out
   }
   
   # --- reactive storage ---
   reactive_files <- shiny::reactiveValues(
     GEX = NULL, clinic = NULL, anno = NULL,
-    RawCounts = NULL, data_input = NULL, output_res = NULL
+    RawCounts = NULL, data_input = NULL,
+    download_calls = NULL, download_full = NULL
   )
   
   # --- dynamic help panels ---
   output$gex_help <- renderUI({
-    badge <- function(txt) tags$span(
-      txt, style = "font-size:12px; padding:2px 6px; background:#f1f3f5; border-radius:12px; margin-left:6px;"
-    )
     if (raw_mode()) {
       tagList(
         div(class = "method-help",
@@ -108,8 +108,7 @@ server <- function(input, output, session) {
               tags$li(tags$b("Processing:"), " NC → log2-CPM (upper-quartile); SSP → FPKM (linear)."),
               tags$li(tags$small("Note: Annotation must include ", tags$code("ENTREZID"),
                                  " and ", tags$code("Length"), " (bp). See Feature annotation."))
-            )
-        )
+            ))
       )
     } else {
       tagList(
@@ -122,8 +121,7 @@ server <- function(input, output, session) {
               tags$li(tags$b("Rows:"), " gene IDs matching ", tags$code("annotation$probe"), "."),
               tags$li(tags$b("Columns:"), " sample IDs matching ", tags$code("clinical$PatientID"), "."),
               tags$li(tags$b("Processing:"), " NC → uses log2 values as-is; SSP → back-transforms to linear scale.")
-            )
-        )
+            ))
       )
     }
   })
@@ -217,106 +215,202 @@ server <- function(input, output, session) {
     )
   })
   
-  
-  
   # --- method descriptions ---
   output$method_help <- renderUI({
-    m <- input$BSmethod
-    if (is.null(m)) return(NULL)
+    m <- input$BSmethod; if (is.null(m)) return(NULL)
     .p <- function(title, items) {
       lis <- Map(function(k, v) tags$li(HTML(paste0("<b>", k, ":</b> ", v))), names(items), items)
       div(class = "method-help", tags$b(title), tags$br(), tags$ul(lis))
     }
     switch(m,
-           "AUTO Mode" = .p(
-             "AUTO Mode (cohort-aware selection)",
-             list(
-               "Category" = "NC-/SSP-based",
-               "IHC Input Requirement" = "ER status and/or HER2, or TN status",
-               "Description" = "Evaluates cohort diagnostics (e.g., receptor-status distribution, subtype purity, subgroup sizes) and programmatically disables classifiers whose assumptions are likely violated — reducing misclassification in skewed or small cohorts.",
-               "Notes" = "AUTO may include PAM50 variants, cIHC / cIHC.itr, PCAPAM50, ssBC/ssBC.v2, AIMS, sspbc as appropriate.",
-               "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
-             )
-           ),
-           "PAM50" = .p(
-             "PAM50 family (NC-based)",
-             list(
-               "Variants" = "parker.original | genefu.scale | genefu.robust",
-               "IHC Input Requirement" = "Not required",
-               "Description" = "Nearest-centroid subtyping using the PAM50 gene set; genefu variants provide alternative internal scaling/centering.",
-               "Key refs" = "Parker et al., 2009 JCO; Gendoo et al., 2016 Bioinformatics."
-             )
-           ),
-           "cIHC" = .p(
-             "cIHC",
-             list(
-               "Category" = "NC-based",
-               "IHC Input Requirement" = "ER status",
-               "Description" = "Conventional ER-balancing using IHC prior to PAM50-style classification.",
-               "Key refs" = "Ciriello et al., 2015 Cell; Raj-Kumar et al., 2019 Sci Rep."
-             )
-           ),
-           "cIHC.itr" = .p(
-             "cIHC.itr",
-             list(
-               "Category" = "NC-based",
-               "IHC Input Requirement" = "ER status",
-               "Description" = "Iterative ER-balancing variant.",
-               "Key ref" = "Curtis et al., 2012 Nature."
-             )
-           ),
-           "PCAPAM50" = .p(
-             "PCAPAM50",
-             list(
-               "Category" = "NC-based",
-               "IHC Input Requirement" = "ER status (IHC) → ESR1 axis",
-               "Description" = "PCA on ESR1 to achieve ER-aware centering before PAM50; improves consistency with IHC.",
-               "Key ref" = "Raj-Kumar et al., 2019 Sci Rep."
-             )
-           ),
-           "ssBC" = .p(
-             "ssBC",
-             list(
-               "Category" = "NC-based",
-               "IHC Input Requirement" = "ER needed for ER/ER.v2 (plus HER2 for ER.v2); TN needed for TN/TN.v2.",
-               "Description" = "Subgroup-specific gene-centering PAM50.",
-               "Key ref" = "Zhao et al., 2015 Breast Cancer Res."
-             )
-           ),
-           "AIMS" = .p(
-             "AIMS",
-             list(
-               "Category" = "SSP-based",
-               "IHC Input Requirement" = "Not required",
-               "Description" = "Absolute Intrinsic Molecular Subtyping using pairwise gene rules.",
-               "Key ref" = "Paquet & Hallett, 2015 JNCI."
-             )
-           ),
-           "sspbc" = .p(
-             "sspbc",
-             list(
-               "Category" = "SSP-based",
-               "IHC Input Requirement" = "Not required",
-               "Description" = "RNA-seq single-sample predictors based on AIMS; 5-class vs 4-class via model choice.",
-               "Key ref" = "Staaf et al., 2022 npj Breast Cancer."
-             )
-           ),
-           NULL
+           "AUTO Mode" = .p("AUTO Mode (cohort-aware selection)", list(
+             "Category" = "NC-/SSP-based",
+             "IHC Input Requirement" = "ER status and/or HER2, or TN status",
+             "Description" = "Evaluates cohort diagnostics and disables classifiers with violated assumptions.",
+             "Notes" = "ROR is disabled in AUTO.",
+             "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
+           )),
+           "PAM50" = .p("PAM50 family (NC-based)", list(
+             "Variants" = "parker.original | genefu.scale | genefu.robust",
+             "IHC Input Requirement" = "Not required",
+             "Description" = "Nearest-centroid subtyping using the PAM50 gene set; multiple centering options.",
+             "Key refs" = "Parker et al., 2009 JCO; Gendoo et al., 2016 Bioinformatics."
+           )),
+           "cIHC" = .p("cIHC", list(
+             "Category" = "NC-based",
+             "IHC Input Requirement" = "ER status",
+             "Description" = "Conventional ER-balancing with PAM50-style classification.",
+             "Key refs" = "Ciriello et al., 2015 Cell; Raj-Kumar et al., 2019 Sci Rep."
+           )),
+           "cIHC.itr" = .p("cIHC.itr", list(
+             "Category" = "NC-based",
+             "IHC Input Requirement" = "ER status",
+             "Description" = "Iterative ER-balancing variant.",
+             "Key ref" = "Curtis et al., 2012 Nature."
+           )),
+           "PCAPAM50" = .p("PCAPAM50", list(
+             "Category" = "NC-based",
+             "IHC Input Requirement" = "ER status (IHC) → ESR1 axis",
+             "Description" = "PCA on ESR1 to achieve ER-aware centering before PAM50.",
+             "Key ref" = "Raj-Kumar et al., 2019 Sci Rep."
+           )),
+           "ssBC" = .p("ssBC", list(
+             "Category" = "NC-based",
+             "IHC Input Requirement" = "ER (and HER2 for ER.v2) or TN depending on subgroup.",
+             "Description" = "Subgroup-specific gene-centering PAM50.",
+             "Key ref" = "Zhao et al., 2015 BCR."
+           )),
+           "AIMS" = .p("AIMS", list(
+             "Category" = "SSP-based",
+             "IHC Input Requirement" = "Not required",
+             "Description" = "Absolute Intrinsic Molecular Subtyping (pairwise rules).",
+             "Key ref" = "Paquet & Hallett, 2015 JNCI."
+           )),
+           "sspbc" = .p("sspbc", list(
+             "Category" = "SSP-based",
+             "IHC Input Requirement" = "Not required",
+             "Description" = "SCAN-B SSP models (4- or 5-class via model).",
+             "Key ref" = "Staaf et al., 2022 NPJ Breast Cancer."
+           )),
+           NULL)
+  })
+  
+  # --- Smart AUTO chip (dynamic) ---
+  output$auto_chip <- renderUI({
+    # fall back icon if FA6 is missing
+    wand_ok <- tryCatch({ htmltools::tagList(icon("wand-magic-sparkles")); TRUE }, error = function(...) FALSE)
+    icn <- if (wand_ok) icon("wand-magic-sparkles") else icon("magic")
+    
+    chk <- auto_requirements()  # uses your existing reactive
+    cls <- if (isTRUE(chk$ready)) "chip auto ready" else "chip auto blocked"
+    state <- if (isTRUE(chk$ready)) "ready" else "action needed"
+    note  <- if (isTRUE(chk$show)) (chk$msg %||% "OK") else "Run Step 1 first"
+    
+    # little “Why AUTO?” link opens a modal with cohort-aware details
+    htmltools::tags$span(
+      class = cls,
+      icn,
+      htmltools::HTML("<b>AUTO:</b> assumption-aware selection"),
+      htmltools::span(class = "chip-note", paste("—", state)),
+      actionLink("show_auto_modal", label = "Why AUTO?", icon = icon("circle-question"), style = "margin-left:6px;")
     )
   })
+  
+  # Lock 4/5-class choice for AIMS (AIMS = 5-class only)
+  observeEvent(input$BSmethod, {
+    if (identical(input$BSmethod, "AIMS")) {
+      updateRadioButtons(
+        session, "k_subtypes",
+        choices  = list("5 classes (includes Normal-like)" = "5"),
+        selected = "5"
+      )
+    } else {
+      prev <- isolate(input$k_subtypes)
+      if (!prev %in% c("4","5")) prev <- "5"
+      updateRadioButtons(
+        session, "k_subtypes",
+        choices  = list("5 classes (includes Normal-like)" = "5",
+                        "4 classes (excludes Normal-like)" = "4"),
+        selected = prev
+      )
+    }
+  }, ignoreInit = FALSE)
+  
+  # Methods where "Full metrics" should be hidden
+  block_full <- reactive({
+    input$BSmethod %in% c("AUTO Mode", "AIMS", "sspbc")
+  })
+  
+  # Dynamic export selector (shows only "Calls only" for AUTO/AIMS/SSPBC)
+  output$export_selector <- renderUI({
+    show_only_calls <- isTRUE(block_full())
+    choices <- if (show_only_calls) {
+      list("Calls only" = "calls")
+    } else {
+      list("Calls only" = "calls", "Full metrics (incl. ROR when available)" = "full")
+    }
+    # default to "calls" if option not present or not yet set
+    sel <- if (show_only_calls) "calls" else (isolate(input$export_kind) %||% "calls")
+    radioButtons("export_kind", "Export content", choices = choices, inline = TRUE, selected = sel)
+  })
+  
+  
+  # --- Cohort-aware AUTO explainer modal ---
+  observeEvent(input$show_auto_modal, {
+    di <- reactive_files$data_input
+    have_data <- !is.null(di) && !is.null(di$se_NC)
+    details_ui <- if (!have_data) {
+      # general explanation (no data yet)
+      tagList(
+        tags$p("AUTO analyzes your cohort to choose compatible classifiers and avoid misclassification in skewed or small cohorts."),
+        tags$ul(
+          tags$li("Checks ER/HER2 presence and coding (ER+/ER-, HER2+/HER2-)."),
+          tags$li("Screens for subgroup imbalance (e.g., ER+ ≫ ER-), subtype purity and subgroup size."),
+          tags$li("Disables methods whose assumptions are violated; runs robust alternatives (e.g., ssBC, AIMS/SSPBC)."),
+          tags$li("Keeps outputs per method.")
+        ),
+        tags$p(tags$em("Tip: Run Step 1 so AUTO can show a cohort snapshot here."))
+      )
+    } else {
+      se <- di$se_NC
+      ph <- as.data.frame(SummarizedExperiment::colData(se))
+      n  <- nrow(ph)
+      ER_tab   <- if ("ER"   %in% names(ph)) table(ph$ER, useNA = "ifany")   else NULL
+      HER2_tab <- if ("HER2" %in% names(ph)) table(ph$HER2, useNA = "ifany") else NULL
+      
+      # Try to preview which methods AUTO would keep (best-effort)
+      kept <- tryCatch({
+        gm <- get_methods(ph)  # from your package
+        gm$methods
+      }, error = function(e) NULL)
+      
+      tagList(
+        tags$p("AUTO inspects your cohort and selects only the classifiers whose assumptions match your data. Quick snapshot:"),
+        tags$ul(
+          tags$li(HTML(sprintf("<b>Samples:</b> %s", n))),
+          if (!is.null(ER_tab))
+            tags$li(HTML(sprintf("<b>ER distribution:</b> %s",
+                                 paste(sprintf("%s=%s", names(ER_tab), as.integer(ER_tab)), collapse = ", ")))),
+          if (!is.null(HER2_tab))
+            tags$li(HTML(sprintf("<b>HER2 distribution:</b> %s",
+                                 paste(sprintf("%s=%s", names(HER2_tab), as.integer(HER2_tab)), collapse = ", "))))
+        ),
+        if (!is.null(kept))
+          tags$p(HTML(sprintf("<b>Selected methods for this cohort:</b> %s", paste(kept, collapse = " · ")))),
+        tags$hr(),
+        tags$p("How AUTO decides"),
+        tags$ul(
+          tags$li("Checks ER/HER2 imbalance, subtype purity, and subgroup size."),
+          tags$li("Disables classic NC-based PAM50 variants when ER/HER2 appear markedly imbalanced."),
+          tags$li("Prefers subgroup-specific gene centring (ssBC / ssBC.v2) when a subtype-specific cohort is detected (e.g., ER+/HER2-, HER2+)."),
+          tags$li("Retains cohort-agnostic SSPs (AIMS / SSPBC) as robust baselines."),
+          tags$li("Returns per-method calls; an entropy score summarises agreement across methods."),
+          tags$li("ROR is not computed in AUTO.")
+        )
+      )
+      
+    }
+    
+    showModal(modalDialog(
+      title = "AUTO: assumption-aware method selection",
+      size  = "l",
+      easyClose = TRUE,
+      details_ui,
+      footer = tagList(modalButton("Close"))
+    ))
+  })
+  
   
   # Tiny toasts
   observeEvent(input$k_subtypes, ignoreInit = TRUE, {
     showNotification(sprintf("Subtype classes: %s",
-                             if (k_is_4class()) "4 (Normal-like excluded)" else "5 (includes Normal-like)"
-    ),
-    type = "message", duration = 2)
+                             if (k_is_4class()) "4 (Normal-like excluded)" else "5 (includes Normal-like)"),
+                     type = "message", duration = 2)
   })
   observeEvent(input$hasClinical, ignoreInit = TRUE, {
     showNotification(sprintf("Use clinical variables (ROR): %s",
-                             if (isTRUE(input$hasClinical)) "ON" else "OFF"
-    ),
-    type = "message", duration = 2)
+                             if (isTRUE(input$hasClinical)) "ON" else "OFF"),
+                     type = "message", duration = 2)
   })
   
   # --- data upload + Mapping ---
@@ -333,30 +427,24 @@ server <- function(input, output, session) {
                           quote = "", comment.char = "", stringsAsFactors = FALSE, fill = TRUE)
       }
       
-      # GEX (robust first-column handling)
+      # GEX
       gex_df <- .read_table(input$GEX)
       if (any(grepl("^probe$", names(gex_df), ignore.case = TRUE))) {
         probe_col <- grep("^probe$", names(gex_df), ignore.case = TRUE)[1]
         rownames(gex_df) <- gex_df[[probe_col]]
         gex_df[[probe_col]] <- NULL
       } else {
-        rn <- gex_df[[1]]
-        gex_df[[1]] <- NULL
-        rownames(gex_df) <- as.character(rn)
+        rn <- gex_df[[1]]; gex_df[[1]] <- NULL; rownames(gex_df) <- as.character(rn)
       }
       gex_mat <- as.matrix(suppressWarnings(sapply(gex_df, function(x) as.numeric(x))))
       rownames(gex_mat) <- rownames(gex_df)
-      if (anyNA(gex_mat)) {
-        showNotification("Warning: NAs introduced while coercing GEX to numeric.", type = "warning")
-      }
+      if (anyNA(gex_mat)) showNotification("Warning: NAs introduced while coercing GEX to numeric.", type = "warning")
       reactive_files$GEX <- gex_mat
       
       # RawCounts flag
       reactive_files$RawCounts <- raw_mode()
-      showNotification(sprintf("Data type: %s",
-                               if (reactive_files$RawCounts) "Raw counts" else "Normalized (log2)"),
-                       type = "message"
-      )
+      showNotification(sprintf("Data type: %s", if (reactive_files$RawCounts) "Raw counts" else "Normalized (log2)"),
+                       type = "message")
       
       # Clinical
       incProgress(0.45, detail = "Loading clinical data...")
@@ -391,7 +479,7 @@ server <- function(input, output, session) {
       # Align & validate
       incProgress(0.8, detail = "Aligning samples and features...")
       samples <- intersect(colnames(reactive_files$GEX), reactive_files$clinic$PatientID)
-      if (length(samples) == 0) stop("No overlapping sample IDs between GEX columns and clinical 'PatientID'. Check headers.")
+      if (length(samples) == 0) stop("No overlapping sample IDs between GEX columns and clinical 'PatientID'.")
       probeID <- intersect(rownames(reactive_files$GEX), reactive_files$anno$probe)
       if (length(probeID) == 0) stop("No overlapping probes between GEX rownames and annotation 'probe'.")
       
@@ -404,13 +492,11 @@ server <- function(input, output, session) {
         colData = S4Vectors::DataFrame(reactive_files$clinic[samples, , drop = FALSE])
       )
       
-      # Run Mapping with proper RawCounts
+      # Run Mapping
       tryCatch({
         output_text <- capture.output({
           message("Mapping() -> RawCounts = ", reactive_files$RawCounts)
-          data_input <- Mapping(se_obj = se_obj,
-                                RawCounts = reactive_files$RawCounts,
-                                impute = TRUE, verbose = TRUE)
+          data_input <- Mapping(se_obj = se_obj, RawCounts = reactive_files$RawCounts, impute = TRUE, verbose = TRUE)
           cat("Step 1 is complete.\nYou may now proceed to Step 2.\n")
         })
         reactive_files$data_input <- data_input
@@ -428,9 +514,7 @@ server <- function(input, output, session) {
   auto_requirements <- reactive({
     if (!identical(input$BSmethod, "AUTO Mode")) return(list(show = FALSE))
     di <- reactive_files$data_input
-    if (is.null(di) || is.null(di$se_NC)) {
-      return(list(show = TRUE, ready = FALSE, msg = "Run Step 1 (Preprocess & map) first."))
-    }
+    if (is.null(di) || is.null(di$se_NC)) return(list(show = TRUE, ready = FALSE, msg = "Run Step 1 (Preprocess & map) first."))
     pheno <- as.data.frame(SummarizedExperiment::colData(di$se_NC))
     msgs <- character(0)
     miss <- setdiff(c("ER","HER2"), names(pheno))
@@ -450,22 +534,13 @@ server <- function(input, output, session) {
     chk <- auto_requirements()
     if (!isTRUE(chk$show)) return(NULL)
     if (isTRUE(chk$ready)) {
-      bs_callout(
-        title = "AUTO preflight: ready",
-        body  = "ER and HER2 present with valid coding (ER+/ER-, HER2+/HER2-). You can run AUTO.",
-        color = "success"
-      )
+      bs_callout("AUTO preflight: ready",
+                 "ER and HER2 present with valid coding (ER+/ER-, HER2+/HER2-). You can run AUTO.",
+                 "success")
     } else {
-      bs_callout(
-        title = "AUTO preflight: action needed",
-        body  = HTML(sprintf(
-          "<p><b>Fix these before running AUTO:</b></p>
-           <ul>
-             <li>%s</li>
-           </ul>
-           <p>Or pick a single method from the dropdown.</p>", chk$msg)),
-        color = "danger"
-      )
+      bs_callout("AUTO preflight: action needed",
+                 HTML(sprintf("<p><b>Fix these before running AUTO:</b></p><ul><li>%s</li></ul><p>Or pick a single method from the dropdown.</p>", chk$msg)),
+                 "danger")
     }
   })
   
@@ -476,38 +551,32 @@ server <- function(input, output, session) {
     se_NC  <- reactive_files$data_input$x_NC  %||% reactive_files$data_input$se_NC
     se_SSP <- reactive_files$data_input$x_SSP %||% reactive_files$data_input$se_SSP
     want_4 <- k_is_4class()
+    if (identical(input$BSmethod, "AIMS")) {
+      want_4 <- FALSE  # enforce 5-class for AIMS
+    }
     
     # ---------- AUTO Mode ----------
     if (identical(input$BSmethod, "AUTO Mode")) {
       # Gate AUTO with preflight
       chk <- auto_requirements()
       if (!isTRUE(chk$ready)) {
-        showNotification(
-          HTML(sprintf(
-            "AUTO requires <code>ER</code> and <code>HER2</code> coded as ER+/ER- and HER2+/HER2-. Issue: %s.",
-            chk$msg
-          )),
-          type = "error", duration = 10
-        )
+        showNotification(HTML(sprintf(
+          "AUTO requires <code>ER</code> and <code>HER2</code> coded as ER+/ER- and HER2+/HER2-. Issue: %s.", chk$msg)),
+          type = "error", duration = 10)
         showModal(modalDialog(
           title = "AUTO Mode requirements not met",
           div(HTML(sprintf(
             "<p><b>AUTO</b> requires both <code>ER</code> and <code>HER2</code> in the clinical data.</p>
-         <ul>
-           <li>ER must be coded <code>ER+</code> / <code>ER-</code>.</li>
-           <li>HER2 must be coded <code>HER2+</code> / <code>HER2-</code>.</li>
-         </ul>
-         <p><b>Issue:</b> %s</p>
-         <p>You can either fix the clinical file and re-run, or choose a single method from the dropdown.</p>", chk$msg
-          ))),
-          easyClose = TRUE,
-          footer = tagList(modalButton("OK"))
-        ))
+             <ul><li>ER must be coded <code>ER+</code>/<code>ER-</code>.</li>
+                 <li>HER2 must be coded <code>HER2+</code>/<code>HER2-</code>.</li></ul>
+             <p><b>Issue:</b> %s</p>
+             <p>You can either fix the clinical file and re-run, or choose a single method from the dropdown.</p>", chk$msg))),
+          easyClose = TRUE, footer = tagList(modalButton("OK")))
+        )
         return(invisible(NULL))
       }
       
-      # IMPORTANT: ROR is disabled in AUTO (checkbox hidden in UI)
-      want_4   <- k_is_4class()
+      # ROR is disabled in AUTO
       use_clin <- FALSE
       
       withProgress(message = "Performing analysis (AUTO Mode)...", value = 0, {
@@ -515,31 +584,62 @@ server <- function(input, output, session) {
         result_auto <- BreastSubtypeR::BS_Multi(
           data_input  = reactive_files$data_input,
           methods     = "AUTO",
-          Subtype     = want_4,     # TRUE -> 4-class; FALSE -> 5-class
+          Subtype     = want_4,   # TRUE -> 4-class; FALSE -> 5-class
           hasClinical = use_clin
         )
         
-        # >>> choose the correct table <<<
-        tab <- if (isTRUE(want_4)) {
-          result_auto$res_subtypes.Subtype   # 4-class table
-        } else {
-          result_auto$res_subtypes           # 5-class table
+        # Table for plotting (chosen k)
+        tab <- if (isTRUE(want_4)) result_auto$res_subtypes.Subtype else result_auto$res_subtypes
+        
+        # ---- Build exports for AUTO ----
+        # Calls-only = chosen k table (+ entropy)
+        calls_tbl_auto <- .build_out_df(rownames(tab), tab)
+        
+        # Full metrics = chosen k table; if the other k exists, append it with suffixes
+        other_tab <- if (isTRUE(want_4)) (result_auto$res_subtypes %||% NULL) else (result_auto$res_subtypes.Subtype %||% NULL)
+        full_tbl_auto <- calls_tbl_auto
+        if (!is.null(other_tab)) {
+          a <- calls_tbl_auto
+          b <- .build_out_df(rownames(other_tab), other_tab)
+          # add suffixes to b's method columns + entropy
+          nonid <- setdiff(names(b), "PatientID")
+          names(b)[names(b) %in% nonid] <- paste0(names(b)[names(b) %in% nonid],
+                                                  if (want_4) "_5class" else "_4class")
+          # also suffix a
+          nonid.a <- setdiff(names(a), "PatientID")
+          names(a)[names(a) %in% nonid.a] <- paste0(names(a)[names(a) %in% nonid.a],
+                                                    if (want_4) "_4class" else "_5class")
+          full_tbl_auto <- merge(a, b, by = "PatientID", all = TRUE, sort = FALSE)
         }
         
-        # Export/plot using the chosen table
-        df_out <- cbind(PatientID = rownames(tab), tab, row.names = NULL)
-        reactive_files$output_res <- df_out
+        # Save export tables
+        reactive_files$download_calls <- calls_tbl_auto
+        reactive_files$download_full  <- NULL
         
+        # Downloads
         output$download <- downloadHandler(
-          filename = function() sprintf("results-AUTO-%s.txt", if (want_4) "4class" else "5class"),
-          content  = function(file) write.table(reactive_files$output_res, file, sep = "\t", quote = FALSE, row.names = FALSE)
+          filename = function() {
+            kind <- if (!isTRUE(block_full()) && identical(input$export_kind, "full")) "full" else "calls"
+            sprintf("results-AUTO-%s-%s.txt", if (want_4) "4class" else "5class", kind)
+          },
+          content  = function(file) {
+            # force calls when full is blocked or unavailable
+            want_full <- identical(input$export_kind, "full") && !isTRUE(block_full())
+            obj <- if (want_full && !is.null(reactive_files$download_full) && nrow(reactive_files$download_full) > 0) {
+              reactive_files$download_full
+            } else {
+              reactive_files$download_calls
+            }
+            write.table(obj, file, sep = "\t", quote = FALSE, row.names = FALSE)
+          }
         )
         
+        # Visualization
         output$plotSection <- renderUI({
           bslib::layout_columns(col_width = 2, bslib::card(plotOutput("multi_plot", height = 480)))
         })
         output$multi_plot <- renderPlot({
-          BreastSubtypeR::Vis_Multi(tab)     # plot the chosen (4- or 5-class) table
+          BreastSubtypeR::Vis_Multi(tab)   # unchanged; expects the per-method calls matrix
         })
         
         incProgress(1, detail = "AUTO Mode complete.")
@@ -567,7 +667,6 @@ server <- function(input, output, session) {
       incProgress(0.25, detail = "Initializing...")
       
       res <- NULL
-      output_res <- NULL
       
       if (input$BSmethod == "PAM50") {
         req(se_NC)
@@ -587,66 +686,27 @@ server <- function(input, output, session) {
               read.table(inFile$datapath, header = TRUE, row.names = NULL, sep = "\t",
                          fill = TRUE, stringsAsFactors = FALSE)
             }
-            
-            ## --- Optional lightweight validation for custom medians ---
-            try({
-              data_env <- new.env(parent = emptyenv())
-              data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
-              pam50_syms <- as.character(
-                data_env$BreastSubtypeRobj$genes.signature$Gene.Symbol[
-                  data_env$BreastSubtypeRobj$genes.signature$PAM50 == "Yes"
-                ])
-              
-              genes_in <- as.character(medians[[1]])
-              vals_in  <- suppressWarnings(as.numeric(medians[[2]]))
-              missing  <- setdiff(pam50_syms, genes_in)
-              dupes    <- genes_in[duplicated(genes_in)]
-              
-              if (length(missing))
-                showNotification(sprintf("Given.mdns is missing %d PAM50 genes (e.g., %s)...",
-                                         length(missing), paste(head(missing, 6), collapse = ", ")),
-                                 type = "warning", duration = 8)
-              
-              if (length(dupes))
-                showNotification(sprintf("Given.mdns has duplicated gene symbols (e.g., %s). Keep one per gene.",
-                                         paste(head(unique(dupes), 6), collapse = ", ")),
-                                 type = "warning", duration = 8)
-              
-              if (any(!is.finite(vals_in)))
-                showNotification("Given.mdns contains non-numeric or NA median values (2nd column).",
-                                 type = "warning", duration = 8)
-            }, silent = TRUE)
-            ## --- end validation ---
-            
-            args$external <- "Given.mdns"
-            args$medians  <- medians
-          } else {
-            args$external <- input$external
-          }
-          
-        } else if (identical(cal, "None")) {
-          args$calibration <- "None"
-        }
+            args$external <- "Given.mdns"; args$medians  <- medians
+          } else args$external <- input$external
+        } else args$calibration <- "None"
+        
         incProgress(0.55, detail = "BS_parker...")
         res <- do.call(BreastSubtypeR::BS_parker, args)
-        output_res <- res$score.ROR
       }
       
       if (input$BSmethod == "cIHC") {
         req(se_NC)
         incProgress(0.55, detail = "BS_cIHC...")
         res <- BreastSubtypeR::BS_cIHC(se_obj = se_NC, Subtype = want_4, hasClinical = use_clin)
-        output_res <- res$score.ROR
       }
       
       if (input$BSmethod == "cIHC.itr") {
         req(se_NC)
         incProgress(0.55, detail = "BS_cIHC.itr...")
         res <- BreastSubtypeR::BS_cIHC.itr(
-          se_obj = se_NC, iteration = input$iteration,
-          ratio = input$ratio, Subtype = want_4, hasClinical = use_clin
+          se_obj = se_NC, iteration = input$iteration, ratio = input$ratio,
+          Subtype = want_4, hasClinical = use_clin
         )
-        output_res <- res$score.ROR
       }
       
       if (input$BSmethod == "PCAPAM50") {
@@ -654,54 +714,35 @@ server <- function(input, output, session) {
         incProgress(0.55, detail = "BS_PCAPAM50...")
         res <- tryCatch(
           BreastSubtypeR::BS_PCAPAM50(se_obj = se_NC, Subtype = want_4, hasClinical = use_clin),
-          error = function(e) {
-            showNotification("PCAPAM50 failed on this dataset; skipping (see console for details).", type = "warning", duration = 6)
-            NULL
-          }
+          error = function(e) { showNotification("PCAPAM50 failed on this dataset; skipping.", type = "warning", duration = 6); NULL }
         )
-        output_res <- if (is.null(res)) data.frame() else res$score.ROR
       }
       
       if (input$BSmethod == "ssBC") {
         req(se_NC)
         cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
-        need_cols <- switch(input$s,
-                            "ER"    = c("ER"),
-                            "ER.v2" = c("ER","HER2"),
-                            "TN"    = c("TN"),
-                            "TN.v2" = c("TN"))
+        need_cols <- switch(input$s, "ER"=c("ER"), "ER.v2"=c("ER","HER2"), "TN"=c("TN"), "TN.v2"=c("TN"))
         miss <- setdiff(need_cols, names(cd))
-        if (length(miss)) {
-          showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "), "| missing:", paste(miss, collapse=", ")),
-                           type = "error", duration = 7)
-          return(invisible(NULL))
-        }
-        # value sanity checks
+        if (length(miss)) { showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "),
+                                                   "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
+          return(invisible(NULL)) }
         if (input$s %in% c("ER","ER.v2")) {
           badER <- setdiff(na.omit(unique(cd$ER)), c("ER+","ER-"))
-          if (length(badER)) showNotification(
-            sprintf("ER values should be 'ER+' or 'ER-'. Found: %s", paste(badER, collapse=", ")),
-            type="warning", duration=7
-          )
+          if (length(badER)) showNotification(sprintf("ER values should be 'ER+' or 'ER-'. Found: %s", paste(badER, collapse=", ")),
+                                              type="warning", duration=7)
         }
         if (input$s == "ER.v2") {
           badH <- setdiff(na.omit(unique(cd$HER2)), c("HER2+","HER2-"))
-          if (length(badH)) showNotification(
-            sprintf("HER2 values should be 'HER2+' or 'HER2-'. Found: %s", paste(badH, collapse=", ")),
-            type="warning", duration=7
-          )
+          if (length(badH)) showNotification(sprintf("HER2 values should be 'HER2+' or 'HER2-'. Found: %s", paste(badH, collapse=", ")),
+                                             type="warning", duration=7)
         }
         if (input$s %in% c("TN","TN.v2")) {
           badTN <- setdiff(na.omit(unique(cd$TN)), c("TN","nonTN"))
-          if (length(badTN)) showNotification(
-            sprintf("TN values should be 'TN' or 'nonTN'. Found: %s", paste(badTN, collapse=", ")),
-            type="warning", duration=7
-          )
+          if (length(badTN)) showNotification(sprintf("TN values should be 'TN' or 'nonTN'. Found: %s", paste(badTN, collapse=", ")),
+                                              type="warning", duration=7)
         }
-        
         incProgress(0.55, detail = "BS_ssBC...")
         res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
-        output_res <- res$score.ROR
       }
       
       if (input$BSmethod == "AIMS") {
@@ -716,70 +757,66 @@ server <- function(input, output, session) {
             row.names = rownames(res$cl),
             check.names = FALSE
           )
-          output_res <- res$BS.all
-        } else {
-          output_res <- data.frame()
         }
       }
       
       if (input$BSmethod == "sspbc") {
         req(se_SSP)
         incProgress(0.55, detail = "BS_sspbc...")
-        model <- if (want_4) "ssp.subtype" else "ssp.pam50"  # 4 vs 5
+        model <- if (want_4) "ssp.subtype" else "ssp.pam50"
         res_sspbc <- BreastSubtypeR::BS_sspbc(se_obj = se_SSP, ssp.name = model)
-        BS.all <- data.frame(
-          PatientID = rownames(res_sspbc),
-          BS = res_sspbc[, 1, drop = TRUE],
-          row.names = rownames(res_sspbc),
-          check.names = FALSE
-        )
-        res <- list(BS.all = BS.all)
-        output_res <- BS.all
+        res <- list(BS.all = data.frame(PatientID = rownames(res_sspbc),
+                                        BS = res_sspbc[, 1, drop = TRUE],
+                                        row.names = rownames(res_sspbc),
+                                        check.names = FALSE))
       }
       
       incProgress(0.9, detail = "Finalizing...")
       
-      # ---------- Build a single Subtype column for plotting ----------
+      # ---------- Visualization (unchanged API expectations) ----------
       out <- NULL
       if (!is.null(res) && !is.null(res$BS.all) && nrow(res$BS.all) > 0) {
-        labcol <- if (want_4 && "BS.Subtype" %in% names(res$BS.all)) {
-          "BS.Subtype"
-        } else if ("BS" %in% names(res$BS.all)) {
-          "BS"
-        } else if ("Subtype" %in% names(res$BS.all)) {
-          "Subtype"
-        } else {
-          names(res$BS.all)[2]
-        }
-        out <- data.frame(
-          PatientID = res$BS.all$PatientID,
-          Subtype   = res$BS.all[[labcol]],
-          check.names = FALSE
-        )
+        labcol <- if (want_4 && "BS.Subtype" %in% names(res$BS.all)) "BS.Subtype"
+        else if ("BS" %in% names(res$BS.all)) "BS"
+        else setdiff(names(res$BS.all), "PatientID")[1]
+        out <- data.frame(PatientID = res$BS.all$PatientID,
+                          Subtype   = res$BS.all[[labcol]],
+                          check.names = FALSE)
       } else if (!is.null(res) && !is.null(res$cl) && is.matrix(res$cl) && ncol(res$cl) >= 1) {
-        out <- data.frame(
-          PatientID = rownames(res$cl),
-          Subtype   = res$cl[, 1, drop = TRUE],
-          check.names = FALSE
-        )
+        out <- data.frame(PatientID = rownames(res$cl),
+                          Subtype   = res$cl[, 1, drop = TRUE],
+                          check.names = FALSE)
       }
       
-      # ---------- Save & download (export both labels when present) ----------
-      if (!is.null(out) && nrow(out) > 0) {
-        download_tbl <- data.frame(PatientID = out$PatientID, Subtype = out$Subtype, check.names = FALSE)
-        if (!is.null(res$BS.all)) {
-          if ("BS" %in% names(res$BS.all))        download_tbl$BS_5class <- res$BS.all$BS
-          if ("BS.Subtype" %in% names(res$BS.all)) download_tbl$BS_4class <- res$BS.all$BS.Subtype
+      # ---------- Exports (Calls-only / Full) ----------
+      if (!is.null(res) && !is.null(res$BS.all) && nrow(res$BS.all) > 0) {
+        ex <- .build_single_exports(res, want_4)
+        reactive_files$download_calls <- ex$calls
+        reactive_files$download_full  <- ex$full
+        
+        # Hide "full" for AIMS/SSPBC
+        if (input$BSmethod %in% c("AIMS", "sspbc")) {
+          reactive_files$download_full <- NULL
         }
-        reactive_files$output_res <- download_tbl
       } else {
-        reactive_files$output_res <- data.frame()
+        reactive_files$download_calls <- data.frame()
+        reactive_files$download_full  <- NULL
       }
       
       output$download <- downloadHandler(
-        filename = function() paste0("results-", input$BSmethod, ".txt"),
+        filename = function() {
+          kind <- if (!isTRUE(block_full()) && identical(input$export_kind, "full")) "full" else "calls"
+          sprintf("results-%s-%s-%s.txt", input$BSmethod,
+                  if (want_4) "4class" else "5class", kind)
+        },
         content  = function(file) {
-          write.table(reactive_files$output_res, file, row.names = FALSE, sep = "\t", quote = FALSE)
+          want_full <- identical(input$export_kind, "full") && !isTRUE(block_full())
+          obj <- if (want_full && !is.null(reactive_files$download_full) && nrow(reactive_files$download_full) > 0) {
+            reactive_files$download_full
+          } else {
+            reactive_files$download_calls
+          }
+          write.table(obj, file, row.names = FALSE, sep = "\t", quote = FALSE)
         }
       )
       
