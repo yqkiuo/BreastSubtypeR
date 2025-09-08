@@ -210,19 +210,21 @@ For users new to R, we offer an intuitive Shiny app for interactive molecular su
 Launch the local Shiny GUI with:
 
 ```{r, eval = FALSE}
-library(BreastSubtypeR)
-library(tidyverse)
-library(shiny)
-library(bslib)
-
-iBreastSubtypeR()
+BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
 
 The app enables:\
-- Uploading gene expression matrices and clinical annotation,\
-- Running single-method subtyping,\
-- Exploring per-sample classifier concordance,\
-- Exporting subtype calls and plots locally.
+- Upload expression, clinical, and feature-annotation tables.
+- Run single methods or `AUTO` (assumption-aware selection).\
+- Choose 5-class (incl. Normal-like) or 4-class.\
+- View per-sample concordance (entropy), heatmap & pie summaries.\
+- Export Calls only or Full metrics (ROR available for NC methods when `TSIZE`/`NODE` are present and numeric).
+
+If needed, install UI dependencies and re-run:
+
+```{r, eval = FALSE}
+install.packages(c("shiny","bslib"))
+```
 
 ## Limitations & future work
 

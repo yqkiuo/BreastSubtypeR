@@ -1,0 +1,4 @@
+Name: Launch iBreastSubtypeR
+Description: Start the iBreastSubtypeR Shiny app
+Binding: iBreastSubtypeR
+Interactive: true

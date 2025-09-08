@@ -129,12 +129,14 @@ Vis_Multi(result_auto$res_subtypes)
 **4) Launch the local Shiny app**
 
 ``` r
-library(BreastSubtypeR)
-library(tidyverse)
-library(shiny)
-library(bslib)
+BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
+```
+***Notes:***
+-   The app runs locally; no data leave your machine.
+-   On v1.1.3+, UI dependencies (`shiny`, `bslib`) are auto-loaded. If you see a missing package error:
 
-iBreastSubtypeR() # interactive GUI (local)
+``` r
+install.packages(c("shiny","bslib"))
 ```
 
 ## Vignette & Documentation
