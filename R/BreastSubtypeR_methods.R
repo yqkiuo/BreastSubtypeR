@@ -105,7 +105,12 @@ NULL
 #' @return A named list with:
 #'   \item{se_NC}{`SummarizedExperiment` holding log2-transformed data prepared for NC-based methods (assay name: `counts`).}
 #'   \item{se_SSP}{`SummarizedExperiment` holding linear-scale data prepared for SSP-based methods (assay name: `counts`).}
-#'
+#'   
+#' @references
+#' Yang Q, Hartman J, Sifakis EG.  
+#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
+#' NAR Genomics and Bioinformatics. In press, 2025. Selected as Editor’s Choice.
+#' 
 #' @details
 #' `Mapping()` supports multiple input types:
 #' - **Raw RNA-seq counts** (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
@@ -237,9 +242,9 @@ Mapping <- function(
 #' Journal of Clinical Oncology. 2009;27(8).
 #' https://doi.org/10.1200/JCO.2008.18.1370
 #'
-#' - Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et
-#' al. *Genefu: An R/Bioconductor package for computation of gene
-#' expression-based signatures in breast cancer*. Bioinformatics. 2016;32(7).
+#' - Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.
+#' *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer*.
+#' Bioinformatics. 2016;32(7).
 #' https://doi.org/10.1093/bioinformatics/btv693
 #'
 #' @examples
@@ -458,8 +463,7 @@ BS_cIHC <- function(se_obj,
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.  
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals
-#' novel subgroups.*  
+#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*  
 #' Nature. 2012;486(7403):346–352.  
 #' https://doi.org/10.1038/nature10983
 #'
@@ -551,8 +555,7 @@ BS_cIHC.itr <- function(se_obj,
 #'
 #' @references
 #' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.  
-#' *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical
-#' subtyping, reclassifying a subset of luminal A tumors as luminal B.*  
+#' *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.*  
 #' Scientific Reports. 2019;9(1):1–12.  
 #' https://doi.org/10.1038/s41598-019-44339-4
 #'
@@ -702,9 +705,7 @@ BS_PCAPAM50 <- function(se_obj,
 #' https://doi.org/10.1186/s13058-015-0520-4
 #'
 #' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.  
-#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a
-#' neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without
-#' lapatinib in HER2-positive breast cancer.*  
+#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*  
 #' Journal of Clinical Oncology. 2020;38(36):4184–4197.  
 #' https://doi.org/10.1200/JCO.20.01276
 #'
@@ -873,8 +874,7 @@ BS_AIMS <- function(se_obj) {
 #'
 #' @references
 #' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.  
-#' *RNA sequencing-based single sample predictors of molecular subtype and risk of
-#' recurrence for clinical assessment of early-stage breast cancer.*  
+#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*  
 #' NPJ Breast Cancer. 2022;8(1):27.  
 #' https://doi.org/10.1038/s41523-022-00465-3
 #'
@@ -923,7 +923,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' Executes multiple intrinsic molecular subtyping methods in parallel.  
 #' Users can either specify a set of classifiers directly, or enable the
 #' **AUTO mode**, which dynamically selects methods based on cohort composition
-#' (e.g., ER/HER2 distribution, subtype purity, subgroup sizes).  
+#' (e.g., ER/HER2 distribution, subtype purity, subgroup size).  
 #' AUTO reduces misclassification in skewed or subtype-specific cohorts by
 #' disabling methods whose assumptions are violated, but does not perform
 #' consensus voting—subtypes are still returned per method.
