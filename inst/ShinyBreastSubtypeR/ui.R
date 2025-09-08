@@ -176,6 +176,9 @@ ui <- bslib::page_fluid(
                   "external", "External calibration method",
                   choices = c(
                     "Given.mdns" = "Given.mdns",
+                    "nCounter" = "nCounter",
+                    "RNAseq.Freeze.20120907" = "RNAseq.Freeze.20120907",
+                    "totalRNA.FFPE.20151111" = "totalRNA.FFPE.20151111",
                     "RNAseq.V2"  = "RNAseq.V2",
                     "RNAseq.V1"  = "RNAseq.V1",
                     "GC.4x44Kcustom" = "GC.4x44Kcustom",
