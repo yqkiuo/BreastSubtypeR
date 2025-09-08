@@ -29,10 +29,12 @@ rescale <- function(x, na.rm = FALSE, q = 0) {
         ma <- max(x, na.rm = na.rm)
         mi <- min(x, na.rm = na.rm)
     } else {
-        ma <- quantile(x, probs = 1 - (q / 2), na.rm = na.rm)
-        mi <- quantile(x, probs = q / 2, na.rm = na.rm)
+        ma <- quantile(x, probs = 1 - (q / 2), na.rm = na.rm, names = FALSE, type = 7)
+        mi <- quantile(x, probs = q / 2, na.rm = na.rm, names = FALSE, type = 7)
     }
-    xx <- (x - mi) / (ma - mi)
+    rng <- ma - mi
+    if (!is.finite(rng) || rng == 0) return(x * 0)   # avoid NaN/Inf
+    xx <- (x - mi) / rng
 
     return(xx)
 }
@@ -141,207 +143,128 @@ getsuffix <- function(calibration,
 #' @param distm "spearman" (default), "euclidean", "correlation" or "pearson"
 #' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
-sspPredict <- function(x,
-    y,
-    std = FALSE,
-    distm = "spearman",
-    Subtype = TRUE) {
-    distm <- match.arg(distm, choices = c("spearman", "euclidean", "correlation", "pearson"))
-
-    dataMatrix <- x
-    tdataMatrix <- y
-
-    temp <- overlapSets(dataMatrix, tdataMatrix)
-    dataMatrix <- temp$x
-    tdataMatrix <- temp$y
-    
-    dataMatrix_main  <- dataMatrix
-    tdataMatrix_main <- tdataMatrix
-    
-    sfeatureNames <- row.names(dataMatrix)
-
-    # standardize both sets
-    if (std) {
-        dataMatrix <- standardize(dataMatrix)
-        tdataMatrix <- standardize(tdataMatrix)
-    }
-
-
-    nGenes <- dim(dataMatrix)[1]
-    # print(paste("Number of genes used:",nGenes))
-    centroids <- dataMatrix
-    nClasses <- dim(centroids)[2]
-    classLevels <- dimnames(centroids)[[2]]
-
-    distances <- matrix(
-        ncol = nClasses, nrow = dim(tdataMatrix)[2],
-        dimnames = list(colnames(tdataMatrix), colnames(centroids))
+sspPredict <- function(x, y, std = FALSE, distm = "spearman", Subtype = TRUE) {
+  distm <- match.arg(distm, choices = c("spearman", "euclidean", "correlation", "pearson"))
+  
+  dataMatrix <- x
+  tdataMatrix <- y
+  
+  tmp <- overlapSets(dataMatrix, tdataMatrix)
+  dataMatrix <- tmp$x
+  tdataMatrix <- tmp$y
+  
+  dataMatrix_main  <- dataMatrix
+  tdataMatrix_main <- tdataMatrix
+  
+  if (nrow(dataMatrix) == 0L || ncol(tdataMatrix) == 0L) {
+    # return an empty but well-formed object
+    pred <- setNames(character(0), character(0))
+    res <- list(
+      predictions     = pred,
+      testData        = as.matrix(tdataMatrix_main),
+      distances       = matrix(numeric(0), nrow = 0, ncol = ncol(dataMatrix), dimnames = list(NULL, colnames(dataMatrix))),
+      dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = min(4, ncol(dataMatrix)), dimnames = list(NULL, colnames(dataMatrix)[seq_len(min(4, ncol(dataMatrix)))])),
+      centroids       = dataMatrix_main
     )
-    for (j in seq(1, nClasses, 1)) {
-        if (distm == "euclidean") {
-            combined <- cbind(centroids[, j], tdataMatrix)
-            distances_vec <- dist(t(combined))
-            distances[, j] <- distances_vec[seq(1, ncol(tdataMatrix))]
-        }
-        if (distm == "correlation" | distm == "pearson") {
-            distances[, j] <- apply(tdataMatrix, 2, function(x) {
-                -cor(centroids[, j], x,
-                    method = "pearson",
-                    use = "pairwise.complete.obs"
-                )
-            })
-        }
-        if (distm == "spearman") {
-            distances[, j] <- apply(tdataMatrix, 2, function(x) {
-                -cor(centroids[, j], x,
-                    method = "spearman",
-                    use = "pairwise.complete.obs"
-                )
-            })
-        }
-    }
-
-    prediction <- classLevels[apply(distances, 1, which.min, simplify = TRUE)]
-    names(prediction) <- colnames(tdataMatrix)
-
-    ## run Four Subtypes
-    if (Subtype) {
-        nClasses <- nClasses - 1 ## omitting normal
-        classLevels <- classLevels[seq(1, 4, 1)]
-        dist.FourSubtype <- matrix(
-            ncol = nClasses,
-            nrow = dim(tdataMatrix)[2],
-            dimnames = list(colnames(tdataMatrix), classLevels)
-        )
-        for (j in seq(1, nClasses, 1)) {
-            if (distm == "euclidean") {
-                combined_matrix <- cbind(centroids[, j], tdataMatrix)
-                distances_vec <- dist(t(combined_matrix))
-                dist.FourSubtype[, j] <- distances_vec[seq_len(ncol(tdataMatrix))]
-            }
-            if (distm == "correlation" | distm == "pearson") {
-                dist.FourSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
-                    -cor(centroids[, j], x,
-                        method = "pearson",
-                        use = "pairwise.complete.obs"
-                    )
-                })
-            }
-            if (distm == "spearman") {
-                dist.FourSubtype[, j] <- apply(tdataMatrix, 2, function(x) {
-                    -cor(centroids[, j], x,
-                        method = "spearman",
-                        use = "pairwise.complete.obs"
-                    )
-                })
-            }
-        }
-
-        prediction.Subtype <- classLevels[apply(dist.FourSubtype, 1,
-            which.min,
-            simplify = TRUE
-        )]
-        names(prediction.Subtype) <- colnames(tdataMatrix)
-    }
-
-
-    ## prepare Subtype.distances
-    ## genes to be excluded
-    genes.ex <- c("BIRC5", "CCNB1", "GRB7", "MYBL2")
-
-    # parse the test file - same as train file but no rows of classes
-    # tdataMatrix <- y[which(!(rownames(y) %in% genes.ex)), ]
-    tdataMatrix <- tdataMatrix_main[!(rownames(tdataMatrix_main) %in% genes.ex), , drop = FALSE]
-    
-    # dimnames(tdataMatrix)[[2]]=paste("x",seq(1,471))
-    temp <- overlapSets(dataMatrix, tdataMatrix)
-    # dataMatrix <- temp$x
-    # tdataMatrix <- temp$y
-    dataMatrix_four  <- temp$x[, 1:4, drop = FALSE]    # omit Normal-like
-    tdataMatrix_four <- temp$y
-
-    ## omitting normal
-    # dataMatrix <- dataMatrix[, seq(1, 4, 1)] ## omitting normal
-    # nGenes <- dim(dataMatrix)[1]
-    # centroids.RORSubtype <- dataMatrix
-    # nClasses <- dim(centroids.RORSubtype)[2] ## four subtypes
-    # classLevels <- dimnames(centroids.RORSubtype)[[2]]
-    centroids.RORSubtype <- dataMatrix_four
-    nClasses <- ncol(centroids.RORSubtype)
-    classLevels <- colnames(centroids.RORSubtype)
-    
-    dist.RORSubtype <- matrix(
-        ncol = nClasses, nrow = dim(tdataMatrix)[2],
-        dimnames = list(colnames(tdataMatrix), colnames(centroids.RORSubtype))
-    )
-    for (j in seq(1, nClasses, 1)) {
-      if (distm == "euclidean") {
-        combined_matrix <- cbind(centroids.RORSubtype[, j], tdataMatrix_four)
-        distances_vec <- dist(t(combined_matrix))
-        dist.RORSubtype[, j] <- distances_vec[seq_len(ncol(tdataMatrix_four))]
-      }
-        if (distm == "correlation" | distm == "pearson") {
-              dist.RORSubtype[, j] <- apply(tdataMatrix_four, 2, function(x) {
-                -cor(
-                    centroids.RORSubtype[, j],
-                    x,
-                    method = "pearson",
-                    use = "pairwise.complete.obs"
-                )
-            })
-        }
-        if (distm == "spearman") {
-          dist.RORSubtype[, j] <- apply(tdataMatrix_four, 2, function(x) {
-                -cor(
-                    centroids.RORSubtype[, j],
-                    x,
-                    method = "spearman",
-                    use = "pairwise.complete.obs"
-                )
-            })
-        }
-    }
-
-    ## return
-    # if (Subtype) {
-    #     res <- list(
-    #         predictions = prediction,
-    #         predictions.FourSubtype = prediction.Subtype,
-    #         testData = as.matrix(y),
-    #         distances = distances,
-    #         dist.RORSubtype = dist.RORSubtype,
-    #         dist.FourSubtype = dist.FourSubtype,
-    #         centroids = centroids
-    #     )
-    # } else {
-    #     res <- list(
-    #         predictions = prediction,
-    #         testData = as.matrix(y),
-    #         distances = distances,
-    #         dist.RORSubtype = dist.RORSubtype,
-    #         centroids = centroids
-    #     )
-    # }
-    if (Subtype) {
-       res <- list(
-       predictions            = prediction,
-       predictions.FourSubtype= prediction.Subtype,
-       testData               = as.matrix(tdataMatrix_main),   # aligned to centroids
-       distances              = distances,
-       dist.RORSubtype        = dist.RORSubtype,               # 4-class distances
-       centroids              = dataMatrix_main                # aligned 5-class centroids
-       )
-     } else {
-       res <- list(
-         predictions            = prediction,
-         testData               = as.matrix(tdataMatrix_main),   # aligned to centroids
-         distances              = distances,
-         dist.RORSubtype        = dist.RORSubtype,               # present but may be unused
-         centroids              = dataMatrix_main
-         )
-      }
-    
+    if (Subtype) res$predictions.FourSubtype <- pred
     return(res)
+  }
+  
+  sfeatureNames <- rownames(dataMatrix)
+  
+  if (std) {
+    dataMatrix  <- standardize(dataMatrix)
+    tdataMatrix <- standardize(tdataMatrix)
+  }
+  
+  nClasses   <- ncol(dataMatrix)
+  classLevels<- colnames(dataMatrix)
+  
+  distances <- matrix(NA_real_, ncol = nClasses, nrow = ncol(tdataMatrix),
+                      dimnames = list(colnames(tdataMatrix), colnames(dataMatrix)))
+  
+  for (j in seq_len(nClasses)) {
+    if (distm == "euclidean") {
+      combined <- cbind(dataMatrix[, j], tdataMatrix)
+      dv <- dist(t(combined))
+      distances[, j] <- dv[seq_len(ncol(tdataMatrix))]
+    } else {
+      mth <- if (distm == "spearman") "spearman" else "pearson"
+      distances[, j] <- apply(tdataMatrix, 2, function(xx) {
+        -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
+      })
+    }
+  }
+  
+  # If a row is all NA (no finite distances), prediction := NA
+  prediction <- rep(NA_character_, nrow(distances))
+  names(prediction) <- rownames(distances)
+  good <- rowSums(is.finite(distances)) > 0
+  if (any(good)) {
+    prediction[good] <- classLevels[apply(distances[good, , drop = FALSE], 1, which.min)]
+  }
+  
+  if (Subtype) {
+    nClasses4    <- min(4, nClasses)
+    classLevels4 <- classLevels[seq_len(nClasses4)]
+    dist4 <- matrix(NA_real_, ncol = nClasses4, nrow = ncol(tdataMatrix),
+                    dimnames = list(colnames(tdataMatrix), classLevels4))
+    for (j in seq_len(nClasses4)) {
+      if (distm == "euclidean") {
+        combined <- cbind(dataMatrix[, j], tdataMatrix)
+        dv <- dist(t(combined))
+        dist4[, j] <- dv[seq_len(ncol(tdataMatrix))]
+      } else {
+        mth <- if (distm == "spearman") "spearman" else "pearson"
+        dist4[, j] <- apply(tdataMatrix, 2, function(xx) {
+          -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
+        })
+      }
+    }
+    prediction.Subtype <- rep(NA_character_, nrow(dist4))
+    names(prediction.Subtype) <- rownames(dist4)
+    good4 <- rowSums(is.finite(dist4)) > 0
+    if (any(good4)) {
+      prediction.Subtype[good4] <- classLevels4[apply(dist4[good4, , drop = FALSE], 1, which.min)]
+    }
+  }
+  
+  ## ROR distances: drop the 4 excluded genes first
+  genes.ex <- c("BIRC5","CCNB1","GRB7","MYBL2")
+  t4 <- tdataMatrix_main[!(rownames(tdataMatrix_main) %in% genes.ex), , drop = FALSE]
+  tmp4 <- overlapSets(dataMatrix, t4)
+  cent4 <- tmp4$x[, seq_len(min(4, ncol(tmp4$x))), drop = FALSE]
+  dat4  <- tmp4$y
+  
+  dist.RORSubtype <- matrix(NA_real_, ncol = ncol(cent4), nrow = ncol(dat4),
+                            dimnames = list(colnames(dat4), colnames(cent4)))
+  if (ncol(dat4) > 0L) {
+    for (j in seq_len(ncol(cent4))) {
+      dist.RORSubtype[, j] <- apply(dat4, 2, function(xx) {
+        -cor(cent4[, j], xx, method = "spearman", use = "pairwise.complete.obs")
+      })
+    }
+  }
+  
+  if (Subtype) {
+    res <- list(
+      predictions            = prediction,
+      predictions.FourSubtype= prediction.Subtype,
+      testData               = as.matrix(tdataMatrix_main),
+      distances              = distances,
+      dist.RORSubtype        = dist.RORSubtype,
+      centroids              = dataMatrix_main
+    )
+  } else {
+    res <- list(
+      predictions            = prediction,
+      testData               = as.matrix(tdataMatrix_main),
+      distances              = distances,
+      dist.RORSubtype        = dist.RORSubtype,
+      centroids              = dataMatrix_main
+    )
+  }
+  res
 }
 
 
@@ -485,6 +408,8 @@ RORgroup <- function(out,
             }, error = function(e) 1)
           call.conf[j] <- 1 - pv
         }
+    call.conf <- as.numeric(call.conf)
+    call.conf[!is.finite(call.conf)] <- NA_real_
     call.conf <- round(call.conf, 2)
     call.conf <- data.frame(
         "Confidence" = call.conf,
@@ -1556,28 +1481,67 @@ makeCalls.ssBC <- function(
     }
 
     res <- mapply(
-        function(element) {
-            x.m <- mat[, samples_selected[[element]]]
-
-            gene.sigma.o <- gene.sigma[rownames(x.m), element]
-            x.sigma <- unlist(lapply(seq(1, nrow(x.m), 1), function(i) {
-                quantile(x.m[i, ], probs = gene.sigma.o[i], na.rm = TRUE)
-            }))
-            x.m <- sweep(x.m, 1, x.sigma)
-            ## it has been calibrated by selected quantile
-
-            out <- sspPredict(
-                BreastSubtypeRobj$centroid,
-                x.m,
-                std = FALSE,
-                distm = "spearman",
-                Subtype = Subtype
-            )
-        },
-        names(samples_selected),
-        SIMPLIFY = FALSE,
-        USE.NAMES = TRUE
+      function(element) {
+        # restrict to PAM50 genes first
+        pam50 <- rownames(BreastSubtypeRobj$centroid)
+        samp  <- samples_selected[[element]]
+        if (length(samp) == 0L) {
+          # return a well-formed empty result for this subgroup
+          pred <- setNames(character(0), character(0))
+          empty <- list(
+            predictions     = pred,
+            testData        = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
+            distances       = matrix(numeric(0), nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
+                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))),
+            dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = 4,
+                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4]))
+          )
+          if (Subtype) empty$predictions.FourSubtype <- pred
+          return(empty)
+        }
+        
+        x.m <- mat[rownames(mat) %in% pam50, samp, drop = FALSE]
+        if (nrow(x.m) == 0L) {
+          # no overlapping PAM50 genes in this subgroup
+          pred <- setNames(character(0), character(0))
+          empty <- list(
+            predictions     = pred,
+            testData        = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
+            distances       = matrix(numeric(0), nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
+                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))),
+            dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = 4,
+                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4]))
+          )
+          if (Subtype) empty$predictions.FourSubtype <- pred
+          return(empty)
+        }
+        
+        # gene-specific quantiles: align safely
+        gene.sigma.o <- gene.sigma[rownames(x.m), element, drop = TRUE]
+        
+        # per-row quantile with guards
+        x.sigma <- vapply(seq_len(nrow(x.m)), function(i) {
+          p <- gene.sigma.o[i]
+          if (!is.finite(p)) return(NA_real_)
+          tryCatch(quantile(x.m[i, ], probs = p, na.rm = TRUE, names = FALSE, type = 7),
+                   error = function(e) NA_real_)
+        }, numeric(1))
+        
+        x.m <- sweep(x.m, 1, x.sigma, FUN = "-")
+        
+        sspPredict(
+          BreastSubtypeRobj$centroid,
+          x.m,
+          std = FALSE,
+          distm = "spearman",
+          Subtype = Subtype
+        )
+      },
+      names(samples_selected),
+      SIMPLIFY = FALSE,
+      USE.NAMES = TRUE
     )
+    
 
     ## prepare data for ROR
 
