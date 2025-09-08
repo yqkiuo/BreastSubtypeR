@@ -281,7 +281,7 @@ server <- function(input, output, session) {
     wand_ok <- tryCatch({ htmltools::tagList(icon("wand-magic-sparkles")); TRUE }, error = function(...) FALSE)
     icn <- if (wand_ok) icon("wand-magic-sparkles") else icon("magic")
     
-    chk <- auto_requirements()  # uses your existing reactive
+    chk <- auto_requirements()  # uses existing reactive
     cls <- if (isTRUE(chk$ready)) "chip auto ready" else "chip auto blocked"
     state <- if (isTRUE(chk$ready)) "ready" else "action needed"
     note  <- if (isTRUE(chk$show)) (chk$msg %||% "OK") else "Run Step 1 first"
@@ -360,7 +360,7 @@ server <- function(input, output, session) {
       
       # Try to preview which methods AUTO would keep (best-effort)
       kept <- tryCatch({
-        gm <- get_methods(ph)  # from your package
+        gm <- get_methods(ph)  # from package
         gm$methods
       }, error = function(e) NULL)
       
