@@ -1296,26 +1296,58 @@ BS_Multi <- function(
         stop("Unknown method: ", method)
     })
 
+    ## Map method names and align outputs by PatientID (robust to order/missing)
     names(results) <- methods
-    samples <- colnames(assay(data_input$se_NC))
-
-    res_subtypes <- data.table(row_id = samples)
+    
+    # Prefer se_NC samples; fall back to se_SSP if needed
+    samples_NC  <- if (!is.null(data_input$se_NC))  colnames(SummarizedExperiment::assay(data_input$se_NC))  else character(0)
+    samples_SSP <- if (!is.null(data_input$se_SSP)) colnames(SummarizedExperiment::assay(data_input$se_SSP)) else character(0)
+    samples <- if (length(samples_NC)) samples_NC else samples_SSP
+    
+    # Hold per-method calls; start empty and fill by matching PatientID
+    res_subtypes <- data.table::data.table(row_id = samples)
     if (Subtype) {
-        res_subtypes.Subtype <- data.table(row_id = samples)
+      res_subtypes.Subtype <- data.table::data.table(row_id = samples)
     }
-
+    
     for (method in methods) {
-        if (!is.null(results[[method]])) {
-            set(res_subtypes, j = method, value = results[[method]]$BS.all$BS)
-            if (Subtype) {
-                set(res_subtypes.Subtype,
-                    j = method,
-                    value = results[[method]]$BS.all$BS.Subtype
-                )
-            }
+      x <- results[[method]]
+      # default (all NA) if the method failed or returned nothing usable
+      vec5 <- rep(NA_character_, length(samples))
+      vec4 <- rep(NA_character_, length(samples))
+      
+      if (!is.null(x) && is.data.frame(x$BS.all) && "PatientID" %in% names(x$BS.all)) {
+        i <- match(samples, x$BS.all$PatientID)  # align by PatientID
+        # 5-class column (may be absent for some SSPs or error cases)
+        if ("BS" %in% names(x$BS.all)) {
+          v <- x$BS.all$BS
+          # coerce to character to avoid factor levels surprises
+          if (is.factor(v)) v <- as.character(v)
+          vec5 <- v[i]
         }
+        # 4-class column (may not exist for some methods or when Subtype = FALSE)
+        if (Subtype && "BS.Subtype" %in% names(x$BS.all)) {
+          v <- x$BS.all$BS.Subtype
+          if (is.factor(v)) v <- as.character(v)
+          vec4 <- v[i]
+        }
+      }
+      
+      data.table::set(res_subtypes, j = method, value = vec5)
+      if (Subtype) data.table::set(res_subtypes.Subtype, j = method, value = vec4)
     }
-
+    
+    # Convert to data.frame with rownames = sample IDs, drop the id column
+    res_subtypes <- as.data.frame(res_subtypes, stringsAsFactors = FALSE, check.names = FALSE)
+    rownames(res_subtypes) <- res_subtypes$row_id
+    res_subtypes$row_id <- NULL
+    
+    if (Subtype) {
+      res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype, stringsAsFactors = FALSE, check.names = FALSE)
+      rownames(res_subtypes.Subtype) <- res_subtypes.Subtype$row_id
+      res_subtypes.Subtype$row_id <- NULL
+    }
+    
     ## entropy index
     res_subtypes <- as.data.frame(res_subtypes)
     rownames(res_subtypes) <- samples

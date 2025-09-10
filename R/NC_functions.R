@@ -55,6 +55,36 @@ overlapSets <- function(x, y) {
     return(list(x = x, y = y))
 }
 
+# Align multiple expression matrices by common gene rows, then cbind (columns)
+.align_and_cbind_by_genes <- function(...) {
+  mats <- list(...)
+  # keep only non-empty matrices
+  mats <- Filter(function(m) !is.null(m) && is.matrix(m) && nrow(m) > 0 && ncol(m) > 0, mats)
+  if (!length(mats)) {
+    # return an empty, well-formed matrix
+    return(matrix(numeric(0), nrow = 0, ncol = 0,
+                  dimnames = list(NULL, NULL)))
+  }
+  
+  # require rownames on all
+  if (any(vapply(mats, function(m) is.null(rownames(m)), logical(1)))) {
+    stop("All subgroup testData matrices must have rownames (gene IDs).")
+  }
+  
+  common <- Reduce(intersect, lapply(mats, rownames))
+  if (!length(common)) {
+    # no common genes: return a 0-row matrix with all sample columns
+    all_cols <- unlist(lapply(mats, colnames), use.names = FALSE)
+    return(matrix(numeric(0), nrow = 0, ncol = length(all_cols),
+                  dimnames = list(NULL, all_cols)))
+  }
+  
+  mats_aligned <- lapply(mats, function(m) m[common, , drop = FALSE])
+  # keep a consistent gene order across all mats
+  mats_aligned <- lapply(mats_aligned, function(m) m[match(common, rownames(m)), , drop = FALSE])
+  do.call(cbind, mats_aligned)
+}
+
 #' Function for calibration methods
 #' @param y Gene expression matrix
 #' @param medians.all Medians for calibration
@@ -359,8 +389,23 @@ RORgroup <- function(out,
 
     ## ER and HER2 score
     # out$testData = mat
-    erScore <- out$testData["ESR1", ]
-    her2Score <- out$testData["ERBB2", ]
+    
+    # Safe extraction of ESR1 / ERBB2 scores; fill with NA if missing
+    n_samp <- if (is.matrix(out$testData)) ncol(out$testData) else 0L
+    samp_names <- if (n_samp) colnames(out$testData) else character(0)
+    
+    erScore <- if (!is.null(rownames(out$testData)) && "ESR1" %in% rownames(out$testData)) {
+      out$testData["ESR1", ]
+    } else {
+      setNames(rep(NA_real_, n_samp), samp_names)
+    }
+    
+    her2Score <- if (!is.null(rownames(out$testData)) && "ERBB2" %in% rownames(out$testData)) {
+      out$testData["ERBB2", ]
+    } else {
+      setNames(rep(NA_real_, n_samp), samp_names)
+    }
+    
 
     er_her2 <- data.frame(
         "ER" = erScore,
@@ -1550,7 +1595,7 @@ makeCalls.ssBC <- function(
 
         predictions <- c(res$ER_neg$predictions, res$ER_pos$predictions)
         distances <- rbind(res$ER_neg$distances, res$ER_pos$distances)
-        testData <- cbind(res$ER_neg$testData, res$ER_pos$testData)
+        testData <- .align_and_cbind_by_genes(res$ER_neg$testData, res$ER_pos$testData)
         dist.RORSubtype <- rbind(
             res$ER_neg$dist.RORSubtype,
             res$ER_pos$dist.RORSubtype
@@ -1575,7 +1620,7 @@ makeCalls.ssBC <- function(
             res$HER2pos_ERneg$distances,
             res$HER2pos_ERpos$distances
         )
-        testData <- cbind(
+        testData <- .align_and_cbind_by_genes(
             res$ERneg_HER2neg$testData,
             res$ERpos_HER2neg$testData,
             res$HER2pos_ERneg$testData,
@@ -1605,7 +1650,7 @@ makeCalls.ssBC <- function(
             res$TN$distances,
             res$nonTN$distances
         )
-        testData <- cbind(
+        testData <- .align_and_cbind_by_genes(
             res$TN$testData,
             res$nonTN$testData
         )
