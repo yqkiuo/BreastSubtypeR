@@ -43,7 +43,7 @@ jobs:
       - name: "Add remotes"
         run: |
           git remote add mirror_org   git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
-          git remote add mirror_user  git@github.com:<SecondAccount>/BreastSubtypeR.git
+          git remote add mirror_user  git@github.com:sifakise/BreastSubtypeR.git
           git remote -v
 
       - name: "Push main and tags to both forks (no force)"
