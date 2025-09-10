@@ -2,20 +2,36 @@ name: Sync main & tags to org fork
 
 on:
   push:
-    branches: ['main']    # run when main is updated
-    tags: ['*']           # and when any tag is pushed
+    branches: ['main']        # run when main updates
+    tags: ['*']               # and on any tag push
   release:
-    types: [published]    # also run when a release is published
-  workflow_dispatch: {}   # allow manual runs
+    types: [published]        # also when a release is published
+  workflow_dispatch: {}       # allow manual runs
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout full history
+      - name: Preflight: verify token can reach target repo (expect 200)
+        env:
+          TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          set -euo pipefail
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/repos/JohanHartmanGroupBioteam/BreastSubtypeR)
+          echo "GitHub API returned: $HTTP"
+          if [ "$HTTP" != "200" ]; then
+            echo "::error:: Token cannot access repo. Expected HTTP 200 but got $HTTP."
+            echo "::error:: Check: token type=fine-grained; resource owner=JohanHartmanGroupBioteam; repo selected=BreastSubtypeR; permission=Contents: Read & Write; token not expired."
+            exit 1
+          fi
+
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false   # use our PAT for pushes, not GITHUB_TOKEN
 
       - name: Configure git
         run: |
@@ -26,9 +42,12 @@ jobs:
         env:
           TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
+          # Note: no trailing slash after .git
           git remote add mirror https://x-access-token:${TOKEN}@github.com/JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote -v
 
       - name: Push main (no force) and tags
         run: |
+          set -e
           git push mirror HEAD:refs/heads/main
           git push --tags mirror
