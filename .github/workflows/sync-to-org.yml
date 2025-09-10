@@ -1,52 +1,55 @@
-name: "Sync to fork (SSH)"
+name: "Sync to org fork (SSH)"
 
 on:
   push:
-    branches: [ main ]
-    tags: [ "*" ]
+    branches:
+      - main
+    tags:
+      - "*"
   release:
-    types: [ published ]
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
   sync:
-    if: github.repository == 'yqkiuo/BreastSubtypeR'
+    if: github.repository == 'yqkiuo/BreastSubtypeR'   # <-- run only in source repo
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: "Checkout"
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.9.0
-
-      - name: Add deploy key (sanitize CRLF)
+      - name: "Ensure secret exists (helpful error)"
         run: |
           if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
-            echo "::error:: Secret MIRROR_DEPLOY_KEY is empty or missing"; exit 1; fi
-          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key
-          chmod 600 /tmp/key
-          ssh-add /tmp/key
+            echo "::error:: Secret MIRROR_DEPLOY_KEY is not set in yqkiuo/BreastSubtypeR."
+            exit 1
+          fi
 
-      - name: Add GitHub to known_hosts
+      - name: "Start ssh-agent and add deploy key"
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
+
+      - name: "Add GitHub to known_hosts"
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
 
-      - name: Configure git
+      - name: "Configure git"
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Add fork remote
+      - name: "Add mirror remote (SSH)"
         run: |
           git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
           git remote -v
 
-      - name: Push main and tags (no force)
+      - name: "Push main and tags (no force)"
         run: |
           set -e
           git push mirror HEAD:refs/heads/main
