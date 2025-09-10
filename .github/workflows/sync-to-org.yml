@@ -1,0 +1,34 @@
+name: Sync main & tags to org fork
+
+on:
+  push:
+    branches: ['main']    # run when main is updated
+    tags: ['*']           # and when any tag is pushed
+  release:
+    types: [published]    # also run when a release is published
+  workflow_dispatch: {}   # allow manual runs
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add mirror remote
+        env:
+          TOKEN: ${{ secrets.MIRROR_TOKEN }}
+        run: |
+          git remote add mirror https://x-access-token:${TOKEN}@github.com/JohanHartmanGroupBioteam/BreastSubtypeR.git
+
+      - name: Push main (no force) and tags
+        run: |
+          git push mirror HEAD:refs/heads/main
+          git push --tags mirror
