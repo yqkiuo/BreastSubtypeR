@@ -1,56 +1,68 @@
-name: "Sync to org fork (SSH)"
+name: "Sync ALL branches & tags to org (SSH, prune)"
 
 on:
   push:
     branches:
-      - main
+      - "**"          # run on any branch push
     tags:
-      - "*"
+      - "*"           # and on any tag push
   release:
     types:
-      - published
-  workflow_dispatch:
+      - published     # also when a GitHub release is published
+  workflow_dispatch:   # allow manual runs
 
 jobs:
   sync:
-    if: github.repository == 'yqkiuo/BreastSubtypeR'   # <-- run only in source repo
+    # Run only from the source repo so the fork doesn't need secrets
+    if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
+
     steps:
-      - name: "Checkout"
+      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          persist-credentials: false
+          fetch-depth: 0               # full history
+          persist-credentials: false   # we'll use SSH key, not GITHUB_TOKEN
 
-      - name: "Ensure secret exists (helpful error)"
+      - name: Ensure secret exists
         run: |
           if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
-            echo "::error:: Secret MIRROR_DEPLOY_KEY is not set in yqkiuo/BreastSubtypeR."
+            echo "::error:: Secret MIRROR_DEPLOY_KEY is missing in yqkiuo/BreastSubtypeR."
             exit 1
           fi
 
-      - name: "Start ssh-agent and add deploy key"
+      - name: Start ssh-agent & add deploy key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
 
-      - name: "Add GitHub to known_hosts"
+      - name: Trust github.com host key
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
 
-      - name: "Configure git"
+      - name: Configure git identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: "Add mirror remote (SSH)"
+      - name: Add mirror remote (org fork)
         run: |
           git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
           git remote -v
 
-      - name: "Push main and tags (no force)"
+      - name: Fetch ALL branches & tags from origin
         run: |
           set -e
-          git push mirror HEAD:refs/heads/main
-          git push --tags mirror
+          # Update tags and prune deleted ones
+          git fetch --tags --prune origin
+          # Fetch every branch into remote-tracking refs
+          git fetch --prune origin +refs/heads/*:refs/remotes/origin/*
+
+      - name: Push ALL branches & tags to mirror (prune deletions)
+        run: |
+          set -e
+          # Push all branches (remote-tracking -> real branches on mirror), pruning deletions
+          git push --prune mirror 'refs/remotes/origin/*:refs/heads/*'
+          # Push tags, pruning tags deleted at source
+          git push --prune --tags mirror
