@@ -1,18 +1,22 @@
-name: Sync main & tags to org fork
+name: "Sync to org fork"
 
 on:
   push:
-    branches: ['main']        # run when main updates
-    tags: ['*']               # and on any tag push
+    branches:
+      - main
+    tags:
+      - "*"
   release:
-    types: [published]        # also when a release is published
-  workflow_dispatch: {}       # allow manual runs
+    types:
+      - published
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Preflight: verify token can reach target repo (expect 200)
+      - name: "Preflight - verify token can reach target repo (expect 200)"
         env:
           TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
@@ -27,26 +31,25 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout repository
+      - name: "Checkout repository"
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false   # use our PAT for pushes, not GITHUB_TOKEN
+          persist-credentials: false
 
-      - name: Configure git
+      - name: "Configure git"
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Add mirror remote
+      - name: "Add mirror remote"
         env:
           TOKEN: ${{ secrets.MIRROR_TOKEN }}
         run: |
-          # Note: no trailing slash after .git
           git remote add mirror https://x-access-token:${TOKEN}@github.com/JohanHartmanGroupBioteam/BreastSubtypeR.git
           git remote -v
 
-      - name: Push main (no force) and tags
+      - name: "Push main and tags (no force)"
         run: |
           set -e
           git push mirror HEAD:refs/heads/main
