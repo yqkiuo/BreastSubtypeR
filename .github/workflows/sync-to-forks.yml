@@ -1,51 +1,56 @@
-name: "Sync to two forks (SSH)"
+name: "Sync to org fork (SSH)"
 
 on:
   push:
-    branches: [ main ]
-    tags: [ "*" ]
+    branches:
+      - main
+    tags:
+      - "*"
   release:
-    types: [ published ]
+    types:
+      - published
   workflow_dispatch:
 
 jobs:
   sync:
-    if: github.repository == 'yqkiuo/BreastSubtypeR'   # run only in the source repo
+    if: github.repository == 'yqkiuo/BreastSubtypeR'   # <-- run only in source repo
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
+      - name: "Checkout"
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      # Start ssh-agent and PERSIST its env to later steps
-      - name: Start ssh-agent
+      - name: "Ensure secret exists (helpful error)"
         run: |
-          eval "$(ssh-agent -s)"
-          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> $GITHUB_ENV
+          if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
+            echo "::error:: Secret MIRROR_DEPLOY_KEY is not set in yqkiuo/BreastSubtypeR."
+            exit 1
+          fi
 
-      - name: Assert secrets exist
-        run: |
-          [ -n "${{ secrets.MIRROR_DEPLOY_KEY }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY is missing"; exit 1; }
-          [ -n "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY_2_SIFAKISE is missing"; exit 1; }
+      - name: "Start ssh-agent and add deploy key"
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
 
-      # Add OpenSSH private keys, stripping CRLF if present
-      - name: Add deploy key for org fork
-        run: |
-          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key_org
-          chmod 600 /tmp/key_org
-          ssh-add /tmp/key_org
-
-      - name: Add deploy key for user fork (sifakise)
-        run: |
-          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" | tr -d '\r' > /tmp/key_user
-          chmod 600 /tmp/key_user
-          ssh-add /tmp/key_user
-
-      - name: Add GitHub to known_hosts
+      - name: "Add GitHub to known_hosts"
         run: |
           mkdir -p ~/.ssh
-          ssh-keysca
+          ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
+
+      - name: "Configure git"
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: "Add mirror remote (SSH)"
+        run: |
+          git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote -v
+
+      - name: "Push main and tags (no force)"
+        run: |
+          set -e
+          git push mirror HEAD:refs/heads/main
+          git push --tags mirror
