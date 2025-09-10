@@ -7,17 +7,21 @@
 [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fnargab%2Flqaf131-blue.svg)](https://doi.org/10.1093/nargab/lqaf131)
 <!-- badges: end -->
 
-**BreastSubtypeR** — assumption-aware, multi-method intrinsic molecular subtyping for breast cancer (R / Bioconductor)
+**BreastSubtypeR** — assumption-aware, multi-method intrinsic molecular subtyping for breast cancer (Bioconductor)
 
-**Authors:** Qiao Yang, Emmanouil G. Sifakis\
-**Affiliation:** Department of Oncology-Pathology, Karolinska Institutet (Stockholm, Sweden)\
-**Paper:** Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
+**Authors:** Qiao Yang, Emmanouil G. Sifakis  
+**Affiliation:** Department of Oncology-Pathology, Karolinska Institutet (Stockholm, Sweden)  
+**Paper:** [Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**.](https://doi.org/10.1093/nargab/lqaf131)
 
 ------------------------------------------------------------------------
 
 ## Overview
 
-**BreastSubtypeR** consolidates established gene-expression–based intrinsic subtyping methods into a single, reproducible R/Bioconductor package and provides a local Shiny app (`iBreastSubtypeR`) for users without programming experience.
+**BreastSubtypeR** provides a unified, assumption-aware framework—together with a local Shiny app (`iBreastSubtypeR`)—
+that supports more accurate and reproducible intrinsic molecular subtyping in breast cancer research 
+by auto-selecting cohort-appropriate methods (**AUTO**) and exposing **QC** outputs.
+
+> *Research use only; in clinical practice, intrinsic molecular subtyping is standardised via approved diagnostics (e.g., Prosigna®).*
 
 ------------------------------------------------------------------------
 
@@ -34,7 +38,7 @@
 -   **Comprehensive Intrinsic Subtyping:** Integrates multiple published intrinsic subtyping algorithms (NC- and SSP-based), including PAM50 variants, AIMS, ssBC, sspbc, and others.
 -   **Unified Multi-Method Interface (`BS_Multi`)**: Run many classifiers from one consistent API and compare results side-by-side.
 -   **AUTO Mode (cohort-aware selection):** Evaluates cohort diagnostics (e.g., receptor-status distribution, subtype purity, subgroup sizes) and programmatically disables classifiers whose assumptions are likely violated—reducing misclassification in skewed or small cohorts.
--   **Standardised Input & Method-Specific Normalisation:** Supports raw RNA-seq counts, precomputed FPKM, and log₂-normalised microarray/nCounter matrices with automated, method-appropriate transformations.
+-   **Standardised Input & Method-Specific Normalisation:** Supports raw RNA-seq counts, precomputed FPKM, and log2-normalised microarray/nCounter matrices with automated, method-appropriate transformations.
 -   **Optimised Probe/Gene Mapping:** Entrez ID–based mapping and conflict resolution to maximise marker coverage across platforms.
 -   **Interactive Shiny App (`iBreastSubtypeR`):** Local GUI that replicates core workflows for non-programmers and preserves data privacy.
 -   **Bioconductor distribution & reproducibility:** Unit tests, vignettes and SummarizedExperiment compatibility to support reproducible deployment.
@@ -155,7 +159,7 @@ Contributions and issue reports are welcome. Please open issues or pull requests
 
 When using **BreastSubtypeR** in publications, please cite the package and the paper:
 
-Yang Q., Hartman J., Sifakis E.G. (2025) *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics**. **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
+Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. [DOI](https://doi.org/10.1093/nargab/lqaf131)
 
 You can also use citation("BreastSubtypeR") after installing the package to retrieve the canonical citation(s).
 
