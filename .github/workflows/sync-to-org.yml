@@ -1,4 +1,4 @@
-name: "Sync to forks (SSH)"
+name: "Sync to two forks (SSH)"
 
 on:
   push:
@@ -13,9 +13,10 @@ on:
 
 jobs:
   sync:
-    # only run from the source repo, so forks don't need secrets
+    # Run only in the source repo so forks don't need secrets
     if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
+
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
@@ -23,12 +24,26 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: "Start ssh-agent and add deploy keys"
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.MIRROR_DEPLOY_KEY }}       # org fork key
-            ${{ secrets.MIRROR_DEPLOY_KEY_2 }}     # second account fork key
+      - name: "Start ssh-agent"
+        run: |
+          eval "$(ssh-agent -s)"
+
+      - name: "Assert secrets exist"
+        run: |
+          [ -n "${{ secrets.MIRROR_DEPLOY_KEY }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY is missing"; exit 1; }
+          [ -n "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY_2_SIFAKISE is missing"; exit 1; }
+
+      - name: "Add deploy key for org fork (sanitize CRLF)"
+        run: |
+          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key_org
+          chmod 600 /tmp/key_org
+          ssh-add /tmp/key_org
+
+      - name: "Add deploy key for user fork (sanitize CRLF)"
+        run: |
+          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" | tr -d '\r' > /tmp/key_user
+          chmod 600 /tmp/key_user
+          ssh-add /tmp/key_user
 
       - name: "Add GitHub to known_hosts"
         run: |
@@ -42,8 +57,8 @@ jobs:
 
       - name: "Add remotes"
         run: |
-          git remote add mirror_org   git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
-          git remote add mirror_user  git@github.com:sifakise/BreastSubtypeR.git
+          git remote add mirror_org  git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote add mirror_user git@github.com:sifakise/BreastSubtypeR.git
           git remote -v
 
       - name: "Push main and tags to both forks (no force)"
