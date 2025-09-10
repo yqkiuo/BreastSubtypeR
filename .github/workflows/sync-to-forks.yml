@@ -1,4 +1,4 @@
-name: "Sync to two forks (SSH, with diagnostics)"
+name: "Sync to two forks (SSH, autodetect default branch)"
 
 on:
   push:
@@ -23,35 +23,29 @@ jobs:
       - name: Start ssh-agent (persist env)
         run: |
           eval "$(ssh-agent -s)"
-          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-          echo "SSH_AGENT_PID=$SSH_AGENT_PID"   >> $GITHUB_ENV
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+          echo "SSH_AGENT_PID=$SSH_AGENT_PID"   >> "$GITHUB_ENV"
 
-      - name: Assert secrets exist
+      - name: Ensure secrets exist
         run: |
           [ -n "${{ secrets.MIRROR_DEPLOY_KEY }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY missing (org fork)"; exit 1; }
           [ -n "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY_2_SIFAKISE missing (user fork)"; exit 1; }
 
-      # ---- ORG FORK KEY (JohanHartmanGroupBioteam) ----
-      - name: Validate org private key format
+      - name: Write & validate org private key
         run: |
           printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key_org
           chmod 600 /tmp/key_org
-          grep -q "BEGIN OPENSSH PRIVATE KEY" /tmp/key_org || { echo "::error:: MIRROR_DEPLOY_KEY is not an OpenSSH private key (export via MobaKeyGen → Conversions → Export OpenSSH key)"; exit 1; }
-          ssh-keygen -y -f /tmp/key_org > /dev/null 2>&1 || { echo "::error:: MIRROR_DEPLOY_KEY unreadable (passphrase set or invalid)"; exit 1; }
+          grep -q "BEGIN OPENSSH PRIVATE KEY" /tmp/key_org || { echo "::error:: MIRROR_DEPLOY_KEY is not an OpenSSH private key"; exit 1; }
+          ssh-keygen -y -f /tmp/key_org >/dev/null 2>&1 || { echo "::error:: MIRROR_DEPLOY_KEY unreadable (passphrase or invalid)"; exit 1; }
+          ssh-add /tmp/key_org
 
-      - name: Add org key to agent
-        run: ssh-add /tmp/key_org
-
-      # ---- USER FORK KEY (sifakise) ----
-      - name: Validate user private key format
+      - name: Write & validate user private key
         run: |
           printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" | tr -d '\r' > /tmp/key_user
           chmod 600 /tmp/key_user
           grep -q "BEGIN OPENSSH PRIVATE KEY" /tmp/key_user || { echo "::error:: MIRROR_DEPLOY_KEY_2_SIFAKISE is not an OpenSSH private key"; exit 1; }
-          ssh-keygen -y -f /tmp/key_user > /dev/null 2>&1 || { echo "::error:: MIRROR_DEPLOY_KEY_2_SIFAKISE unreadable (passphrase set or invalid)"; exit 1; }
-
-      - name: Add user key to agent
-        run: ssh-add /tmp/key_user
+          ssh-keygen -y -f /tmp/key_user >/dev/null 2>&1 || { echo "::error:: MIRROR_DEPLOY_KEY_2_SIFAKISE unreadable (passphrase or invalid)"; exit 1; }
+          ssh-add /tmp/key_user
 
       - name: Add GitHub to known_hosts
         run: |
@@ -69,29 +63,28 @@ jobs:
           git remote add mirror_user git@github.com:sifakise/BreastSubtypeR.git
           git remote -v
 
-      # --- Preflight: auth to BOTH remotes ---
-      - name: Preflight org fork (ls-remote)
+      - name: Detect default branches on forks
+        id: detect
         run: |
-          git ls-remote mirror_org >/dev/null || { echo "::error:: Cannot read org fork (deploy key mismatch / no write access / repo slug)"; exit 1; }
+          # Get default branch via HEAD symref
+          ORG_DEF=$(git ls-remote --symref mirror_org HEAD | awk '/^ref:/ {print $2}' | sed 's@refs/heads/@@')
+          USER_DEF=$(git ls-remote --symref mirror_user HEAD | awk '/^ref:/ {print $2}' | sed 's@refs/heads/@@')
+          echo "Org fork default branch:   $ORG_DEF"
+          echo "User fork default branch:  $USER_DEF"
+          # Fallbacks if detection fails
+          [ -n "$ORG_DEF" ]  || ORG_DEF=main
+          [ -n "$USER_DEF" ] || USER_DEF=main
+          echo "ORG_DEF=$ORG_DEF"   >> "$GITHUB_OUTPUT"
+          echo "USER_DEF=$USER_DEF" >> "$GITHUB_OUTPUT"
 
-      - name: Preflight user fork (ls-remote)
-        run: |
-          git ls-remote mirror_user >/dev/null || { echo "::error:: Cannot read user fork (deploy key mismatch / no write access / repo slug)"; exit 1; }
-
-      # --- Push to org fork ---
       - name: Push to org fork (main + tags)
         run: |
           set -e
-          git push -v mirror_org  HEAD:refs/heads/main
+          git push -v mirror_org  HEAD:refs/heads/${{ steps.detect.outputs.ORG_DEF }}
           git push -v mirror_org  --tags
 
-      # --- Push to user fork with explicit diagnostics ---
-      - name: Push to user fork (main + tags) with diagnostics
+      - name: Push to user fork (main + tags)
         run: |
           set -e
-          # Show current default branch on the user fork (helps if it's 'master' or protected)
-          echo "Remote heads on user fork:"
-          git ls-remote --heads mirror_user || true
-          # Try pushing main and tags
-          git push -v mirror_user HEAD:refs/heads/main || { echo "::error:: Push to user fork 'main' failed. Check: Deploy key added to sifakise/BreastSubtypeR with 'Allow write access'; branch protection; correct key/secret."; exit 1; }
-          git push -v mirror_user --tags || { echo "::error:: Push tags to user fork failed."; exit 1; }
+          git push -v mirror_user HEAD:refs/heads/${{ steps.detect.outputs.USER_DEF }}
+          git push -v mirror_user --tags
