@@ -1,7 +1,7 @@
 # BreastSubtypeR 1.1.3
 
 ## Highlights
-- Paper accepted in *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** (Yang, Hartman, Sifakis).
+- Paper published in *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** (DOI: 10.1093/nargab/lqaf131).
 - **New:** Support for raw RNA-seq counts (requires gene lengths).
 - Major **iBreastSubtypeR** refresh: cleaner UX, smarter AUTO guidance, consistent exports.
 - Refined, data-driven thresholds for ER/HER2 skew detection in AUTO.

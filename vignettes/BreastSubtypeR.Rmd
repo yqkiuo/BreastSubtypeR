@@ -238,7 +238,7 @@ BreastSubtypeR harmonises many published, signature-based classifiers but has kn
 
 If you use **BreastSubtypeR**, please cite the paper:
 
-Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**.
+Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
 
 Also cite the original method authors (see method-specific references in the package documentation).
 
@@ -250,7 +250,7 @@ sessionInfo()
 
 ## References
 
--   Yang Q, Hartman J, Sifakis EG. (2025). BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. *NAR Genomics and Bioinformatics*, *in press*.
+-   Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. *NAR Genomics and Bioinformatics*. <https://doi.org/10.1093/nargab/lqaf131>
 
 -   Parker JS, Mullins M, Cheang MCU, Leung S, Voduc D, Vickery T, *et al.* (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *J Clin Oncol*, 27(8):1160–1167. <https://doi.org/10.1200/JCO.2008.18.1370>
 

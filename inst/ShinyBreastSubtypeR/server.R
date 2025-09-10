@@ -26,6 +26,56 @@ server <- function(input, output, session) {
   `%||%`       <- function(a, b) if (!is.null(a)) a else b
   has_clinical <- reactive({ isTRUE((input$hasClinical %||% FALSE)) })
   k_is_4class  <- reactive({ identical(input$k_subtypes, "4") })
+
+  # --- DOI / version info for exports ---
+  PKG_VER      <- as.character(utils::packageVersion("BreastSubtypeR"))
+  CITATION_DOI <- "10.1093/nargab/lqaf131"
+  CITATION_NOTE <- sprintf(
+    "BreastSubtypeR v%s — NAR Genomics and Bioinformatics (2025) DOI: %s",
+    PKG_VER, CITATION_DOI
+  )
+  
+  # Write a TSV with one or more header lines (each prefixed with "# ")
+  .write_tsv_with_header <- function(path, df, header_lines = CITATION_NOTE) {
+    con <- file(path, open = "wt", encoding = "UTF-8")
+    on.exit(close(con), add = TRUE)
+    if (length(header_lines)) writeLines(paste0("# ", header_lines), con)
+    utils::write.table(df, con, sep = "\t", quote = FALSE, row.names = FALSE)
+  }
+  
+  # Map PAM50 UI choices to a clear export header
+  .pam50_variant_from_internal <- function(internal) {
+    switch(internal,
+           "medianCtr" = "parker.original",
+           "meanCtr"   = "genefu.scale",
+           "qCtr"      = "genefu.robust",
+           "parker.original"
+    )
+  }
+  
+  .method_header_line <- function(input, want_4, use_clin) {
+    method_label <- input$BSmethod %||% "Unknown"
+    
+    if (identical(method_label, "PAM50")) {
+      cal <- input$calibration %||% "None"
+      if (identical(cal, "Internal")) {
+        internal <- input$internal %||% "medianCtr"
+        variant  <- .pam50_variant_from_internal(internal)
+        method_label <- sprintf("PAM50 (variant: %s, calibration: Internal (%s))", variant, internal)
+      } else if (identical(cal, "External")) {
+        ext <- input$external %||% "Unknown"
+        ext_label <- if (identical(ext, "Given.mdns")) "Custom (Given.mdns)" else ext
+        method_label <- sprintf("PAM50 (variant: parker.original, calibration: External (%s))", ext_label)
+      } else {
+        method_label <- "PAM50 (variant: parker.original, calibration: None)"
+      }
+    }
+    
+    sprintf("Method: %s | Classes: %s | ROR: %s",
+            method_label,
+            if (want_4) "4" else "5",
+            if (use_clin) "ON" else "OFF")
+  }
   
   # Build a safe data.frame with PatientID prepended (avoid cbind(..., check.names=...))
   .build_out_df <- function(ids, tab) {
@@ -93,6 +143,11 @@ server <- function(input, output, session) {
     RawCounts = NULL, data_input = NULL,
     download_calls = NULL, download_full = NULL
   )
+  
+  # Minimal DOI helper for compact links
+  doi_tag <- function(doi) {
+    sprintf("<a href='https://doi.org/%s' target='_blank' rel='noopener noreferrer'>doi</a>", doi)
+  }
   
   # --- dynamic help panels ---
   output$gex_help <- renderUI({
@@ -233,51 +288,70 @@ server <- function(input, output, session) {
              "IHC Input Requirement" = "ER status and/or HER2, or TN status",
              "Description" = "Evaluates cohort diagnostics and disables classifiers with violated assumptions.",
              "Notes" = "ROR is disabled in AUTO.",
-             "Key ref" = "Yang et al., 2025 NAR Genom Bioinform."
+             "Key refs" = paste0(
+               "Yang et al., 2025 NAR Genom Bioinform. (", doi_tag("10.1093/nargab/lqaf131"), ")"
+             )
            )),
            "PAM50" = .p("PAM50 family (NC-based)", list(
              "Variants" = "parker.original | genefu.scale | genefu.robust",
              "IHC Input Requirement" = "Not required",
              "Description" = "Nearest-centroid subtyping using the PAM50 gene set; multiple centering options.",
-             "Key refs" = "Parker et al., 2009 JCO; Gendoo et al., 2016 Bioinformatics."
+             "Key refs" = paste0(
+               "Parker et al., 2009 JCO (", doi_tag("10.1200/JCO.2008.18.1370"), "); ",
+               "Gendoo et al., 2016 Bioinformatics (", doi_tag("10.1093/bioinformatics/btv693"), ")"
+             )
            )),
            "cIHC" = .p("cIHC", list(
              "Category" = "NC-based",
              "IHC Input Requirement" = "ER status",
              "Description" = "Conventional ER-balancing with PAM50-style classification.",
-             "Key refs" = "Ciriello et al., 2015 Cell; Raj-Kumar et al., 2019 Sci Rep."
+             "Key refs" = paste0(
+               "Ciriello et al., 2015 Cell (", doi_tag("10.1016/j.cell.2015.09.033"), ") "
+             )
            )),
            "cIHC.itr" = .p("cIHC.itr", list(
              "Category" = "NC-based",
              "IHC Input Requirement" = "ER status",
              "Description" = "Iterative ER-balancing variant.",
-             "Key ref" = "Curtis et al., 2012 Nature."
+             "Key refs" = paste0(
+               "Curtis et al., 2012 Nature (", doi_tag("10.1038/nature10983"), ")"
+             )
            )),
            "PCAPAM50" = .p("PCAPAM50", list(
              "Category" = "NC-based",
              "IHC Input Requirement" = "ER status (IHC) → ESR1 axis",
              "Description" = "PCA on ESR1 to achieve ER-aware centering before PAM50.",
-             "Key ref" = "Raj-Kumar et al., 2019 Sci Rep."
+             "Key refs" = paste0(
+               "Raj-Kumar et al., 2019 Sci Rep (", doi_tag("10.1038/s41598-019-44339-4"), ")"
+             )
            )),
            "ssBC" = .p("ssBC", list(
              "Category" = "NC-based",
              "IHC Input Requirement" = "ER (and HER2 for ER.v2) or TN depending on subgroup.",
              "Description" = "Subgroup-specific gene-centering PAM50.",
-             "Key ref" = "Zhao et al., 2015 BCR; Fernandez-Martinez et al., 2020 JCO."
+             "Key refs" = paste0(
+               "Zhao et al., 2015 BCR (", doi_tag("10.1186/s13058-015-0520-4"), "); ",
+               "Fernandez-Martinez et al., 2020 JCO (", doi_tag("10.1200/JCO.20.01276"), ")"
+             )
            )),
            "AIMS" = .p("AIMS", list(
              "Category" = "SSP-based",
              "IHC Input Requirement" = "Not required",
              "Description" = "Absolute Intrinsic Molecular Subtyping (pairwise rules).",
-             "Key ref" = "Paquet & Hallett, 2015 JNCI."
+             "Key refs" = paste0(
+               "Paquet & Hallett, 2015 JNCI (", doi_tag("10.1093/jnci/dju357"), ")"
+             )
            )),
            "sspbc" = .p("sspbc", list(
              "Category" = "SSP-based",
              "IHC Input Requirement" = "Not required",
              "Description" = "SCAN-B SSP models (4- or 5-class via model).",
-             "Key ref" = "Staaf et al., 2022 NPJ Breast Cancer."
+             "Key refs" = paste0(
+               "Staaf et al., 2022 NPJ Breast Cancer (", doi_tag("10.1038/s41523-022-00465-3"), ")"
+             )
            )),
            NULL)
+    
   })
   
   # --- Smart AUTO chip (dynamic) ---
@@ -416,6 +490,21 @@ server <- function(input, output, session) {
     showNotification(sprintf("Use clinical variables (ROR): %s",
                              if (isTRUE(input$hasClinical)) "ON" else "OFF"),
                      type = "message", duration = 2)
+  })
+  
+  observeEvent(input$about, {
+    showModal(modalDialog(
+      title = "About & Citation",
+      easyClose = TRUE, footer = NULL,
+      HTML(paste0(
+        "<p><b>BreastSubtypeR</b> — intrinsic molecular subtyping for breast cancer (R/Bioconductor).</p>",
+        "<p><b>Please cite:</b><br/>",
+        "Yang Q., Hartman J., Sifakis E.G. ",
+        "<em>BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research</em>. ",
+        "<em>NAR Genomics and Bioinformatics</em> (2025). ",
+        "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>https://doi.org/10.1093/nargab/lqaf131</a></p>"
+      ))
+    ))
   })
   
   # --- data upload + Mapping ---
@@ -627,15 +716,22 @@ server <- function(input, output, session) {
             kind <- if (!isTRUE(block_full()) && identical(input$export_kind, "full")) "full" else "calls"
             sprintf("results-AUTO-%s-%s.txt", if (want_4) "4class" else "5class", kind)
           },
-          content  = function(file) {
-            # force calls when full is blocked or unavailable
+          content = function(file) {
             want_full <- identical(input$export_kind, "full") && !isTRUE(block_full())
             obj <- if (want_full && !is.null(reactive_files$download_full) && nrow(reactive_files$download_full) > 0) {
               reactive_files$download_full
             } else {
               reactive_files$download_calls
             }
-            write.table(obj, file, sep = "\t", quote = FALSE, row.names = FALSE)
+            hdr <- c(
+              CITATION_NOTE,
+              sprintf("Method: AUTO | Classes: %s | ROR: OFF", if (want_4) "4" else "5"),
+              sprintf("Export: %s | Date: %s | R: %s",
+                      if (want_full) "full" else "calls",
+                      format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
+                      getRversion())
+            )
+            .write_tsv_with_header(file, obj, header_lines = hdr)
           }
         )
         
@@ -853,14 +949,24 @@ server <- function(input, output, session) {
           sprintf("results-%s-%s-%s.txt", input$BSmethod,
                   if (want_4) "4class" else "5class", kind)
         },
-        content  = function(file) {
+        content = function(file) {
           want_full <- identical(input$export_kind, "full") && !isTRUE(block_full())
           obj <- if (want_full && !is.null(reactive_files$download_full) && nrow(reactive_files$download_full) > 0) {
             reactive_files$download_full
           } else {
             reactive_files$download_calls
           }
-          write.table(obj, file, row.names = FALSE, sep = "\t", quote = FALSE)
+          
+          hdr <- c(
+            CITATION_NOTE,
+            .method_header_line(input, want_4, use_clin),
+            sprintf("Export: %s | Date: %s | R: %s",
+                    if (want_full) "full" else "calls",
+                    format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"),
+                    getRversion())
+          )
+          
+          .write_tsv_with_header(file, obj, header_lines = hdr)
         }
       )
       

@@ -52,7 +52,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
-URL: https://github.com/yqkiuo/BreastSubtypeR
+URL: https://doi.org/10.1093/nargab/lqaf131, https://github.com/yqkiuo/BreastSubtypeR
 BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL-3
 VignetteBuilder: knitr

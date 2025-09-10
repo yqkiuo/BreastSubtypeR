@@ -4,13 +4,14 @@
 [![Bioconductor Release](https://bioconductor.org/shields/years-in-bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/BreastSubtypeR)
 [![Bioconductor Devel](https://bioconductor.org/shields/build/devel/bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/devel/bioc/html/BreastSubtypeR.html)
 [![License: GPL-3](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
+[![DOI](https://img.shields.io/badge/DOI-10.1093%2Fnargab%2Flqaf131-blue.svg)](https://doi.org/10.1093/nargab/lqaf131)
 <!-- badges: end -->
 
 **BreastSubtypeR** — assumption-aware, multi-method intrinsic molecular subtyping for breast cancer (R / Bioconductor)
 
 **Authors:** Qiao Yang, Emmanouil G. Sifakis\
 **Affiliation:** Department of Oncology-Pathology, Karolinska Institutet (Stockholm, Sweden)\
-**Paper:** Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**.
+**Paper:** Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
 
 ------------------------------------------------------------------------
 
@@ -154,7 +155,7 @@ Contributions and issue reports are welcome. Please open issues or pull requests
 
 When using **BreastSubtypeR** in publications, please cite the package and the paper:
 
-Yang Q., Hartman J., Sifakis E. G. (2025) *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics**. (Editor’s Choice).
+Yang Q., Hartman J., Sifakis E.G. (2025) *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics**. **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
 
 You can also use citation("BreastSubtypeR") after installing the package to retrieve the canonical citation(s).
 

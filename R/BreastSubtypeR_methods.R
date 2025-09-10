@@ -109,7 +109,7 @@ NULL
 #' @references
 #' Yang Q, Hartman J, Sifakis EG.  
 #' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
-#' NAR Genomics and Bioinformatics. In press, 2025. Selected as Editor’s Choice.
+#' NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
 #' 
 #' @details
 #' `Mapping()` supports multiple input types:
@@ -962,7 +962,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' @references
 #' Yang Q, Hartman J, Sifakis EG.  
 #' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
-#' NAR Genomics and Bioinformatics. In press, 2025. Selected as Editor’s Choice.
+#' NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
 #' 
 #' Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.  
 #' *Supervised risk predictor of breast cancer based on intrinsic subtypes.*  

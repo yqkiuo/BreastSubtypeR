@@ -17,9 +17,12 @@ ui <- bslib::page_fluid(
     .modal { z-index: 1060 !important; }
     .app-title { text-align: center; margin: 16px 0 8px; }
     .app-title h2 { margin: 0; }
-    .method-help { margin: 6px 0 12px; padding: 10px 12px;
-      border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px; }
+    .method-help { margin: 6px 0 12px; padding: 10px 12px; border-left: 4px solid #e9ecef; background: #fafbfc; border-radius: 6px; }
     .method-help ul { margin-bottom: 0; }
+    .paper-cite { font-size: 12.5px; color: #555; margin-top: 8px; }
+    .paper-cite a { text-decoration: none; }
+    # .chip.doi { background:#eef7ff; border-color:#cfe5ff; }
+    # .chip.doi a { text-decoration:none; }
   "))),
   
   tags$head(tags$style(HTML("
@@ -44,6 +47,8 @@ ui <- bslib::page_fluid(
 
   .feature-list { margin: 8px 0 0 0; padding-left: 18px; }
   .feature-list li { margin: 3px 0; }
+  
+  
 
   .hero-ctas { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
   .btn-pink {
@@ -52,9 +57,9 @@ ui <- bslib::page_fluid(
   .btn-outline { border:1px solid #dee2e6; background:#fff; }
   
   .chip.auto { border:1px solid; padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center; }
-.chip.auto.ready   { background:#e6f7ed; border-color:#2fb170; }
-.chip.auto.blocked { background:#fff5f5; border-color:#e03131; }
-.chip .chip-note   { font-size:11px; opacity:0.75; }
+  .chip.auto.ready   { background:#e6f7ed; border-color:#2fb170; }
+  .chip.auto.blocked { background:#fff5f5; border-color:#e03131; }
+  .chip .chip-note   { font-size:11px; opacity:0.75; }
 
 "))),
   
@@ -119,6 +124,7 @@ ui <- bslib::page_fluid(
   tags$div(class = "app-title", tags$h2("Interactive Breast Cancer Intrinsic Molecular Subtyping")),
   
   # --- Welcome / hero card ---
+  # --- Welcome / hero card ---
   bslib::card(
     class = "hero-card",
     bslib::card_body(
@@ -141,11 +147,16 @@ ui <- bslib::page_fluid(
                   class = "chip", icon("vial"),
                   HTML("<b>SSP-based:</b> AIMS, SSPBC")
                 ),
-                uiOutput("auto_chip"),  # smart AUTO chip (dynamic)
                 span(
                   class = "chip", icon("chart-line"),
                   HTML("<b>ROR:</b> research-use Risk of Recurrence (uses TSIZE, NODE; NC methods only)")
-                )
+                ),
+                uiOutput("auto_chip"),  # smart AUTO chip (dynamic)
+                # DOI chip
+                # span(
+                #   class = "chip doi", icon("link"),
+                #   HTML("<b>DOI:</b> <a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>10.1093/nargab/lqaf131</a>")
+                # )
             ),
             # short bullets
             tags$ul(class = "feature-list",
@@ -154,15 +165,27 @@ ui <- bslib::page_fluid(
                     tags$li("Choose 5-class (incl. Normal-like) or 4-class; AIMS is 5-class only."),
                     tags$li("All computation runs locally; exports are Bioconductor-ready.")
             ),
+            # --- CITATION LINE ---
+            div(
+              class = "paper-cite",
+              HTML(
+                "Please cite: Yang Q., Hartman J., Sifakis E.G. ",
+                "<em>BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research</em>. ",
+                "<span class='journal'>NAR Genomics and Bioinformatics</span> (2025). ",
+                "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>https://doi.org/10.1093/nargab/lqaf131</a>"
+              )
+            ),
             # CTAs
             div(class = "hero-ctas",
                 tags$a(class = "btn btn-pink", href = "#step1", icon("upload"), "Go to Step 1"),
-                tags$a(class = "btn btn-outline", href = "#step2", icon("play-circle"), "Go to Step 2")
+                tags$a(class = "btn btn-outline", href = "#step2", icon("play-circle"), "Go to Step 2"),
+                actionLink("about", "About & Citation", class = "btn btn-outline")
             )
           )
       )
     )
-  ),
+  )
+  ,
   
   #### Step 1
   h3(id = "step1", "Step 1 · Upload your data"),
@@ -378,6 +401,17 @@ ui <- bslib::page_fluid(
             white-space: normal; line-height: 1.2;
             background-color: #FF69B4; color: white; border: none;"
           )
+      )
+    )
+  ),
+  
+  tags$hr(),
+  tags$footer(
+    class = "text-center",
+    tags$small(
+      HTML(
+        "&copy; Karolinska Institutet — BreastSubtypeR. DOI: ",
+        "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>10.1093/nargab/lqaf131</a>"
       )
     )
   )
