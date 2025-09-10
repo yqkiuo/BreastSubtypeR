@@ -1,4 +1,4 @@
-name: "Sync to org fork (SSH)"
+name: "Sync to forks (SSH)"
 
 on:
   push:
@@ -13,7 +13,8 @@ on:
 
 jobs:
   sync:
-    if: github.repository == 'yqkiuo/BreastSubtypeR'   # <-- run only in source repo
+    # only run from the source repo, so forks don't need secrets
+    if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout"
@@ -22,17 +23,12 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: "Ensure secret exists (helpful error)"
-        run: |
-          if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
-            echo "::error:: Secret MIRROR_DEPLOY_KEY is not set in yqkiuo/BreastSubtypeR."
-            exit 1
-          fi
-
-      - name: "Start ssh-agent and add deploy key"
+      - name: "Start ssh-agent and add deploy keys"
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
+          ssh-private-key: |
+            ${{ secrets.MIRROR_DEPLOY_KEY }}       # org fork key
+            ${{ secrets.MIRROR_DEPLOY_KEY_2 }}     # second account fork key
 
       - name: "Add GitHub to known_hosts"
         run: |
@@ -44,13 +40,16 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: "Add mirror remote (SSH)"
+      - name: "Add remotes"
         run: |
-          git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote add mirror_org   git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote add mirror_user  git@github.com:<SecondAccount>/BreastSubtypeR.git
           git remote -v
 
-      - name: "Push main and tags (no force)"
+      - name: "Push main and tags to both forks (no force)"
         run: |
           set -e
-          git push mirror HEAD:refs/heads/main
-          git push --tags mirror
+          git push mirror_org  HEAD:refs/heads/main
+          git push mirror_org  --tags
+          git push mirror_user HEAD:refs/heads/main
+          git push mirror_user --tags
