@@ -1,70 +1,53 @@
-name: "Sync to two forks (SSH)"
+name: "Sync to fork (SSH)"
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "*"
+    branches: [ main ]
+    tags: [ "*" ]
   release:
-    types:
-      - published
+    types: [ published ]
   workflow_dispatch:
 
 jobs:
   sync:
-    # Run only in the source repo so forks don't need secrets
     if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: "Start ssh-agent"
-        run: |
-          eval "$(ssh-agent -s)"
+      - name: Start ssh-agent
+        uses: webfactory/ssh-agent@v0.9.0
 
-      - name: "Assert secrets exist"
+      - name: Add deploy key (sanitize CRLF)
         run: |
-          [ -n "${{ secrets.MIRROR_DEPLOY_KEY }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY is missing"; exit 1; }
-          [ -n "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" ] || { echo "::error:: Secret MIRROR_DEPLOY_KEY_2_SIFAKISE is missing"; exit 1; }
+          if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
+            echo "::error:: Secret MIRROR_DEPLOY_KEY is empty or missing"; exit 1; fi
+          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key
+          chmod 600 /tmp/key
+          ssh-add /tmp/key
 
-      - name: "Add deploy key for org fork (sanitize CRLF)"
-        run: |
-          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY }}" | tr -d '\r' > /tmp/key_org
-          chmod 600 /tmp/key_org
-          ssh-add /tmp/key_org
-
-      - name: "Add deploy key for user fork (sanitize CRLF)"
-        run: |
-          printf '%s' "${{ secrets.MIRROR_DEPLOY_KEY_2_SIFAKISE }}" | tr -d '\r' > /tmp/key_user
-          chmod 600 /tmp/key_user
-          ssh-add /tmp/key_user
-
-      - name: "Add GitHub to known_hosts"
+      - name: Add GitHub to known_hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
 
-      - name: "Configure git"
+      - name: Configure git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: "Add remotes"
+      - name: Add fork remote
         run: |
-          git remote add mirror_org  git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
-          git remote add mirror_user git@github.com:sifakise/BreastSubtypeR.git
+          git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
           git remote -v
 
-      - name: "Push main and tags to both forks (no force)"
+      - name: Push main and tags (no force)
         run: |
           set -e
-          git push mirror_org  HEAD:refs/heads/main
-          git push mirror_org  --tags
-          git push mirror_user HEAD:refs/heads/main
-          git push mirror_user --tags
+          git push mirror HEAD:refs/heads/main
+          git push --tags mirror
