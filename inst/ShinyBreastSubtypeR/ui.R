@@ -263,37 +263,57 @@ ui <- bslib::page_fluid(
           div(
             style = "position: relative; overflow: visible;",
             
-            # External
+            # External (reference medians)
             conditionalPanel(
               condition = "input.calibration == 'External'",
               tagList(
                 selectizeInput(
-                  "external", "External calibration method",
-                  choices = list(
-                    "Given.mdns" = "Given.mdns",
-                    "nCounter" = "nCounter",
-                    "RNAseq.Freeze.20120907" = "RNAseq.Freeze.20120907",
-                    "totalRNA.FFPE.20151111" = "totalRNA.FFPE.20151111",
-                    "RNAseq.V2"  = "RNAseq.V2",
-                    "RNAseq.V1"  = "RNAseq.V1",
-                    "GC.4x44Kcustom" = "GC.4x44Kcustom",
-                    "Agilent_244K"   = "Agilent_244K",
-                    "commercial_1x44k_postMeanCollapse_WashU"    = "commercial_1x44k_postMeanCollapse_WashU",
-                    "commercial_4x44k_postMeanCollapse_WashU_v2" = "commercial_4x44k_postMeanCollapse_WashU_v2",
-                    "htp1.5_WU_update" = "htp1.5_WU_update",
-                    "arrayTrain_postMeanCollapse" = "arrayTrain_postMeanCollapse"
+                  "external",
+                  "Reference medians",
+                  choices = c(
+                    "Custom (upload file…)"                                  = "Given.mdns",
+                    "Built-in: nCounter"                                     = "nCounter",
+                    "Built-in: RNA-seq (Freeze 2012-09-07)"                  = "RNAseq.Freeze.20120907",
+                    "Built-in: totalRNA FFPE (2015-11-11)"                   = "totalRNA.FFPE.20151111",
+                    "Built-in: RNA-seq V2"                                   = "RNAseq.V2",
+                    "Built-in: RNA-seq V1"                                   = "RNAseq.V1",
+                    "Built-in: Agilent custom 4×44K (GC)"                    = "GC.4x44Kcustom",
+                    "Built-in: Agilent 244K"                                 = "Agilent_244K",
+                    "Built-in: 1×44K (WashU, post-collapse)"                 = "commercial_1x44k_postMeanCollapse_WashU",
+                    "Built-in: 4×44K (WashU v2, post-collapse)"              = "commercial_4x44k_postMeanCollapse_WashU_v2",
+                    "Built-in: htp1.5 (WU update)"                           = "htp1.5_WU_update",
+                    "Built-in: arrayTrain (post-collapse)"                   = "arrayTrain_postMeanCollapse"
                   ),
-                  selected = "RNAseq.V2", width = "100%",
-                  options = list(placeholder = "Choose a reference set…",
-                                 openOnFocus = TRUE, dropdownParent = "body")
+                  selected = "Given.mdns",
+                  width = "100%",
+                  options = list(
+                    placeholder = "Choose a reference medians set…",
+                    openOnFocus = TRUE,
+                    dropdownParent = "body"
+                  )
                 ),
                 conditionalPanel(
                   condition = "input.external == 'Given.mdns'",
-                  fileInput("medians", "Upload Given.mdns file",
-                            accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt"))
+                  tagList(
+                    fileInput(
+                      "medians",
+                      "Upload custom medians (.csv / .txt)",
+                      accept = c("text/csv",
+                                 "text/comma-separated-values,text/plain",
+                                 ".csv", ".txt")
+                    ),
+                    helpText(
+                      HTML(
+                        "Expected format: two columns — ",
+                        "<code>X</code> (gene symbol) and <code>Given.mdns</code> (median). ",
+                        "One row per PAM50 gene; extra genes are ignored; case-sensitive."
+                      )
+                    )
+                  )
                 )
               )
-            ),
+            )
+            ,
             
             # Internal
             conditionalPanel(

@@ -190,26 +190,31 @@ server <- function(input, output, session) {
   
   output$calib_help <- renderUI({
     if (!identical(input$BSmethod, "PAM50")) return(NULL)
+    
     tagList(
       div(class = "method-help",
           tags$b("Calibration notes (PAM50)"),
           tags$ul(
-            tags$li(HTML("<b>None</b>: no centering (only if your data already match the training scale).")),
+            tags$li(HTML("<b>None</b>: no centering (use only if your expression scale already matches the training data).")),
+            
             tags$li(
-              HTML("<b>Internal</b>: cohort-based centering; choose one of:"),
+              HTML("<b>Internal</b>: center your cohort; choose one of:"),
               tags$ul(
-                tags$li(HTML("<code>medianCtr</code> — Parker original: gene-wise <i>median</i> centering.")),
-                tags$li(HTML("<code>meanCtr</code> — genefu.scale: gene-wise z-score (mean 0, sd 1).")),
-                tags$li(HTML("<code>qCtr</code> — genefu.robust: quantile re-centering (mq ≈ 0.05)."))
+                tags$li(HTML("<code>medianCtr</code> — gene-wise <i>median</i> centering (Parker original).")),
+                tags$li(HTML("<code>meanCtr</code> — gene-wise z-score (mean&nbsp;0, sd&nbsp;1).")),
+                tags$li(HTML("<code>qCtr</code> — robust quantile re-centering (mq&nbsp;&approx;&nbsp;0.05)."))
               )
             ),
+            
             tags$li(
-              HTML("<b>External</b>: center to medians from a training cohort/platform."),
+              HTML("<b>External</b>: subtract <i>reference medians</i> from a training cohort/platform."),
               tags$ul(
-                tags$li(HTML("<i>Given.mdns</i>: upload your own medians file with <b>two columns</b>: PAM50 gene <b>symbols</b> (col 1) and their median <b>log2</b> expression (col 2). Exactly 50 unique genes, case-sensitive, no duplicates.")),
-                tags$li(HTML("<i>Presets</i> (e.g., <code>RNAseq.V2</code>, <code>Agilent_244K</code>) load built-in medians; pick the one matching your platform/pipeline."))
+                tags$li(HTML("<b>Reference medians</b> selector: choose a <i>Built-in</i> preset (e.g., <code>RNAseq.V2</code>, <code>nCounter</code>, <code>Agilent_244K</code>) or <b>Custom (upload file…)</b>.")),
+                tags$li(HTML("<b>Custom upload</b>: CSV/TXT with two columns — <code>X</code> (PAM50 gene symbol) and <code>Given.mdns</code> (median log2 expression). Exactly 50 unique symbols; extra rows are ignored; gene symbols are case-sensitive."))
               )
-            )
+            ),
+            
+            tags$li(HTML("<b>Gene overlap</b>: all steps operate on the intersection of your genes and PAM50; missing genes are ignored."))
           )
       )
     )
@@ -258,7 +263,7 @@ server <- function(input, output, session) {
              "Category" = "NC-based",
              "IHC Input Requirement" = "ER (and HER2 for ER.v2) or TN depending on subgroup.",
              "Description" = "Subgroup-specific gene-centering PAM50.",
-             "Key ref" = "Zhao et al., 2015 BCR."
+             "Key ref" = "Zhao et al., 2015 BCR; Fernandez-Martinez et al., 2020 JCO."
            )),
            "AIMS" = .p("AIMS", list(
              "Category" = "SSP-based",
@@ -670,29 +675,68 @@ server <- function(input, output, session) {
       
       if (input$BSmethod == "PAM50") {
         req(se_NC)
-        cal <- input$calibration %||% "Internal"
+        cal  <- input$calibration %||% "Internal"
         args <- list(se_obj = se_NC, hasClinical = use_clin, Subtype = want_4)
+        
         if (identical(cal, "Internal")) {
-          args$calibration <- "Internal"; args$internal <- input$internal
+          args$calibration <- "Internal"
+          args$internal    <- input$internal
+          
         } else if (identical(cal, "External")) {
           args$calibration <- "External"
+          
           if (identical(input$external, "Given.mdns")) {
             req(input$medians)
             inFile <- input$medians
             ext <- tolower(tools::file_ext(inFile$name))
             medians <- if (ext == "csv") {
-              read.csv(inFile$datapath, header = TRUE, row.names = NULL, sep = ",")
+              read.csv(inFile$datapath, header = TRUE, row.names = NULL, sep = ",",
+                       check.names = FALSE)
             } else {
               read.table(inFile$datapath, header = TRUE, row.names = NULL, sep = "\t",
-                         fill = TRUE, stringsAsFactors = FALSE)
+                         fill = TRUE, stringsAsFactors = FALSE, check.names = FALSE,
+                         quote = "", comment.char = "")
             }
-            args$external <- "Given.mdns"; args$medians  <- medians
-          } else args$external <- input$external
-        } else args$calibration <- "None"
+            
+            # --- VALIDATE custom medians ---
+            if (ncol(medians) < 2) {
+              showNotification("Custom medians file must have 2 columns: gene symbol + value.",
+                               type = "error", duration = 7)
+              return(invisible(NULL))
+            }
+            # Count unique gene symbols in first column
+            uniq_genes <- length(unique(medians[[1]]))
+            if (uniq_genes < 40) {
+              showNotification(
+                paste("Custom medians: only", uniq_genes,
+                      "unique gene symbols found. Expect ~50 PAM50 genes."),
+                type = "warning", duration = 7
+              )
+            }
+            # Gently warn if column names aren’t X/Given.mdns
+            if (!all(c("X", "Given.mdns") %in% names(medians))) {
+              showNotification(
+                "Tip: Columns will be treated as (X, Given.mdns). Rename in file to avoid ambiguity.",
+                type = "message", duration = 6
+              )
+            }
+            # -----------------------------------------
+            
+            args$external <- "Given.mdns"
+            args$medians  <- medians
+            
+          } else {
+            args$external <- input$external
+          }
+          
+        } else {
+          args$calibration <- "None"
+        }
         
         incProgress(0.55, detail = "BS_parker...")
         res <- do.call(BreastSubtypeR::BS_parker, args)
       }
+      
       
       if (input$BSmethod == "cIHC") {
         req(se_NC)

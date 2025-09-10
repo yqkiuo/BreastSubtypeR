@@ -86,18 +86,11 @@ overlapSets <- function(x, y) {
 }
 
 #' Function for calibration methods
-#' @param y Gene expression matrix
-#' @param medians.all Medians for calibration
-#' @param calibration How to do calibration, "None"(default) means no
-#'   calibration for gene expression matrix. When setting calibration =None, you
-#'   dont need to set internal and external parameters.  "Internal" means
-#'   calibration for gene expression matrix by itself. "External" means
-#'   calibration by external cohort.
-#' @param internal Specify the strategy for internal calibration,
-#'   "medianCtr" (default, median-centered), meanCtr and qCtr
-#' @param external Specify the platform name(which column) of external medians
-#'   calculated by train cohorts. When users want to use Medians prepared by
-#'   user selves, this parameter should be "Given.mdns", not platform name.
+#' @param y gene x sample matrix
+#' @param medians.all matrix/data.frame of reference medians; rownames=genes, cols=platforms (e.g., nCounter, RNAseq.V2, Given.mdns, IHC.mdns, etc.)
+#' @param calibration "None", "Internal", or "External"
+#' @param internal    For Internal: one of "medianCtr" (default), "meanCtr", "qCtr", or the NAME of a column in medians.all (e.g., "IHC.mdns")
+#' @param external    For External: NAME of a column in medians.all (e.g., "RNAseq.V2", "Given.mdns")
 #' @noRd
 docalibration <- function(y,
                           medians.all,
@@ -106,35 +99,53 @@ docalibration <- function(y,
                           external = NA) {
   
   calibration <- match.arg(calibration)
-  mq <- 0.05  # preset for robust (genefu)
+  y <- as.matrix(y)
+  mq <- 0.05  # robust quantiles for 'qCtr' (genefu.robust)
   
-  if (calibration == "None") {
+  # ---- No calibration ----
+    if (calibration == "None") {
     message("No calibration")
     return(as.matrix(y))
   }
   
+  # ---- Internal ----
   if (calibration == "Internal") {
-    # Treat NA exactly as "medianCtr"
     if (length(internal) == 0L || is.na(internal) || identical(internal, "medianCtr")) {
       y <- medianCtr(y)
+      
     } else if (identical(internal, "meanCtr")) {
       y <- t(scale(t(y), center = TRUE, scale = TRUE))
+      
     } else if (identical(internal, "qCtr")) {
       y <- t(apply(y, 1, function(x) (rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2))
-    } else if (internal %in% colnames(medians.all)) {
-      tm <- overlapSets(medians.all, y)
-      y <- (tm$y - tm$x[, internal])
+      
+    } else if (!is.null(medians.all) && !is.null(colnames(medians.all)) && internal %in% colnames(medians.all)) {
+      # use a cohort-derived *internal* medians column (e.g., "IHC.mdns")
+      tm <- overlapSets(medians.all, y)                 # align genes
+      med <- tm$x[, internal, drop = TRUE]
+      y   <- tm$y - med
+      
     } else {
       stop("Invalid internal calibration '", internal,
-           "'. Use NA/'medianCtr', 'meanCtr', 'qCtr', or a column of medians.")
+           "'. Use 'medianCtr', 'meanCtr', 'qCtr', or a column present in 'medians.all'.")
     }
-    return(as.matrix(y))
+    return(y)
   }
   
-  # External
-  tm <- overlapSets(medians.all, y)
-  y <- (tm$y - tm$x[, external])
-  return(as.matrix(y))
+  
+  # ---- External ----
+  if (length(external) == 0L || is.na(external)) {
+    stop("For calibration='External', please supply 'external' as a column name in medians.")
+  }
+  if (is.null(medians.all) || is.null(colnames(medians.all)) || !(external %in% colnames(medians.all))) {
+    stop("Column '", external, "' not found in medians table. Available: ",
+         paste(colnames(medians.all), collapse = ", "))
+  }
+  tm <- overlapSets(medians.all, y)                     # align genes
+  y  <- tm$y - tm$x[, external, drop = TRUE]            # subtract EXTERNAL medians
+  
+  return(y)
+
 }
 
 
