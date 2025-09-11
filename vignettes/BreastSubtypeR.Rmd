@@ -1,5 +1,5 @@
 ---
-title: "BreastSubtypeR: workflow and examples"
+title: "BreastSubtypeR: Introduction and Workflow"
 author:
   - name: "Qiao Yang"
     affiliation: "Department of Oncology-Pathology, Karolinska Institutet"
@@ -10,8 +10,9 @@ output:
     toc: true
     number_sections: true
     toc_depth: 3
+lang: en
 vignette: >
-  %\VignetteIndexEntry{BreastSubtypeR: workflow and examples}
+  %\VignetteIndexEntry{BreastSubtypeR: Introduction and Workflow}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -19,88 +20,89 @@ vignette: >
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
+  comment  = "#>",
   fig.path = "figures/",
-  warning = FALSE,
-  message = FALSE
+  warning  = FALSE,
+  message  = FALSE
 )
 ```
 
-# BreastSubtypeR
 
-<!-- badges: start -->
+# Installation
 
-<!-- badges: end -->
+Install the released version from Bioconductor:
 
-## Motivation
+```{r, eval = FALSE}
+# Requires R >= 4.5.0
+if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("BreastSubtypeR")
+```
 
-Breast cancer (BC) is a biologically heterogeneous disease characterised by intrinsic molecular subtypes (e.g., Luminal A, Luminal B, HER2-enriched, Basal-like, Normal-like) that inform biological interpretation and clinical decision-making. While clinical assays such as **Prosigna®** provide standardized subtyping in the clinic, research implementations of intrinsic subtyping have proliferated and diverge in preprocessing, gene mapping and algorithmic assumptions. This heterogeneity reduces reproducibility across studies and complicates cross-cohort analyses.
 
-**BreastSubtypeR** was developed to address these gaps by consolidating multiple published gene-expression signature classifiers into a single, reproducible R/Bioconductor package with:
+# Citing BreastSubtypeR
 
--   standardized, method-specific preprocessing for different input types (raw counts, FPKM, log₂-normalized arrays),
--   Entrez ID–based probe/gene mapping to maximise marker coverage across platforms,
--   a unified multi-method API for running and comparing many classifiers,
--   **AUTO mode**: cohort-aware selection of compatible classifiers (see below),
--   and a local Shiny app (`iBreastSubtypeR`) for users without programming experience.
+If you use **BreastSubtypeR**, please cite:
 
-## Features (brief)
+- Yang Q., Hartman J., Sifakis E.G. (2025). *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics**. <https://doi.org/10.1093/nargab/lqaf131>
 
--   Comprehensive single-method implementations (PAM50 variants, ssBC, AIMS, sspbc, etc.).
--   `BS_Multi` for user-defined multi-method or `methods = "AUTO"` for cohort-aware method selection.
--   `Mapping()` routine for robust probe/gene mapping using Entrez IDs and conflict resolution.
--   Local Shiny app `iBreastSubtypeR()` for interactive analyses.
--   Bioconductor-friendly objects (e.g., `SummarizedExperiment`) and vignettes illustrating end-to-end workflows.
+For BibTeX/LaTeX, run in R:
+
+```{r, eval = FALSE}
+citation("BreastSubtypeR")
+```
+
+
+# Brief description
+
+Breast cancer (BC) is a biologically heterogeneous disease with intrinsic molecular subtypes (e.g., Luminal A, Luminal B, HER2-enriched, Basal-like, Normal-like) that inform biological interpretation and clinical decision-making. While clinical assays such as **Prosigna** provide standardised subtyping in the clinic, research implementations have proliferated and diverge in pre-processing, gene mapping, and algorithmic assumptions—reducing reproducibility and complicating cross-cohort analyses.
+
+**BreastSubtypeR** consolidates multiple published gene-expression signature classifiers into a unified, assumption-aware Bioconductor package with: - a unified multi-method API (run many classifiers in one call), - **AUTO** mode for cohort-aware method selection, - standardised, method-specific pre-processing for multiple input types (raw counts, FPKM, log2-processed arrays), - Entrez ID–based probe/gene mapping, - and a local Shiny app (`iBreastSubtypeR`) for non-programmers.
+
+
+## Features
+
+-   **Unified interface for published methods:** consolidates PAM50 variants, AIMS, ssBC/sspbc, and others under one consistent API.
+-   **Run multiple methods at once (`BS_Multi`):** execute several classifiers in a single call and compare results side by side.
+-   **AUTO (cohort-aware selection):** checks ER/HER2 distribution, subtype purity, and subgroup sizes; disables incompatible classifiers.
+-   **Method-specific pre-processing:** automatically routes raw RNA-seq counts, precomputed FPKM, or log2-processed microarray/nCounter matrices.
+-   **Robust mapping:** Entrez ID–based gene mapping with conflict resolution.
+-   **Local Shiny app (`iBreastSubtypeR`):** point-and-click analysis; data stay on your machine.
+-   **Reproducibility:** Bioconductor distribution, unit tests, vignettes, and `SummarizedExperiment` compatibility.
 
 ## Implemented approaches
 
-The package includes implementations of commonly used subtyping methods (NC-based and SSP-based). See the package manual and CITATION for the exact list and references. Example methods:
+The package includes implementations of commonly used subtyping methods (NC-based and SSP-based):
 
-| **Method id** | **Description** | **Group** | **Reference** |
-|-------------|-----------------------|-------------|------------------------|
+| **Method id** | **Short description** | **Group** | **Reference** |
+|------------------|-------------------|------------------|------------------|
 | `parker.original` | Original PAM50 by Parker et al., 2009 | NC-based | [Parker et al., 2009](https://doi.org/10.1200/JCO.2008.18.1370) |
 | `genefu.scale` | PAM50 implementation as in the genefu R package (scaled version) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
 | `genefu.robust` | PAM50 implementation as in the genefu R package (robust version) | NC-based | [Gendoo et al., 2016](https://doi.org/10.1093/bioinformatics/btv693) |
 | `cIHC` | Conventional ER-balancing using immunohistochemistry (IHC) | NC-based | [Ciriello et al., 2015](https://doi.org/10.1016/j.cell.2015.09.033) |
 | `cIHC.itr` | Iterative version of cIHC | NC-based | [Curtis et al., 2012](https://doi.org/10.1038/nature10983) |
-| `PCAPAM50` | PCA-based iterative PAM50; ESR1 expression used for ER balancing | NC-based | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4) |
+| `PCAPAM50` | Selects IHC-defined ER subsets, then uses Principal Component Analysis (PCA) to create ESR1 expression-based ER-balancing | NC-based | [Raj-Kumar et al., 2019](https://doi.org/10.1038/s41598-019-44339-4) |
 | `ssBC` | Subgroup-specific gene-centering PAM50 | NC-based | [Zhao et al., 2015](https://doi.org/10.1186/s13058-015-0520-4) |
 | `ssBC.v2` | Updated subgroup-specific gene-centering PAM50 with refined quantiles | NC-based | [Fernandez-Martinez et al., 2020](https://doi.org/10.1200/JCO.20.01276) |
 | `AIMS` | Absolute Intrinsic Molecular Subtyping (AIMS) method | SSP-based | [Paquet & Hallett, 2015](https://doi.org/10.1093/jnci/dju357) |
 | `sspbc` | Single-Sample Predictors for Breast Cancer (AIMS adaptation) | SSP-based | [Staaf et al., 2022](https://doi.org/10.1038/s41523-022-00465-3) |
 
-## Installation
 
-Install the released version from Bioconductor:
+# Quick start
 
-```{r, eval = FALSE}
-if (!require("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-}
-BiocManager::install("BreastSubtypeR")
-```
-
-Or install the development version from GitHub:
-
-```{r, eval = FALSE}
-install.packages("devtools")
-devtools::install_github("yqkiuo/BreastSubtypeR")
-```
-
-## Quick start
-
-The examples below use small example datasets shipped with the package. Replace these objects with your own `SummarizedExperiment` object and clinical metadata.
-
-**1) Prepare data & map probes to Entrez IDs**
+The examples below use small example datasets shipped with the package. For your own data, provide a `SummarizedExperiment` **with clinical metadata in `colData`** (e.g., `PatientID`, ER/HER2; for ROR: `TSIZE`, `NODE`).
 
 ```{r, eval=FALSE}
 library(BreastSubtypeR)
 
-# Example data included in the package
+# Example data
 data("BreastSubtypeRobj")
 data("OSLO2EMIT0obj")
+```
 
-# Preprocessing: automatically apply tailored normalization, map probes/IDs to Entrez and (optionally) impute missing values
+**1) Map & prepare (method-specific pre-processing + mapping)**
+
+```{r, eval=FALSE}
+# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, and (optionally) impute missing values
 data_input <- Mapping(
   OSLO2EMIT0obj$se_obj,
   method = "max",     # mapping strategy (example)
@@ -113,22 +115,22 @@ data_input <- Mapping(
 ## Notes
 
 -   `Mapping()` prepares expression inputs for downstream subtyping functions by:
-    -   automatically applying tailored normalization workflows depending on input type
-        -   **Raw RNA-seq counts (+ gene lengths):** converted to log₂ CPM (upper-quartile normalized) for NC-based methods; converted to linear FPKM for SSP-based methods.\
-        -   **Precomputed RNA-seq FPKM (log₂-transformed):** used directly for NC-based methods; back-transformed to linear scale (2\^x) for SSP-based methods.\
-        -   **Microarray/nCounter (log₂-processed):** used directly for NC-based methods; back-transformed to linear scale (2\^x) for SSP-based methods.\
+    -   automatically applying tailored normalisation workflows depending on input type
+        -   **Raw RNA-seq counts (+ gene lengths):** converted to log2-CPM (upper-quartile normalised) for NC-based methods; converted to linear FPKM for SSP-based methods.\
+        -   **Precomputed RNA-seq FPKM (log₂-transformed):** used directly for NC-based methods; back-transformed to linear scale (`2^x`) for SSP-based methods.\
+        -   **Microarray/nCounter (log₂-processed):** used directly for NC-based methods; back-transformed to linear scale (`2^x`) for SSP-based methods.\
     -   resolving probe/ID → Entrez mappings,\
     -   selecting or collapsing multiple probes per gene (`method` argument),\
     -   optionally imputing missing marker values,\
     -   and returning a packaged object ready for `BS_Multi` or single-method callers.
--   See `?Mapping` for the full parameter list (e.g., `RawCounts`, `method`, `impute`, `verbose`) and the manuscript **Methods (Sections 2.3–2.4)** for a complete description of the input/normalization pipeline.
+-   See `?Mapping` for the full parameter list (e.g., `RawCounts`, `method`, `impute`, `verbose`) and [Methods (Sections 2.3–2.4) in the paper](https://doi.org/10.1093/nargab/lqaf131) for a complete description of the input/normalisation pipeline.
 
-**2) Multi-method subtyping (user-defined)**
+**2) Multi-method run (user-defined)**
 
 ```{r, eval=FALSE}
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 
-result <- BS_Multi(
+res <- BS_Multi(
   data_input = data_input,
   methods = methods,
   Subtype = FALSE,
@@ -136,15 +138,15 @@ result <- BS_Multi(
 )
 
 # Per-sample calls (methods × samples)
-head(result$res_subtypes[, 1:min(5, ncol(result$res_subtypes))], 5)
+head(res$res_subtypes, 5)
 ```
 
-**3) AUTO mode: cohort-aware selection**
+**3) AUTO mode (cohort-aware selection) + visualize**
 
-AUTO evaluates cohort diagnostics (for example, receptor-status distribution and subgroup sizes) and selects methods compatible with the cohort. It disables classifiers whose distributional assumptions would likely be violated.
+AUTO evaluates cohort diagnostics (for example, ER/HER2 distribution, subtype purity, and subgroup sizes) and selects methods compatible with the cohort. It disables classifiers whose distributional assumptions would likely be violated.
 
 ```{r, eval=FALSE}
-result_auto <- BS_Multi(
+res_auto <- BS_Multi(
   data_input = data_input,
   methods = "AUTO",
   Subtype = FALSE,
@@ -152,12 +154,12 @@ result_auto <- BS_Multi(
 )
 
 # Visualise multi-method output and concordance
-Vis_Multi(result$res_subtypes)
+Vis_Multi(res_auto$res_subtypes)
 ```
 
-**4) Single-method usage examples**
+**4) Single-method run**
 
-PAM50 (parker.original)
+PAM50 (NC-based)
 
 ```{r, eval=FALSE}
 res_pam <- BS_parker(
@@ -175,50 +177,35 @@ AIMS (SSP-based)
 res_aims <- BS_AIMS(data_input$se_SSP)
 ```
 
-### Guidance & best practices
+# Guidance & best practices
 
-### Input types
+## Input types
 
--   Provide **one** of the following as input:
-    -   raw counts **plus** gene lengths (for internal calculation of FPKM/CPM),
-    -   precomputed FPKM/TPM matrices,
-    -   log₂-transformed microarray / nCounter matrices (e.g., RMA).
--   `BreastSubtypeR` will route the supplied input to the appropriate, **method-specific** preprocessing pipeline automatically — see `?BS_Multi` and **Methods (Section 2.3)** of the manuscript for full details.
+- Provide **one** of the following as input:
+    - raw counts **plus** gene lengths (for internal calculation of CPM/FPKM),
+    - precomputed FPKM/TPM matrices,
+    - log2-processed microarray/nCounter matrices (e.g., RMA).
+- `BreastSubtypeR` routes the supplied input to the appropriate, **method-specific** pre-processing pipeline automatically — see `?BS_Multi` and [Methods (Section 2.3) in the paper](https://doi.org/10.1093/nargab/lqaf131) for details.
 
-### When to use `AUTO`
+## When to use `AUTO`
 
--   Use `methods = "AUTO"` (i.e. `BS_Multi(methods = "AUTO", ...)`) for exploratory datasets or cohorts of unknown / skewed composition.
--   Use `AUTO` when you want the package to **select only classifiers compatible with the cohort** (it disables methods whose assumptions appear violated).
--   For validation against a single published method or a clinical assay (e.g., Prosigna®), run the corresponding **single-method** implementation directly (e.g., `BS_parker()`).
+- Use `methods = "AUTO"` (i.e. `BS_Multi(methods = "AUTO", ...)`) for exploratory datasets or cohorts of unknown / skewed composition.
+- Use `AUTO` when you want the package to **select only classifiers compatible with the cohort** (it disables methods whose assumptions appear violated).
+- For validation against a single published method or a clinical assay (e.g., Prosigna®), run the corresponding **single-method** implementation directly (e.g., `BS_parker()`).
 
-### Interpretation
+## Interpretation
 
--   `AUTO` is designed to **avoid misapplication** of NC-based classifiers when cohort assumptions are violated; it **does not** produce a forced consensus label.
+- `AUTO` is designed to **avoid misapplication** of NC-based classifiers when cohort assumptions are violated; it **does not** produce a forced consensus label.
 
-## Vignette & Documentation
-
-A detailed usage guide is provided with the package and can be accessed through your R help system or found in the installed documentation files.
-
-To explore specific functionalities, refer to the help pages for functions like `BS_Multi`, `Mapping`, or `iBreastSubtypeR`. For a complete overview, including acceptable input formats and parameter descriptions, see the package manual.
-
-## Shiny app (iBreastSubtypeR)
+# Shiny app
 
 For users new to R, we offer an intuitive Shiny app for interactive molecular subtyping.
 
-### Launch the Shiny App:
-
-Launch the local Shiny GUI with:
+## Launch the local Shiny app
 
 ```{r, eval = FALSE}
 BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
-
-The app enables:\
-- Upload expression, clinical, and feature-annotation tables.
-- Run single methods or `AUTO` (assumption-aware selection).\
-- Choose 5-class (incl. Normal-like) or 4-class.\
-- View per-sample concordance (entropy), heatmap & pie summaries.\
-- Export Calls only or Full metrics (ROR available for NC methods when `TSIZE`/`NODE` are present and numeric).
 
 If needed, install UI dependencies and re-run:
 
@@ -226,46 +213,51 @@ If needed, install UI dependencies and re-run:
 install.packages(c("shiny","bslib"))
 ```
 
-## Limitations & future work
+The app runs locally; **no data leave your machine**.
+
+**What you can do**:\
+- Upload expression, clinical, and feature-annotation tables (clinical lives in `colData`). - Run single methods, or run multiple classifiers at once with `BS_Multi` and `AUTO` enabled for cohort-aware selection.\
+- Choose 5-class (incl. Normal-like) or 4-class (AIMS is 5-class only).\
+- Inspect per-sample concordance (entropy), heatmap and pie summaries.\
+- Export Calls-only or Full metrics. ROR is available for NC methods when `TSIZE`/`NODE` are present and numeric.
+
+
+# Limitations
 
 BreastSubtypeR harmonises many published, signature-based classifiers but has known limitations:\
 
--   It is not a clinical-grade replacement for assays like Prosigna®; clinical validation requires paired clinical assay data.\
+- It is not a clinical-grade replacement for assays like Prosigna; clinical validation requires paired clinical assay data.\
 
--   AUTO selects compatible methods; it does not perform consensus voting by default.
+- AUTO selects compatible methods; it does not perform consensus voting by default.
 
-## Acknowledgements & citation
 
-If you use **BreastSubtypeR**, please cite the paper:
+# Appendix
 
-Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. https://doi.org/10.1093/nargab/lqaf131
+## References
 
-Also cite the original method authors (see method-specific references in the package documentation).
+- Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. *NAR Genomics and Bioinformatics*. <https://doi.org/10.1093/nargab/lqaf131>
 
-## Session info
+-  Parker JS, Mullins M, Cheang MCU, Leung S, Voduc D, Vickery T, *et al.* (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *J Clin Oncol*, 27(8):1160–1167. <https://doi.org/10.1200/JCO.2008.18.1370>
+
+- Gendoo DMA, Ratanasirigulchai N, Schröder MS, Pare L, Parker JS, Prat A, Haibe-Kains B. (2016). Genefu: an R/Bioconductor package for computation of gene expression-based signatures in breast cancer. *Bioinformatics*, 32(7):1097–1099. <https://doi.org/10.1093/bioinformatics/btv693>
+
+- Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, *et al.* (2015). Comprehensive molecular portraits of invasive lobular breast cancer. *Cell*, 163(2):506–519. <https://doi.org/10.1016/j.cell.2015.09.033>
+
+-  Curtis C, Shah SP, Chin S-F, Turashvili G, Rueda OM, Dunning MJ, *et al.* (2012). The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups. *Nature*, 486:346–352. <https://doi.org/10.1038/nature10983>
+
+- Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, Hu H. (2019). PCA-PAM50 improves subtype assignment in ER-positive breast cancer. *Sci Rep*, 9:14386. <https://doi.org/10.1038/s41598-019-44339-4>
+
+- Zhao X, Rodland EA, Tibshirani R, Edvardsen H, Sauer T, Hovig E. (2015). Systematic evaluation of subtype prediction using gene expression profiles and intrinsic subtyping methods. *Breast Cancer Res*, 17:55. <https://doi.org/10.1186/s13058-015-0520-4>
+
+- Fernandez-Martinez A, Krop IE, Hillman DW, Polley M-YC, Parker JS, Huebner L, *et al.* (2020). Survival, pathologic response, and PAM50 subtype in stage II–III HER2-positive breast cancer treated with neoadjuvant chemotherapy and trastuzumab ± lapatinib. *J Clin Oncol*, 38(19):2140–2150. <https://doi.org/10.1200/JCO.20.01276>
+
+- Paquet ER, Hallett MT. (2015). Absolute assignment of breast cancer intrinsic molecular subtype. *J Natl Cancer Inst*, 107(1):357. <https://doi.org/10.1093/jnci/dju357>
+
+- Staaf J, Ringnér M, Vallon-Christersson J. (2022). Simple single-sample predictors for breast cancer subtype identification using gene expression data. *npj Breast Cancer*, 8:104. <https://doi.org/10.1038/s41523-022-00465-3>
+
+
+## Session information
 
 ```{r}
 sessionInfo()
 ```
-
-## References
-
--   Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. *NAR Genomics and Bioinformatics*. <https://doi.org/10.1093/nargab/lqaf131>
-
--   Parker JS, Mullins M, Cheang MCU, Leung S, Voduc D, Vickery T, *et al.* (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *J Clin Oncol*, 27(8):1160–1167. <https://doi.org/10.1200/JCO.2008.18.1370>
-
--   Gendoo DMA, Ratanasirigulchai N, Schröder MS, Pare L, Parker JS, Prat A, Haibe-Kains B. (2016). Genefu: an R/Bioconductor package for computation of gene expression-based signatures in breast cancer. *Bioinformatics*, 32(7):1097–1099. <https://doi.org/10.1093/bioinformatics/btv693>
-
--   Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, *et al.* (2015). Comprehensive molecular portraits of invasive lobular breast cancer. *Cell*, 163(2):506–519. <https://doi.org/10.1016/j.cell.2015.09.033>
-
--   Curtis C, Shah SP, Chin S-F, Turashvili G, Rueda OM, Dunning MJ, *et al.* (2012). The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups. *Nature*, 486:346–352. <https://doi.org/10.1038/nature10983>
-
--   Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, Hu H. (2019). PCA-PAM50 improves subtype assignment in ER-positive breast cancer. *Sci Rep*, 9:14386. <https://doi.org/10.1038/s41598-019-44339-4>
-
--   Zhao X, Rodland EA, Tibshirani R, Edvardsen H, Sauer T, Hovig E. (2015). Systematic evaluation of subtype prediction using gene expression profiles and intrinsic subtyping methods. *Breast Cancer Res*, 17:55. <https://doi.org/10.1186/s13058-015-0520-4>
-
--   Fernandez-Martinez A, Krop IE, Hillman DW, Polley M-YC, Parker JS, Huebner L, *et al.* (2020). Survival, pathologic response, and PAM50 subtype in stage II–III HER2-positive breast cancer treated with neoadjuvant chemotherapy and trastuzumab ± lapatinib. *J Clin Oncol*, 38(19):2140–2150. <https://doi.org/10.1200/JCO.20.01276>
-
--   Paquet ER, Hallett MT. (2015). Absolute assignment of breast cancer intrinsic molecular subtype. *J Natl Cancer Inst*, 107(1):357. <https://doi.org/10.1093/jnci/dju357>
-
--   Staaf J, Ringnér M, Vallon-Christersson J. (2022). Simple single-sample predictors for breast cancer subtype identification using gene expression data. *npj Breast Cancer*, 8:104. <https://doi.org/10.1038/s41523-022-00465-3>
