@@ -1,20 +1,39 @@
-# BreastSubtypeR <a href='https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" align="right" height="110"/></a>
+# BreastSubtypeR <a href='https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" alt="BreastSubtypeR logo" align="right" height="110"/></a>
 
 <!-- badges: start -->
 [![Bioconductor Release](https://bioconductor.org/shields/years-in-bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/BreastSubtypeR)
 [![Bioconductor Devel](https://bioconductor.org/shields/build/devel/bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/devel/bioc/html/BreastSubtypeR.html)
 [![License: GPL-3](https://img.shields.io/badge/license-GPL--3-blue.svg)](https://opensource.org/licenses/GPL-3.0)
-[![DOI](https://img.shields.io/badge/DOI-10.1093%2Fnargab%2Flqaf131-blue.svg)](https://doi.org/10.1093/nargab/lqaf131)
+[![Paper: NAR Genomics & Bioinformatics](https://img.shields.io/badge/Paper-NAR%20Genomics%20%26%20Bioinformatics-0a7)](https://doi.org/10.1093/nargab/lqaf131)
 <!-- badges: end -->
 
-**BreastSubtypeR** is an assumption-aware, multi-method R/Bioconductor package with a local Shiny app. 
-It consolidates published intrinsic subtyping methods under one API and lets you run multiple classifiers at once.  
-(**AUTO**) inspects cohort diagnostics to select compatible methods and reduce misclassification.
+**BreastSubtypeR** is an assumption-aware, multi-method R/Bioconductor package with a local Shiny app.
+It consolidates published intrinsic subtyping methods under one API and lets you run multiple classifiers at once.
+**AUTO** inspects cohort diagnostics to select compatible methods and reduce misclassification.
 
 > *Research use only; in clinical practice, intrinsic molecular subtyping is standardised via approved diagnostics (e.g., Prosigna®).*
 
+📄 **Publication:** *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** → [doi:10.1093/nargab/lqaf131](https://doi.org/10.1093/nargab/lqaf131)
 
-**Paper:** [Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**.](https://doi.org/10.1093/nargab/lqaf131)
+<details>
+<summary><strong>How to cite</strong> (plain text &amp; BibTeX)</summary>
+
+**Plain text**
+
+Yang Q, Hartman J, Sifakis EG. BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*. 2025. https://doi.org/10.1093/nargab/lqaf131
+
+**BibTeX**
+```bibtex
+@article{Yang2025BreastSubtypeR,
+  author  = {Yang, Qiao and Hartman, Johan and Sifakis, Emmanouil G.},
+  title   = {BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research},
+  journal = {NAR Genomics and Bioinformatics},
+  year    = {2025},
+  doi     = {10.1093/nargab/lqaf131},
+  url     = {https://doi.org/10.1093/nargab/lqaf131}
+}
+```
+</details>
 
 ------------------------------------------------------------------------
 
@@ -23,7 +42,7 @@ It consolidates published intrinsic subtyping methods under one API and lets you
 - **Unified interface for published methods:** consolidates PAM50 variants, AIMS, ssBC/sspbc, and others under one consistent API.
 - **Run multiple methods at once (`BS_Multi`):** execute several classifiers in a single call and compare results side by side.
 - **AUTO (cohort-aware selection):** checks ER/HER2 distribution, subtype purity, and subgroup sizes; disables incompatible classifiers.
-- **Method-specific preprocessing:** automatically routes raw RNA-seq counts, precomputed FPKM, or log2-processed microarray/nCounter matrices.
+- **Method-specific pre-processing:** automatically routes raw RNA-seq counts, precomputed FPKM, or log2-processed microarray/nCounter matrices.
 - **Robust mapping:** Entrez ID–based gene mapping with conflict resolution.
 - **Local Shiny app (`iBreastSubtypeR`):** point-and-click analysis; data stay on your machine.
 - **Reproducibility:** Bioconductor distribution, unit tests, vignettes, and `SummarizedExperiment` compatibility.
@@ -125,14 +144,6 @@ See function help pages for specifics (e.g., `?BS_Multi`, `?Mapping`, `?iBreastS
 ## Contributing & issues
 
 Contributions and issue reports are welcome: <https://github.com/yqkiuo/BreastSubtypeR/issues>.
-
-## Citation
-
-If you use **BreastSubtypeR**, please cite:
-
-- Yang Q., Hartman J., Sifakis E.G. *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics** (2025). **Editor’s Choice**. [DOI](https://doi.org/10.1093/nargab/lqaf131)
-
-Use `citation("BreastSubtypeR")` for BibTeX/LaTeX.
 
 ## License
 
