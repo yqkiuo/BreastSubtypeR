@@ -1337,7 +1337,7 @@ BS_Multi <- function(
       if (Subtype) data.table::set(res_subtypes.Subtype, j = method, value = vec4)
     }
     
-    # Convert to data.frame with rownames = sample IDs, drop the id column
+    # Convert to data.frame and drop ONLY row_id once
     res_subtypes <- as.data.frame(res_subtypes, stringsAsFactors = FALSE, check.names = FALSE)
     rownames(res_subtypes) <- res_subtypes$row_id
     res_subtypes$row_id <- NULL
@@ -1348,27 +1348,26 @@ BS_Multi <- function(
       res_subtypes.Subtype$row_id <- NULL
     }
     
-    ## entropy index
-    res_subtypes <- as.data.frame(res_subtypes)
-    rownames(res_subtypes) <- samples
-    res_subtypes[, 1] <- NULL
-
-    entropy <- apply(res_subtypes, 1, get_entropy)
-    res_subtypes$entropy <- entropy
-
-    if (Subtype) {
-        res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype)
-        rownames(res_subtypes.Subtype) <- samples
-        res_subtypes.Subtype[, 1] <- NULL
-
-        ## removing Normal-like in AIMS (to be comparable with other methods)
-        if ("AIMS" %in% methods) {
-            res_subtypes.Subtype$AIMS[which(res_subtypes.Subtype$AIMS == "Normal")] <- NA
-        }
-        entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
-        res_subtypes.Subtype$entropy <- entropy
+    ## entropy index (compute on method columns; don't drop any)
+    if (ncol(res_subtypes) > 0) {
+      res_subtypes$entropy <- apply(res_subtypes, 1, get_entropy)
+    } else {
+      res_subtypes$entropy <- NA_real_
     }
-
+    
+    if (Subtype) {
+      # AIMS is 5-class; for 4-class summary set Normal to NA only if the column exists
+      if ("AIMS" %in% colnames(res_subtypes.Subtype)) {
+        ix <- which(res_subtypes.Subtype$AIMS == "Normal")
+        if (length(ix)) res_subtypes.Subtype$AIMS[ix] <- NA
+      }
+      if (ncol(res_subtypes.Subtype) > 0) {
+        res_subtypes.Subtype$entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
+      } else {
+        res_subtypes.Subtype$entropy <- NA_real_
+      }
+    }
+    
     if (Subtype) {
         res <- list(
             res_subtypes = res_subtypes,
