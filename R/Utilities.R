@@ -311,15 +311,15 @@ get_methods <- function(pheno) {
             message("A HER2+ cohort has been detected.")
             cohort.select <- "HER2pos"
 
-            if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
+            if (n_ERposHER2pos < n_ERposHER2pos_threshold && n_ERnegHER2pos < n_ERnegHER2pos_threshold) {
                 message("A small HER2+ cohort has been detected.")
                 message("Running methods: AIMS, & sspbc")
                 methods <- c("AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERnegHER2pos < n_ERHER2_threshold) {
+            } else if (n_ERposHER2pos >= n_ERposHER2pos_threshold && n_ERnegHER2pos < n_ERnegHER2pos_threshold) {
                 message("A ER+/HER2+ cohort has been detected.")
                 message("Running methods: ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERnegHER2pos >= n_ERHER2_threshold) {
+            } else if (n_ERposHER2pos < n_ERposHER2pos_threshold && n_ERnegHER2pos >= n_ERnegHER2pos_threshold) {
                 message("A ER-/HER2+ cohort has been detected.")
                 message("Running methods: ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC.v2", "AIMS", "sspbc")
@@ -332,29 +332,29 @@ get_methods <- function(pheno) {
             message("Running methods: AIMS & sspbc")
             methods <- c("AIMS", "sspbc")
         } else if (n_ERpos >= n_ERpos_threshold && n_ERneg < n_ERneg_threshold) {
-            if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
+            if (n_ERposHER2pos >= n_ERposHER2pos_threshold && n_ERposHER2neg >= n_ERposHER2neg_threshold) {
                 message("Running methods for ER+ samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos >= n_ERHER2_threshold && n_ERposHER2neg < n_ERHER2_threshold) {
+            } else if (n_ERposHER2pos >= n_ERposHER2pos_threshold && n_ERposHER2neg < n_ERposHER2neg_threshold) {
                 message("Running methods for ER+/HER2+ samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERposHER2pos < n_ERHER2_threshold && n_ERposHER2neg >= n_ERHER2_threshold) {
+            } else if (n_ERposHER2pos < n_ERposHER2pos_threshold && n_ERposHER2neg >= n_ERposHER2neg_threshold) {
                 message("Running methods for ER+/HER2- samples:
                         ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
             }
         } else if (n_ERpos < n_ERpos_threshold && n_ERneg >= n_ERneg_threshold) {
-            if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
+            if (n_ERnegHER2pos >= n_ERnegHER2pos_threshold && n_ERnegHER2neg >= n_ERnegHER2neg_threshold) {
                 message("Running methods for ER- samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos >= n_ERHER2_threshold && n_ERnegHER2neg < n_ERHER2_threshold) {
+            } else if (n_ERnegHER2pos >= n_ERnegHER2pos_threshold && n_ERnegHER2neg < n_ERnegHER2neg_threshold) {
                 message("Running methods for ER-/HER2+ samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
-            } else if (n_ERnegHER2pos < n_ERHER2_threshold && n_ERnegHER2neg >= n_ERHER2_threshold) {
+            } else if (n_ERnegHER2pos < n_ERnegHER2pos_threshold && n_ERnegHER2neg >= n_ERnegHER2neg_threshold) {
                 message("Running methods for ER-/HER2- samples:
                 ssBC, ssBC.v2, AIMS, & sspbc")
                 methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")

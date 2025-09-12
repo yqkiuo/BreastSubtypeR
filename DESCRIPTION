@@ -46,6 +46,7 @@ Imports:
     SummarizedExperiment,
     utils
 Suggests:
+    tidyverse,
     shiny (>= 1.9.1),
     bslib (>= 0.8.0),
     BiocStyle,

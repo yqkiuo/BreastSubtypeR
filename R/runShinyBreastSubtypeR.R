@@ -70,7 +70,6 @@ iBreastSubtypeR <- function(
 
 #' @title (Deprecated) Run iBreastSubtypeR
 #' @description Back-compat wrapper; use [iBreastSubtypeR()] instead.
-#' @inheritParams iBreastSubtypeR
 #' @param ... Arguments passed on to [iBreastSubtypeR()].
 #' @export
 runShinyBreastSubtypeR <- function(...) {
