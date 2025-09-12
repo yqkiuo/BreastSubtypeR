@@ -90,9 +90,7 @@ remotes::install_github("yqkiuo/BreastSubtypeR")
 
 ## Quick start
 
-Note: *Here’s a clean, ready-to-paste replacement:
-
-> *These examples use datasets shipped with the package. For your own data, provide a `SummarizedExperiment` **with clinical metadata in `colData`** (e.g., `PatientID`, ER/HER2; for ROR: `TSIZE`, `NODE`).*
+> *These examples use datasets shipped with the package. For your own data, provide a `SummarizedExperiment` **with clinical metadata in `colData`** (e.g., `PatientID`, `ER`, `HER2`; for ROR: `TSIZE`, `NODE`).*
 
 ``` r
 library(BreastSubtypeR)
