@@ -7,104 +7,99 @@
 BS_Multi(data_input, methods = "AUTO", Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
-\item{data_input}{The output from the \code{Mapping()} function, containing
-processed gene expression data prepared for subtyping analysis.}
+\item{data_input}{The output from the \code{\link[=Mapping]{Mapping()}} function, containing
+processed gene expression data prepared for subtyping.}
 
-\item{methods}{A character vector specifying the subtyping methods to be
-used. Available options:
+\item{methods}{Character vector specifying the subtyping methods to run.
+Available options include:
 \itemize{
-\item "parker.original": Original PAM50 by Parker et al., 2009 (Parker et al., 2009)
-\item "genefu.scale": PAM50 implementation as in the genefu R package (scaled version) (Gendoo et al., 2016)
-\item "genefu.robust": PAM50 implementation as in the genefu R package (robust version) (Gendoo et al., 2016)
-\item "cIHC": Conventional estrogen receptor (ER)-balancing using immunohistochemistry (cIHC) (Ciriello et al., 2015)
-\item "cIHC.itr": Iterative version of cIHC (Curtis et al., 2012)
-\item "PCAPAM50": PCA-based iterative PAM50 (ER-balancing using ESR1 gene expression) (Raj-Kumar et al., 2019)
-\item "ssBC": Subgroup-specific gene-centering PAM50 (Zhao et al., 2015)
-\item "ssBC.v2": Updated subgroup-specific gene-centering PAM50 with refined quantiles (Fernandez-Martinez et al., 2020)
-\item "AIMS": Absolute Intrinsic Molecular Subtyping (AIMS) method (Paquet & Hallett, 2015)
-\item "sspbc": Single-Sample Predictors for Breast Cancer (AIMS adaptation) (Staaf et al., 2022)
-\item "AUTO": Automatically selects subtyping methods based on the ER/HER2 distribution of the test cohort.
+\item \code{"parker.original"}: Original PAM50 (Parker et al., 2009).
+\item \code{"genefu.scale"}: PAM50 (scaled version; Gendoo et al., 2016).
+\item \code{"genefu.robust"}: PAM50 (robust version; Gendoo et al., 2016).
+\item \code{"cIHC"}: Conventional ER-balancing with immunohistochemistry (Ciriello et al., 2015).
+\item \code{"cIHC.itr"}: Iterative ER-balancing (Curtis et al., 2012).
+\item \code{"PCAPAM50"}: PCA-based PAM50 using ESR1 balancing (Raj-Kumar et al., 2019).
+\item \code{"ssBC"}: Subgroup-specific gene-centering (Zhao et al., 2015).
+\item \code{"ssBC.v2"}: Updated subgroup-specific centering (Fernandez-Martinez et al., 2020).
+\item \code{"AIMS"}: Absolute Intrinsic Molecular Subtyping (Paquet & Hallett, 2015).
+\item \code{"sspbc"}: SSPBC, a large-cohort SSP trained on SCAN-B (Staaf et al., 2022).
+\item \code{"AUTO"}: Cohort-aware selection of compatible methods (must be the only entry).
 }
 
-Notes:
+\strong{Notes:}
 \itemize{
-\item If "AUTO" is selected, it must be the sole value in the vector.
-\item If "AUTO" is not selected, at least \strong{two} methods must be specified; otherwise, an error will occur.
+\item If \code{"AUTO"} is selected, it must be the sole value in \code{methods}.
+\item Otherwise, at least \strong{two} methods must be specified.
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, returns four subtypes (Luminal A, Luminal B,
+HER2-enriched, Basal-like), excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates clinical data from
+\code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive; must be numeric).
 }}
 }
 \value{
-Returns a list of intrinsic subtypes estimated by the selected methods.
+A list containing per-method subtype assignments for each sample.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using multiple methods.
-Users can either specify the subtyping approaches directly or enable automatic selection ("AUTO")
-based on the ER/HER2 distribution of the test cohort.
+Executes multiple intrinsic molecular subtyping methods in parallel.
+Users can either specify a set of classifiers directly, or enable the
+\strong{AUTO mode}, which dynamically selects methods based on cohort composition
+(e.g., ER/HER2 distribution, subtype purity, subgroup size).
+AUTO reduces misclassification in skewed or subtype-specific cohorts by
+disabling methods whose assumptions are violated, but does not perform
+consensus voting—subtypes are still returned per method.
 }
 \examples{
-# Load required dataset
+## Example: run multiple methods
 data("OSLO2EMIT0obj")
-
-# Define methods to use for consensus subtyping
 methods <- c("parker.original", "genefu.scale", "genefu.robust")
-
-# Perform subtyping
 res.test <- BS_Multi(
-    data_input = OSLO2EMIT0obj$data_input,
-    methods = methods,
-    Subtype = FALSE,
-    hasClinical = FALSE
+  data_input = OSLO2EMIT0obj$data_input,
+  methods = methods,
+  Subtype = FALSE,
+  hasClinical = FALSE
 )
 
 }
 \references{
-\itemize{
-\item Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
-\emph{Supervised risk predictor of breast cancer based on intrinsic subtypes}.
-Journal of Clinical Oncology. 2009;27(8).
-https://doi.org/10.1200/JCO.2008.18.1370
-\item Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et
-al. \emph{Genefu: An R/Bioconductor package for computation of gene
-expression-based signatures in breast cancer}. Bioinformatics. 2016;32(7).
-https://doi.org/10.1093/bioinformatics/btv693
-\item Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A,
-et al. \emph{Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer}.
-Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
-\item Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ,
-et al. \emph{The genomic and transcriptomic architecture of 2,000 breast tumours
-reveals novel subgroups}. Nature. 2012;486(7403).
-https://doi.org/10.1038/nature10983
-\item Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular
-subtyping for clinically defined breast cancer subgroups.} Breast Cancer
-Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-\item Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-et al. \emph{Survival, pathologic response, and genomics in CALGB 40601
-(Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-without lapatinib in HER2-positive breast cancer.} Journal of Clinical
-Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
-\item Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular
-subtyping for clinically defined breast cancer subgroups.} Breast Cancer
-Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-\item Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-et al. \emph{Survival, pathologic response, and genomics in CALGB 40601
-(Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-without lapatinib in HER2-positive breast cancer.} Journal of Clinical
-Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
-\item Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer
-intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1).
-https://doi.org/10.1093/jnci/dju357
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype
-and risk of recurrence for clinical assessment of early-stage breast cancer}.
-NPJ Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+Yang Q, Hartman J, Sifakis EG.
+\emph{BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.}
+NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
+
+Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
+\emph{Supervised risk predictor of breast cancer based on intrinsic subtypes.}
+J Clin Oncol. 2009;27(8):1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
+
+Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.
+\emph{Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer.}
+Bioinformatics. 2016;32(7):1097-1099. https://doi.org/10.1093/bioinformatics/btv693
+
+Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
+\emph{Comprehensive molecular portraits of invasive lobular breast cancer.}
+Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
+
+Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
+\emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.}
+Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
+
+Zhao X, Rodland EA, Tibshirani R, Plevritis S.
+\emph{Molecular subtyping for clinically defined breast cancer subgroups.}
+Breast Cancer Res. 2015;17(1):29. https://doi.org/10.1186/s13058-015-0520-4
+
+Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.
+\emph{Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.}
+J Clin Oncol. 2020;38(36):4184-4197. https://doi.org/10.1200/JCO.20.01276
+
+Paquet ER, Hallett MT.
+\emph{Absolute assignment of breast cancer intrinsic molecular subtype.}
+J Natl Cancer Inst. 2015;107(1):dju357. https://doi.org/10.1093/jnci/dju357
+
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+\emph{RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.}
+NPJ Breast Cancer. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 }

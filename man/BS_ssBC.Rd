@@ -2,75 +2,73 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_ssBC}
 \alias{BS_ssBC}
-\title{Subgroup-specific gene-centering Intrinsic Subtyping (BS_ssBC)}
+\title{Subgroup-Specific Gene-Centering Intrinsic Subtyping (BS_ssBC)}
 \usage{
 BS_ssBC(se_obj, s, Subtype = FALSE, hasClinical = FALSE)
 }
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-as rows and samples as columns.
-\item \strong{Column metadata} (\code{colData}): A clinical information table. If \code{hasClinical = TRUE},
-this table must include:
+\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+genes (Gene Symbols) as rows and samples as columns.
+\item \strong{Column metadata} (\code{colData}): If \code{hasClinical = TRUE}, must include:
 \itemize{
-\item \code{"PatientID"}: Unique identifiers for patients or samples.
-\item Additional columns depending on the \code{s} parameter:
+\item \code{"PatientID"}: Unique patient/sample identifier.
+\item Depending on the chosen \code{s} parameter:
 \itemize{
 \item \code{"ER"}: Estrogen receptor status (\code{"ER+"} or \code{"ER-"}) if \code{s = "ER"}.
 \item \code{"HER2"}: HER2 status (\code{"HER2+"} or \code{"HER2-"}) if \code{s = "ER.v2"}.
-\item \code{"TN"}: Triple-negative status (\code{"TN"} or \code{"nonTN"}) if \code{s = "TN"} or \code{s = "TN.v2"}, indicating a triple-negative cohort.
+\item \code{"TN"}: Triple-negative status (\code{"TN"} or \code{"nonTN"}) if \code{s = "TN"} or \code{"TN.v2"}.
 }
 }
 }}
 
-\item{s}{Character.  Specifies which subgroup-specific quantiles to use:
+\item{s}{Character. Specifies which subgroup-specific quantiles to use:
 \itemize{
-\item \code{"ER"} and \code{"TN"}: Original subgroup-specific quantiles published in \emph{Breast Cancer Research} (2015).
-\item \code{"ER.v2"} and \code{"TN.v2"}: Updated subgroup-specific quantiles published in \emph{Journal of Clinical Oncology} (2020).
+\item \code{"ER"}, \code{"TN"}: Original subgroup-specific quantiles (\emph{Breast Cancer Research}, 2015).
+\item \code{"ER.v2"}, \code{"TN.v2"}: Updated subgroup-specific quantiles (\emph{Journal of Clinical Oncology}, 2020).
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, returns only the four main subtypes
+(Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates additional clinical
+variables from \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
 }}
 }
 \value{
-Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-by the ssBC method.
+A character vector of intrinsic subtype predictions assigned to each
+sample using the ssBC method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-the \strong{subgroup-specific (ssBC)} method. The ssBC method applies a
-subgroup-specific gene-centering approach to cohorts with a skewed
-distribution of clinicopathological characteristics compared to the
-original training cohort (e.g., an ER+ selected cohort).
+Implements the \strong{subgroup-specific gene-centering (ssBC)} method for breast
+cancer intrinsic subtyping. The ssBC approach applies precomputed,
+subgroup-specific centering values to adjust PAM50 nearest-centroid
+classification when the study cohort is skewed relative to the original
+training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 }
 \examples{
-## ssBC.v2
+## Example: Updated subgroup-specific quantiles (ER.v2)
 data("OSLO2EMIT0obj")
 res <- BS_ssBC(
-    se_obj = OSLO2EMIT0obj$data_input$se_NC,
-    s = "ER.v2",
-    Subtype = FALSE,
-    hasClinical = FALSE
+  se_obj = OSLO2EMIT0obj$data_input$se_NC,
+  s = "ER.v2",
+  Subtype = FALSE,
+  hasClinical = FALSE
 )
 
 }
 \references{
-\itemize{
-\item Zhao X, Rodland EA, Tibshirani R, Plevritis S. \emph{Molecular
-subtyping for clinically defined breast cancer subgroups.} Breast Cancer
-Research. 2015;17(1). https://doi.org/10.1186/s13058-015-0520-4
-\item Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L,
-et al. \emph{Survival, pathologic response, and genomics in CALGB 40601
-(Alliance), a neoadjuvant Phase III trial of paclitaxel-trastuzumab with or
-without lapatinib in HER2-positive breast cancer.} Journal of Clinical
-Oncology. 2020. https://doi.org/10.1200/JCO.20.01276
-}
+Zhao X, Rodland EA, Tibshirani R, Plevritis S.
+\emph{Molecular subtyping for clinically defined breast cancer subgroups.}
+Breast Cancer Research. 2015;17(1):29.
+https://doi.org/10.1186/s13058-015-0520-4
+
+Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.
+\emph{Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.}
+Journal of Clinical Oncology. 2020;38(36):4184–4197.
+https://doi.org/10.1200/JCO.20.01276
 }

@@ -3,37 +3,33 @@
 \docType{data}
 \name{OSLO2EMIT0obj}
 \alias{OSLO2EMIT0obj}
-\title{OSLO2EMIT0obj: Example Dataset for the OSLO2EMIT0 Cohort}
+\title{OSLO2EMIT0obj: Example dataset (OSLO2-EMIT0 cohort subset)}
 \format{
-A list containing the following elements:
+A list with:
 \describe{
-\item{\code{se_obj}}{A SummarizedExperiment object containing a subset of
-the log2-transformed, normalized gene expression matrix, clinical information, and gene feature
-annotations for the OSLO2EMIT0 cohort.}
-\item{\code{data_input}}{Example output from the \code{Mapping} function.}
-\item{\code{res}}{Example output from the \code{BS_Multi} function with \emph{AUTO} mode.}
+\item{\code{se_obj}}{A \code{SummarizedExperiment} containing a subset of the
+log2-transformed, normalised expression matrix (log2(FPKM+0.1)) with \code{colData} clinical
+metadata and row-level feature annotations.}
+\item{\code{data_input}}{Example output structure produced by \code{Mapping()}.}
+\item{\code{res}}{Example results from \code{BS_Multi()} run in \emph{AUTO} mode.}
 }
 }
 \usage{
 data("OSLO2EMIT0obj")
 }
 \description{
-This example dataset is based on the OSLO2EMIT0 cohort
-described in Staaf et al., 2022. It contains subsetted data for gene
-expression, clinical information, feature annotations, and example outputs
-from the \code{Mapping} and \code{BS_Multi} functions.
+Example object derived from the OSLO2-EMIT0 cohort (Staaf et al., 2022).
+Includes a subset of normalized expression data, clinical metadata, feature
+annotations, and example outputs from \code{Mapping()} and \code{BS_Multi()}.
 }
 \examples{
 library(BreastSubtypeR)
 data("OSLO2EMIT0obj")
-
 }
 \references{
-\itemize{
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
-risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
-Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+RNA sequencing-based single sample predictors of molecular subtype and risk of
+recurrence for clinical assessment of early-stage breast cancer.
+\emph{NPJ Breast Cancer}. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 }
 \keyword{datasets}

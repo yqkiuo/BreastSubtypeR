@@ -2,7 +2,7 @@
 % Please edit documentation in R/BreastSubtypeR_methods.R
 \name{BS_cIHC.itr}
 \alias{BS_cIHC.itr}
-\title{Iterative conventional IHC Intrinsic Subtyping (BS_cIHC.itr)}
+\title{Iterative Conventional IHC Intrinsic Subtyping (BS_cIHC.itr)}
 \usage{
 BS_cIHC.itr(
   se_obj,
@@ -16,64 +16,64 @@ BS_cIHC.itr(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbol)
-in rows and samples in columns.
-\item \strong{Column metadata} (\code{colData}): Clinical information table.
+\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+genes (Gene Symbols) as rows and samples as columns.
+\item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{
-\item \code{"PatientID"}: Unique sample or patient identifiers.
-\item \code{"ER"}: Estrogen receptor (ER) status recorded as \code{"ER+"} or \code{"ER-"}.
+\item \code{"PatientID"}: Unique sample or patient identifier.
+\item \code{"ER"}: Estrogen receptor status, coded as \code{"ER+"} or \code{"ER-"}.
 }
 }}
 
-\item{iteration}{Integer. The number of iterations for the ER-balanced procedure
-with the specified ratio. Default: 100.}
+\item{iteration}{Integer. Number of iterations for the ER-balancing procedure.
+Default: \code{100}.}
 
-\item{ratio}{Numeric. Specifies the ER+/ER- ratio for balancing. Options:
+\item{ratio}{Numeric. Target ER+/ER– ratio for balancing. Options:
 \itemize{
 \item \code{1:1}: Equal balancing.
-\item \code{54:64}: Default, based on the ER+/ER- ratio in the UNC232 training cohort.
+\item \code{54:64}: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, returns only the four main subtypes
+(Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates additional clinical
+variables from \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
 }}
 
-\item{seed}{An integer used to set the random seed for reproducibility.}
+\item{seed}{Integer. Random seed for reproducibility.}
 }
 \value{
 A list containing:
 \itemize{
-\item Intrinsic subtype predictions.
-\item Confidence levels for each subtype.
-\item Percentages of ER+ and ER??? subsets across iterations.
+\item \code{subtypes}: Intrinsic subtype predictions across iterations.
+\item \code{confidence}: Confidence estimates for each assigned subtype.
+\item \code{ER_balance}: Proportions of ER+ and ER– subsets observed across iterations.
 }
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using an
-\strong{iterative} version of conventional estrogen receptor (ER)-balancing via immunohistochemistry (cIHC).
-It allows customization of the ER+/ER- ratio to refine subtype classification..
+Implements an \strong{iterative} version of the conventional IHC-based intrinsic
+subtyping approach. This method repeatedly balances samples by estrogen
+receptor (ER) status across multiple iterations, allowing refinement of
+subtype calls in ER-skewed cohorts. Users can customise the ER+/ER– ratio to
+match specific cohort assumptions (e.g., training distribution).
 }
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC.itr(
-    se_obj = OSLO2EMIT0obj$data_input$se_NC,
-    iteration = 10, ## For final analysis, set iteration = 100
-    Subtype = FALSE,
-    hasClinical = FALSE
+  se_obj = OSLO2EMIT0obj$data_input$se_NC,
+  iteration = 10,   ## for final analysis, use iteration = 100
+  Subtype = FALSE,
+  hasClinical = FALSE
 )
 
 }
 \references{
-\itemize{
-\item Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ,
-et al. \emph{The genomic and transcriptomic architecture of 2,000 breast tumours
-reveals novel subgroups}. Nature. 2012;486(7403).
+Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
+\emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.}
+Nature. 2012;486(7403):346–352.
 https://doi.org/10.1038/nature10983
-}
 }

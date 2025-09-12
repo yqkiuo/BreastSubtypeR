@@ -9,34 +9,36 @@ BS_AIMS(se_obj)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) as rows and samples as columns.
-Important: The gene expression values should not be gene-centered.
-All expression values must be \strong{positive}.
+\item \strong{Assay data}: A gene expression matrix with genes (Entrez IDs) as rows
+and samples as columns.
+\itemize{
+\item Expression values must be \strong{positive} (e.g., FPKM or log₂(FPKM+1)).
+\item Values should not be gene-centered or globally scaled.
+}
 }}
 }
 \value{
-Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-by the AIMS method.
+A character vector of intrinsic subtype predictions assigned to each
+sample using the AIMS method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-the \strong{AIMS (Absolute assignment of Intrinsic Molecular Subtype)} method.
+Implements the \strong{AIMS (Absolute Assignment of Intrinsic Molecular Subtype)}
+method for breast cancer intrinsic subtyping. Unlike nearest-centroid (NC)
+approaches, AIMS is a single-sample predictor (SSP): it assigns subtypes
+independently for each sample using within-sample, pairwise gene expression
+rules. This makes it robust to cohort composition and scaling.
 }
 \examples{
-# Load required datasets
+## Example using SummarizedExperiment input
 data("OSLO2EMIT0obj")
-
-
-# Perform subtyping
 res <- BS_AIMS(
-    se_obj = OSLO2EMIT0obj$data_input$se_SSP
+  se_obj = OSLO2EMIT0obj$data_input$se_SSP
 )
 
 }
 \references{
-\itemize{
-\item Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer
-intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1).
+Paquet ER, Hallett MT.
+\emph{Absolute assignment of breast cancer intrinsic molecular subtype.}
+Journal of the National Cancer Institute. 2015;107(1):dju357.
 https://doi.org/10.1093/jnci/dju357
-}
 }

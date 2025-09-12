@@ -42,7 +42,7 @@ iBreastSubtypeR <- function(
     # Attach to search path so ui.R/server.R can use unqualified calls
     for (p in pkgs) {
       suppressPackageStartupMessages(
-        library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
+          requireNamespace(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
       )
     }
     invisible(NULL)
@@ -52,7 +52,7 @@ iBreastSubtypeR <- function(
   .attach_if(attach)
   if (isTRUE(attach_tidyverse) && "tidyverse" %in% rownames(utils::installed.packages())) {
     suppressPackageStartupMessages(
-      library("tidyverse", quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
+        requireNamespace("tidyverse", quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
     )
   }
   
@@ -71,6 +71,7 @@ iBreastSubtypeR <- function(
 #' @title (Deprecated) Run iBreastSubtypeR
 #' @description Back-compat wrapper; use [iBreastSubtypeR()] instead.
 #' @inheritParams iBreastSubtypeR
+#' @param ... Arguments passed on to [iBreastSubtypeR()].
 #' @export
 runShinyBreastSubtypeR <- function(...) {
   .Deprecated("iBreastSubtypeR", package = "BreastSubtypeR",
