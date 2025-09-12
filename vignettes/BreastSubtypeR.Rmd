@@ -19,11 +19,11 @@ vignette: >
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment  = "#>",
-  fig.path = "figures/",
-  warning  = FALSE,
-  message  = FALSE
+    collapse = TRUE,
+    comment  = "#>",
+    fig.path = "figures/",
+    warning  = FALSE,
+    message  = FALSE
 )
 ```
 
@@ -104,11 +104,11 @@ data("OSLO2EMIT0obj")
 ```{r, eval=FALSE}
 # Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, and (optionally) impute missing values
 data_input <- Mapping(
-  OSLO2EMIT0obj$se_obj,
-  method = "max",     # mapping strategy (example)
-  RawCounts = FALSE,
-  impute = TRUE,
-  verbose = FALSE
+    OSLO2EMIT0obj$se_obj,
+    method = "max", # mapping strategy (example)
+    RawCounts = FALSE,
+    impute = TRUE,
+    verbose = FALSE
 )
 ```
 
@@ -131,10 +131,10 @@ data_input <- Mapping(
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 
 res <- BS_Multi(
-  data_input = data_input,
-  methods = methods,
-  Subtype = FALSE,
-  hasClinical = FALSE
+    data_input = data_input,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 # Per-sample calls (methods × samples)
@@ -147,10 +147,10 @@ AUTO evaluates cohort diagnostics (for example, ER/HER2 distribution, subtype pu
 
 ```{r, eval=FALSE}
 res_auto <- BS_Multi(
-  data_input = data_input,
-  methods = "AUTO",
-  Subtype = FALSE,
-  hasClinical = FALSE
+    data_input = data_input,
+    methods = "AUTO",
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 # Visualise multi-method output and concordance
@@ -163,11 +163,11 @@ PAM50 (NC-based)
 
 ```{r, eval=FALSE}
 res_pam <- BS_parker(
-  se_obj = data_input$se_NC,       # object prepared for NC-based methods
-  calibration = "Internal",
-  internal = "medianCtr",
-  Subtype = FALSE,
-  hasClinical = FALSE
+    se_obj = data_input$se_NC, # object prepared for NC-based methods
+    calibration = "Internal",
+    internal = "medianCtr",
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 ```
 
@@ -210,7 +210,7 @@ BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 If needed, install UI dependencies and re-run:
 
 ```{r, eval = FALSE}
-install.packages(c("shiny","bslib"))
+install.packages(c("shiny", "bslib"))
 ```
 
 The app runs locally; **no data leave your machine**.

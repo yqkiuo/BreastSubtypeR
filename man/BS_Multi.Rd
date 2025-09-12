@@ -59,10 +59,10 @@ consensus voting—subtypes are still returned per method.
 data("OSLO2EMIT0obj")
 methods <- c("parker.original", "genefu.scale", "genefu.robust")
 res.test <- BS_Multi(
-  data_input = OSLO2EMIT0obj$data_input,
-  methods = methods,
-  Subtype = FALSE,
-  hasClinical = FALSE
+    data_input = OSLO2EMIT0obj$data_input,
+    methods = methods,
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }

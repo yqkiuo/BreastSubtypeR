@@ -54,10 +54,10 @@ training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 ## Example: Updated subgroup-specific quantiles (ER.v2)
 data("OSLO2EMIT0obj")
 res <- BS_ssBC(
-  se_obj = OSLO2EMIT0obj$data_input$se_NC,
-  s = "ER.v2",
-  Subtype = FALSE,
-  hasClinical = FALSE
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
+    s = "ER.v2",
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }

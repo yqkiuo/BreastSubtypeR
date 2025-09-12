@@ -14,7 +14,7 @@
 #' @importFrom grDevices dev.off pdf
 #' @importFrom stats prcomp cor cor.test dist quantile median
 #' @importFrom methods is
-#' 
+#'
 NULL
 
 #' BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research
@@ -85,7 +85,7 @@ NULL
 #'     - If row names are gene symbols, provide an additional `SYMBOL` column,
 #'       renamed as `probe`.
 #'   - **Column metadata** (optional): sample-level metadata in `colData()`.
-#'   
+#'
 #' @param RawCounts Logical. If `TRUE`, indicates that `assay()` holds raw RNA-seq counts.
 #'   In this case, `rowData()` must also provide gene lengths (column `"Length"`, in base pairs), used for:
 #'   - NC-based methods: log₂-CPM (upper-quartile normalization).
@@ -97,28 +97,30 @@ NULL
 #'   - `"max"`: probe with highest expression value (often used for RNA-seq).
 #'   - `"stdev"`: probe with highest standard deviation.
 #'   - `"median"`: probe with highest median expression.
-#'     
+#'
 #' @param impute Logical. If `TRUE`, applies KNN-based imputation to missing values.
-#'   
+#'
 #' @param verbose Logical. If `TRUE`, prints progress messages during execution.
 #'
 #' @return A named list with:
+#' \describe{
 #'   \item{se_NC}{`SummarizedExperiment` holding log2-transformed data prepared for NC-based methods (assay name: `counts`).}
 #'   \item{se_SSP}{`SummarizedExperiment` holding linear-scale data prepared for SSP-based methods (assay name: `counts`).}
-#'   
+#' }
+#'
 #' @references
-#' Yang Q, Hartman J, Sifakis EG.  
-#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
+#' Yang Q, Hartman J, Sifakis EG.
+#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*
 #' NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
-#' 
+#'
 #' @details
 #' `Mapping()` supports multiple input types:
 #' - **Raw RNA-seq counts** (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
 #' - **Precomputed log₂(FPKM+1)**: used directly for NC; back-transformed for SSP.
 #' - **Log₂-normalized microarray/nCounter data**: used directly for NC; back-transformed for SSP.
-#' 
+#'
 #' This design allows users to supply a single expression format, while
-#' BreastSubtypeR automatically applies method-specific preprocessing. 
+#' BreastSubtypeR automatically applies method-specific preprocessing.
 #'
 #' @examples
 #' \donttest{
@@ -126,33 +128,32 @@ NULL
 #'
 #' # Using raw RNA-seq counts (with gene lengths)
 #' se_obj <- SummarizedExperiment(
-#'   assays = list(counts = raw_counts_mat),
-#'   rowData = DataFrame(
-#'     probe = rownames(raw_counts_mat),
-#'     ENTREZID = entrez_ids,
-#'     Length = gene_lengths
-#'   )
+#'     assays = list(counts = raw_counts_mat),
+#'     rowData = DataFrame(
+#'         probe = rownames(raw_counts_mat),
+#'         ENTREZID = entrez_ids,
+#'         Length = gene_lengths
+#'     )
 #' )
 #' res <- Mapping(se_obj, RawCounts = TRUE)
 #'
 #' # Using pre-normalized log2(FPKM+1)
 #' se_obj_fpkm <- SummarizedExperiment(
-#'   assays = list(expr = log2_fpkm_mat),
-#'   rowData = DataFrame(
-#'     probe = rownames(log2_fpkm_mat),
-#'     ENTREZID = entrez_ids
-#'   )
+#'     assays = list(expr = log2_fpkm_mat),
+#'     rowData = DataFrame(
+#'         probe = rownames(log2_fpkm_mat),
+#'         ENTREZID = entrez_ids
+#'     )
 #' )
 #' res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
 #' }
 #' @export
 
-Mapping <- function(
-        se_obj,
-        RawCounts = FALSE,
-        method = c("max", "mean", "median", "iqr", "stdev"),
-        impute = TRUE,
-        verbose = TRUE) {
+Mapping <- function(se_obj,
+    RawCounts = FALSE,
+    method = c("max", "mean", "median", "iqr", "stdev"),
+    impute = TRUE,
+    verbose = TRUE) {
     method <- match.arg(method)
 
     arguments <- rlang::dots_list(
@@ -200,37 +201,37 @@ Mapping <- function(
 #'   and samples as columns.
 #'   - **Column metadata** (`colData`): Optional sample- or patient-level
 #'     information.
-#'   
+#'
 #' @param calibration Character. One of:
 #'   - `"None"`: no centering/scaling.
 #'   - `"Internal"`: center by a method derived from the current cohort (see `internal`).
 #'   - `"External"`: center by medians from an external cohort (see `external`).
 #'
-#' @param internal Internal calibration method used when `calibration = "Internal"`.  
+#' @param internal Internal calibration method used when `calibration = "Internal"`.
 #'   Accepts:
-#'   - `NA` or `"medianCtr"` (identical): gene-wise median centering (as in Parker et al.).  
-#'   - `"meanCtr"`: gene-wise z-scoring (mean 0, sd 1; as implemented in `genefu.scale`).  
+#'   - `NA` or `"medianCtr"` (identical): gene-wise median centering (as in Parker et al.).
+#'   - `"meanCtr"`: gene-wise z-scoring (mean 0, sd 1; as implemented in `genefu.scale`).
 #'   - `"qCtr"`: robust centering (quantile rescale with mq = 0.05; as in `genefu.robust`).
 #'   Defaults to `NA` (median centering).
 #'
-#' @param external Character string specifying the external calibration source.  
-#'   - To use training cohort medians, provide the platform/column name.  
+#' @param external Character string specifying the external calibration source.
+#'   - To use training cohort medians, provide the platform/column name.
 #'   - To supply user-defined medians, set `external = "Given.mdns"` and pass
-#'     values via `medians`.  
+#'     values via `medians`.
 #'
 #' @param medians A matrix or data.frame of user-provided medians (required if
-#'   `external = "Given.mdns"`).  
-#'   - First column: 50 PAM50 genes.  
-#'   - Second column: Corresponding median expression values.  
+#'   `external = "Given.mdns"`).
+#'   - First column: 50 PAM50 genes.
+#'   - Second column: Corresponding median expression values.
 #'
 #' @param Subtype Logical. If `TRUE`, assigns only the four main intrinsic
 #'   subtypes (Luminal A, Luminal B, HER2-enriched, Basal-like),
-#'   excluding Normal-like.  
+#'   excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates clinical variables from
 #'   `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
 #'
 #' @return A list containing PAM50 intrinsic subtype calls using the Parker
 #'   classifier and selected calibration strategy.
@@ -252,47 +253,46 @@ Mapping <- function(
 #' res <- BS_parker(
 #'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     calibration = "Internal",
-#'     internal = NA,                     # NA ≡ "medianCtr"
+#'     internal = NA, # NA ≡ "medianCtr"
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_parker <- function(
-        se_obj,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_parker <- function(se_obj,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
     }
-  
+
     ## --- robust calibration handling & legacy -1 guard ---
     # tolerate NULL/NA/missing and unnamed vectors
-      if (missing(calibration) || is.null(calibration) || is.na(calibration)) {
-          calibration <- "None"
-        } else if (length(calibration) > 1L) {
-          calibration <- calibration[1L]
-        }
-    
+    if (missing(calibration) || is.null(calibration) || is.na(calibration)) {
+        calibration <- "None"
+    } else if (length(calibration) > 1L) {
+        calibration <- calibration[1L]
+    }
+
     # legacy semantics: internal == -1 or "-1" means *no* adjustment
-      if (!missing(internal) && !is.null(internal) && !all(is.na(internal))) {
+    if (!missing(internal) && !is.null(internal) && !all(is.na(internal))) {
         if (any(internal %in% c(-1, "-1"))) {
-          calibration <- "None"
-          internal <- NULL
+            calibration <- "None"
+            internal <- NULL
         }
-      }
-    
+    }
+
     # Default Parker behavior: internal = NA → median centering
-      if (identical(calibration, "Internal") &&
-         (length(internal) == 0L || all(is.na(internal)))) {
-          internal <- "medianCtr"
-        }
+    if (identical(calibration, "Internal") &&
+        (length(internal) == 0L || all(is.na(internal)))) {
+        internal <- "medianCtr"
+    }
 
     ## Extract data from SummarizedExperiment
     gene_expr <- assay(se_obj)
@@ -300,19 +300,21 @@ BS_parker <- function(
 
     # Handle clinical metadata if required
     if (hasClinical) {
-          req <- c("PatientID","TSIZE","NODE")
-          miss <- setdiff(req, colnames(pheno))
-           if (length(miss)) {
-               stop("When hasClinical = TRUE, colData(se_obj) must include: ",
-                    paste(req, collapse=", "),
-                    ". Missing: ", paste(miss, collapse=", "), ".")
-           }
-      if (!is.numeric(pheno$NODE)) {
+        req <- c("PatientID", "TSIZE", "NODE")
+        miss <- setdiff(req, colnames(pheno))
+        if (length(miss)) {
+            stop(
+                "When hasClinical = TRUE, colData(se_obj) must include: ",
+                paste(req, collapse = ", "),
+                ". Missing: ", paste(miss, collapse = ", "), "."
+            )
+        }
+        if (!is.numeric(pheno$NODE)) {
             stop("colData(se_obj)$NODE must be numeric (0 for negative, >=1 for positive).")
         }
-      rownames(pheno) <- pheno$PatientID
+        rownames(pheno) <- pheno$PatientID
     } else {
-      pheno <- NULL
+        pheno <- NULL
     }
 
     arguments <- rlang::dots_list(
@@ -326,7 +328,7 @@ BS_parker <- function(
         hasClinical = hasClinical,
         .homonyms = "last"
     )
-    
+
     call <- rlang::call2(makeCalls.parker, !!!arguments)
     res_parker <- eval(call)
 
@@ -347,43 +349,44 @@ BS_parker <- function(
 #'   - **Assay data**: A log₂-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
-#'     - `"PatientID"`: Unique sample or patient identifier.  
-#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
+#'     - `"PatientID"`: Unique sample or patient identifier.
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
-#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
-#'   variables from `colData(se_obj)`. Required columns:  
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'   variables from `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
 #'
-#' @param seed Integer. Random seed for reproducibility of ER-balancing.  
+#' @param seed Integer. Random seed for reproducibility of ER-balancing.
 #'
 #' @return A `data.frame` containing intrinsic subtype assignments estimated
-#'   using the conventional IHC (cIHC) approach.  
+#'   using the conventional IHC (cIHC) approach.
 #'
 #' @references
-#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.  
-#' *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer.*  
-#' Cell. 2015;163(2):506–519.  
+#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
+#' *Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer.*
+#' Cell. 2015;163(2):506–519.
 #' https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'   Subtype = FALSE,
-#'   hasClinical = FALSE
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'     Subtype = FALSE,
+#'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
 
-BS_cIHC <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -398,12 +401,12 @@ BS_cIHC <- function(se_obj,
         stop("The 'colData' of 'se_obj' must include 'PatientID' and 'ER' columns.")
     }
     rownames(pheno) <- pheno$PatientID
-    
+
     if (hasClinical) {
-          req <- c("TSIZE","NODE")
-          miss <- setdiff(req, colnames(pheno))
-          if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
-          if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+        req <- c("TSIZE", "NODE")
+        miss <- setdiff(req, colnames(pheno))
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
 
     arguments <- rlang::dots_list(
@@ -436,54 +439,55 @@ BS_cIHC <- function(se_obj,
 #'   - **Assay data**: A log₂-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
-#'     - `"PatientID"`: Unique sample or patient identifier.  
-#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
+#'     - `"PatientID"`: Unique sample or patient identifier.
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.
 #'
-#' @param iteration Integer. Number of iterations for the ER-balancing procedure.  
-#'   Default: `100`.  
+#' @param iteration Integer. Number of iterations for the ER-balancing procedure.
+#'   Default: `100`.
 #'
-#' @param ratio Numeric. Target ER+/ER– ratio for balancing. Options:  
-#'   - `1:1`: Equal balancing.  
-#'   - `54:64`: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.  
+#' @param ratio Numeric. Target ER+/ER– ratio for balancing. Options:
+#'   - `1:1`: Equal balancing.
+#'   - `54:64`: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
-#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
-#'   variables from `colData(se_obj)`. Required columns:  
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'   variables from `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
 #'
-#' @param seed Integer. Random seed for reproducibility.  
+#' @param seed Integer. Random seed for reproducibility.
 #'
-#' @return A list containing:  
-#'   - `subtypes`: Intrinsic subtype predictions across iterations.  
-#'   - `confidence`: Confidence estimates for each assigned subtype.  
-#'   - `ER_balance`: Proportions of ER+ and ER– subsets observed across iterations.  
+#' @return A list containing:
+#'   - `subtypes`: Intrinsic subtype predictions across iterations.
+#'   - `confidence`: Confidence estimates for each assigned subtype.
+#'   - `ER_balance`: Proportions of ER+ and ER– subsets observed across iterations.
 #'
 #' @references
-#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.  
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*  
-#' Nature. 2012;486(7403):346–352.  
+#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
+#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
+#' Nature. 2012;486(7403):346–352.
 #' https://doi.org/10.1038/nature10983
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_cIHC.itr(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'   iteration = 10,   ## for final analysis, use iteration = 100
-#'   Subtype = FALSE,
-#'   hasClinical = FALSE
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'     iteration = 10, ## for final analysis, use iteration = 100
+#'     Subtype = FALSE,
+#'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_cIHC.itr <- function(se_obj,
-    iteration = 100,
-    ratio = 54 / 64,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC.itr <- function(
+        se_obj,
+        iteration = 100,
+        ratio = 54 / 64,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -500,12 +504,12 @@ BS_cIHC.itr <- function(se_obj,
     rownames(pheno) <- pheno$PatientID
 
     if (hasClinical) {
-      req <- c("TSIZE","NODE")
-      miss <- setdiff(req, colnames(pheno))
-      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
-      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+        req <- c("TSIZE", "NODE")
+        miss <- setdiff(req, colnames(pheno))
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
-    
+
     arguments <- rlang::dots_list(
         mat = gene_expr,
         df.cln = pheno,
@@ -537,42 +541,43 @@ BS_cIHC.itr <- function(se_obj,
 #'   - **Assay data**: A log₂-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
-#'     - `"PatientID"`: Unique sample or patient identifier.  
-#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.  
+#'     - `"PatientID"`: Unique sample or patient identifier.
+#'     - `"ER"`: Estrogen receptor status, coded as `"ER+"` or `"ER-"`.
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
-#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
-#'   variables from `colData(se_obj)`. Required columns:  
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'   variables from `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
 #'
-#' @param seed Integer. Random seed for reproducibility.  
+#' @param seed Integer. Random seed for reproducibility.
 #'
 #' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the PCA-PAM50 method.  
+#'   sample using the PCA-PAM50 method.
 #'
 #' @references
-#' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.  
-#' *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.*  
-#' Scientific Reports. 2019;9(1):1–12.  
+#' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.
+#' *PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.*
+#' Scientific Reports. 2019;9(1):1–12.
 #' https://doi.org/10.1038/s41598-019-44339-4
 #'
 #' @examples
 #' data("OSLO2EMIT0obj")
 #' res <- BS_PCAPAM50(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'   Subtype = FALSE,
-#'   hasClinical = FALSE
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'     Subtype = FALSE,
+#'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_PCAPAM50 <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_PCAPAM50 <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -589,12 +594,12 @@ BS_PCAPAM50 <- function(se_obj,
     rownames(pheno) <- pheno$PatientID
 
     if (hasClinical) {
-      req <- c("TSIZE","NODE")
-      miss <- setdiff(req, colnames(pheno))
-      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
-      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+        req <- c("TSIZE", "NODE")
+        miss <- setdiff(req, colnames(pheno))
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
-    
+
     samples <- pheno$PatientID
 
     if ("ER" %in% colnames(pheno)) {
@@ -675,56 +680,57 @@ BS_PCAPAM50 <- function(se_obj,
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A log₂-transformed, normalised expression matrix with
-#'     genes (Gene Symbols) as rows and samples as columns.  
+#'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): If `hasClinical = TRUE`, must include:
-#'     - `"PatientID"`: Unique patient/sample identifier.  
-#'     - Depending on the chosen `s` parameter:  
-#'       - `"ER"`: Estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.  
-#'       - `"HER2"`: HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.  
-#'       - `"TN"`: Triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `"TN.v2"`.  
+#'     - `"PatientID"`: Unique patient/sample identifier.
+#'     - Depending on the chosen `s` parameter:
+#'       - `"ER"`: Estrogen receptor status (`"ER+"` or `"ER-"`) if `s = "ER"`.
+#'       - `"HER2"`: HER2 status (`"HER2+"` or `"HER2-"`) if `s = "ER.v2"`.
+#'       - `"TN"`: Triple-negative status (`"TN"` or `"nonTN"`) if `s = "TN"` or `"TN.v2"`.
 #'
-#' @param s Character. Specifies which subgroup-specific quantiles to use:  
-#'   - `"ER"`, `"TN"`: Original subgroup-specific quantiles (*Breast Cancer Research*, 2015).  
-#'   - `"ER.v2"`, `"TN.v2"`: Updated subgroup-specific quantiles (*Journal of Clinical Oncology*, 2020).  
+#' @param s Character. Specifies which subgroup-specific quantiles to use:
+#'   - `"ER"`, `"TN"`: Original subgroup-specific quantiles (*Breast Cancer Research*, 2015).
+#'   - `"ER.v2"`, `"TN.v2"`: Updated subgroup-specific quantiles (*Journal of Clinical Oncology*, 2020).
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
-#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.  
+#'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
-#'   variables from `colData(se_obj)`. Required columns:  
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.  
+#'   variables from `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
 #'
 #' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the ssBC method.  
+#'   sample using the ssBC method.
 #'
 #' @references
-#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.  
-#' *Molecular subtyping for clinically defined breast cancer subgroups.*  
-#' Breast Cancer Research. 2015;17(1):29.  
+#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.
+#' *Molecular subtyping for clinically defined breast cancer subgroups.*
+#' Breast Cancer Research. 2015;17(1):29.
 #' https://doi.org/10.1186/s13058-015-0520-4
 #'
-#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.  
-#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*  
-#' Journal of Clinical Oncology. 2020;38(36):4184–4197.  
+#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.
+#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*
+#' Journal of Clinical Oncology. 2020;38(36):4184–4197.
 #' https://doi.org/10.1200/JCO.20.01276
 #'
 #' @examples
 #' ## Example: Updated subgroup-specific quantiles (ER.v2)
 #' data("OSLO2EMIT0obj")
 #' res <- BS_ssBC(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_NC,
-#'   s = "ER.v2",
-#'   Subtype = FALSE,
-#'   hasClinical = FALSE
+#'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
+#'     s = "ER.v2",
+#'     Subtype = FALSE,
+#'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_ssBC <- function(se_obj,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_ssBC <- function(
+        se_obj,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -741,12 +747,12 @@ BS_ssBC <- function(se_obj,
     rownames(pheno) <- pheno$PatientID
 
     if (hasClinical) {
-      req <- c("TSIZE","NODE")
-      miss <- setdiff(req, colnames(pheno))
-      if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse=", "), ".")
-      if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
+        req <- c("TSIZE", "NODE")
+        miss <- setdiff(req, colnames(pheno))
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
-    
+
     # Additional checks based on `s`
     required_columns <- switch(s,
         "ER" = c("ER"),
@@ -789,24 +795,24 @@ BS_ssBC <- function(se_obj,
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
-#'     and samples as columns.  
-#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).  
-#'     - Values should not be gene-centered or globally scaled.  
+#'     and samples as columns.
+#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).
+#'     - Values should not be gene-centered or globally scaled.
 #'
 #' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the AIMS method.  
+#'   sample using the AIMS method.
 #'
 #' @references
-#' Paquet ER, Hallett MT.  
-#' *Absolute assignment of breast cancer intrinsic molecular subtype.*  
-#' Journal of the National Cancer Institute. 2015;107(1):dju357.  
+#' Paquet ER, Hallett MT.
+#' *Absolute assignment of breast cancer intrinsic molecular subtype.*
+#' Journal of the National Cancer Institute. 2015;107(1):dju357.
 #' https://doi.org/10.1093/jnci/dju357
 #'
 #' @examples
 #' ## Example using SummarizedExperiment input
 #' data("OSLO2EMIT0obj")
 #' res <- BS_AIMS(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_SSP
+#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP
 #' )
 #'
 #' @export
@@ -861,29 +867,29 @@ BS_AIMS <- function(se_obj) {
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
-#'     and samples as columns.  
-#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).  
-#'     - Values should not be gene-centered or globally scaled.  
+#'     and samples as columns.
+#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).
+#'     - Values should not be gene-centered or globally scaled.
 #'
-#' @param ssp.name Character. Specifies the SSPBC model to use:  
-#'   - `"ssp.pam50"`: Predicts PAM50-based intrinsic subtypes.  
-#'   - `"ssp.subtype"`: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).  
+#' @param ssp.name Character. Specifies the SSPBC model to use:
+#'   - `"ssp.pam50"`: Predicts PAM50-based intrinsic subtypes.
+#'   - `"ssp.subtype"`: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).
 #'
 #' @return A character vector of intrinsic subtype predictions for each sample,
-#'   as estimated by the SSPBC method.  
+#'   as estimated by the SSPBC method.
 #'
 #' @references
-#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.  
-#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*  
-#' NPJ Breast Cancer. 2022;8(1):27.  
+#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*
+#' NPJ Breast Cancer. 2022;8(1):27.
 #' https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
 #' ## Example using SSPBC with the PAM50 model
 #' data("OSLO2EMIT0obj")
 #' res <- BS_sspbc(
-#'   se_obj = OSLO2EMIT0obj$data_input$se_SSP,
-#'   ssp.name = "ssp.pam50"
+#'     se_obj = OSLO2EMIT0obj$data_input$se_SSP,
+#'     ssp.name = "ssp.pam50"
 #' )
 #'
 #' @export
@@ -920,10 +926,10 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @name BS_Multi
 #' @description
-#' Executes multiple intrinsic molecular subtyping methods in parallel.  
+#' Executes multiple intrinsic molecular subtyping methods in parallel.
 #' Users can either specify a set of classifiers directly, or enable the
 #' **AUTO mode**, which dynamically selects methods based on cohort composition
-#' (e.g., ER/HER2 distribution, subtype purity, subgroup size).  
+#' (e.g., ER/HER2 distribution, subtype purity, subgroup size).
 #' AUTO reduces misclassification in skewed or subtype-specific cohorts by
 #' disabling methods whose assumptions are violated, but does not perform
 #' consensus voting—subtypes are still returned per method.
@@ -933,67 +939,67 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @param methods Character vector specifying the subtyping methods to run.
 #'   Available options include:
-#'   - `"parker.original"`: Original PAM50 (Parker et al., 2009).  
-#'   - `"genefu.scale"`: PAM50 (scaled version; Gendoo et al., 2016).  
-#'   - `"genefu.robust"`: PAM50 (robust version; Gendoo et al., 2016).  
-#'   - `"cIHC"`: Conventional ER-balancing with immunohistochemistry (Ciriello et al., 2015).  
-#'   - `"cIHC.itr"`: Iterative ER-balancing (Curtis et al., 2012).  
-#'   - `"PCAPAM50"`: PCA-based PAM50 using ESR1 balancing (Raj-Kumar et al., 2019).  
-#'   - `"ssBC"`: Subgroup-specific gene-centering (Zhao et al., 2015).  
-#'   - `"ssBC.v2"`: Updated subgroup-specific centering (Fernandez-Martinez et al., 2020).  
-#'   - `"AIMS"`: Absolute Intrinsic Molecular Subtyping (Paquet & Hallett, 2015).  
-#'   - `"sspbc"`: SSPBC, a large-cohort SSP trained on SCAN-B (Staaf et al., 2022).  
-#'   - `"AUTO"`: Cohort-aware selection of compatible methods (must be the only entry).  
+#'   - `"parker.original"`: Original PAM50 (Parker et al., 2009).
+#'   - `"genefu.scale"`: PAM50 (scaled version; Gendoo et al., 2016).
+#'   - `"genefu.robust"`: PAM50 (robust version; Gendoo et al., 2016).
+#'   - `"cIHC"`: Conventional ER-balancing with immunohistochemistry (Ciriello et al., 2015).
+#'   - `"cIHC.itr"`: Iterative ER-balancing (Curtis et al., 2012).
+#'   - `"PCAPAM50"`: PCA-based PAM50 using ESR1 balancing (Raj-Kumar et al., 2019).
+#'   - `"ssBC"`: Subgroup-specific gene-centering (Zhao et al., 2015).
+#'   - `"ssBC.v2"`: Updated subgroup-specific centering (Fernandez-Martinez et al., 2020).
+#'   - `"AIMS"`: Absolute Intrinsic Molecular Subtyping (Paquet & Hallett, 2015).
+#'   - `"sspbc"`: SSPBC, a large-cohort SSP trained on SCAN-B (Staaf et al., 2022).
+#'   - `"AUTO"`: Cohort-aware selection of compatible methods (must be the only entry).
 #'
-#'   **Notes:**  
-#'   - If `"AUTO"` is selected, it must be the sole value in `methods`.  
-#'   - Otherwise, at least **two** methods must be specified.  
+#'   **Notes:**
+#'   - If `"AUTO"` is selected, it must be the sole value in `methods`.
+#'   - Otherwise, at least **two** methods must be specified.
 #'
 #' @param Subtype Logical. If `TRUE`, returns four subtypes (Luminal A, Luminal B,
-#'   HER2-enriched, Basal-like), excluding Normal-like.  
+#'   HER2-enriched, Basal-like), excluding Normal-like.
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates clinical data from
-#'   `colData(se_obj)`. Required columns:  
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).  
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive; must be numeric).  
+#'   `colData(se_obj)`. Required columns:
+#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive; must be numeric).
 #'
 #' @return A list containing per-method subtype assignments for each sample.
 #'
 #' @references
-#' Yang Q, Hartman J, Sifakis EG.  
-#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*  
+#' Yang Q, Hartman J, Sifakis EG.
+#' *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.*
 #' NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
-#' 
-#' Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.  
-#' *Supervised risk predictor of breast cancer based on intrinsic subtypes.*  
+#'
+#' Parker JS, Mullins M, Cheung MCU, Leung S, Voduc D, et al.
+#' *Supervised risk predictor of breast cancer based on intrinsic subtypes.*
 #' J Clin Oncol. 2009;27(8):1160-1167. https://doi.org/10.1200/JCO.2008.18.1370
 #'
-#' Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.  
-#' *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer.*  
+#' Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.
+#' *Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer.*
 #' Bioinformatics. 2016;32(7):1097-1099. https://doi.org/10.1093/bioinformatics/btv693
 #'
-#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.  
-#' *Comprehensive molecular portraits of invasive lobular breast cancer.*  
+#' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
+#' *Comprehensive molecular portraits of invasive lobular breast cancer.*
 #' Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
 #'
-#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.  
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*  
+#' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
+#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
 #' Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
 #'
-#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.  
-#' *Molecular subtyping for clinically defined breast cancer subgroups.*  
+#' Zhao X, Rodland EA, Tibshirani R, Plevritis S.
+#' *Molecular subtyping for clinically defined breast cancer subgroups.*
 #' Breast Cancer Res. 2015;17(1):29. https://doi.org/10.1186/s13058-015-0520-4
 #'
-#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.  
-#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*  
+#' Fernandez-Martinez A, Krop IE, Hillman DW, Polley MY, Parker JS, Huebner L, et al.
+#' *Survival, pathologic response, and genomics in CALGB 40601 (Alliance), a neoadjuvant Phase III trial of paclitaxel–trastuzumab with or without lapatinib in HER2-positive breast cancer.*
 #' J Clin Oncol. 2020;38(36):4184-4197. https://doi.org/10.1200/JCO.20.01276
 #'
-#' Paquet ER, Hallett MT.  
-#' *Absolute assignment of breast cancer intrinsic molecular subtype.*  
+#' Paquet ER, Hallett MT.
+#' *Absolute assignment of breast cancer intrinsic molecular subtype.*
 #' J Natl Cancer Inst. 2015;107(1):dju357. https://doi.org/10.1093/jnci/dju357
 #'
-#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.  
-#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*  
+#' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+#' *RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.*
 #' NPJ Breast Cancer. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 #'
 #' @examples
@@ -1001,19 +1007,18 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' data("OSLO2EMIT0obj")
 #' methods <- c("parker.original", "genefu.scale", "genefu.robust")
 #' res.test <- BS_Multi(
-#'   data_input = OSLO2EMIT0obj$data_input,
-#'   methods = methods,
-#'   Subtype = FALSE,
-#'   hasClinical = FALSE
+#'     data_input = OSLO2EMIT0obj$data_input,
+#'     methods = methods,
+#'     Subtype = FALSE,
+#'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_Multi <- function(
-        data_input,
-        methods = "AUTO",
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_Multi <- function(data_input,
+    methods = "AUTO",
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -1034,9 +1039,9 @@ BS_Multi <- function(
 
     ## extract pheno table
     pheno <- colData(data_input$se_NC) %>% data.frame()
-        if (!"PatientID" %in% colnames(pheno)) {
-          stop("colData(se_NC) must have a 'PatientID' column.")
-        }
+    if (!"PatientID" %in% colnames(pheno)) {
+        stop("colData(se_NC) must have a 'PatientID' column.")
+    }
     rownames(pheno) <- pheno$PatientID
 
     # Check ER and HER2 columns in pheno
@@ -1054,6 +1059,7 @@ BS_Multi <- function(
     samples_ERHER2.icd <- NULL
     if (length(methods) == 1 && methods[1] == "AUTO") {
         AUTO.output <- get_methods(pheno)
+
         samples_ER.icd <- AUTO.output$samples_ER.icd
         samples_ERHER2.icd <- AUTO.output$samples_ERHER2.icd
         methods <- AUTO.output$methods
@@ -1069,7 +1075,7 @@ BS_Multi <- function(
                 BS_parker(
                     data_input$se_NC,
                     calibration = "Internal",
-                    internal = "medianCtr",              # default to medianCtr in BS_parker()
+                    internal = "medianCtr", # default to medianCtr in BS_parker()
                     Subtype = Subtype,
                     hasClinical = hasClinical
                 )
@@ -1229,6 +1235,7 @@ BS_Multi <- function(
                 length(samples_ERHER2.icd) < nrow(pheno)) {
                 unprocessed_patients <- base::setdiff(pheno$PatientID, samples_ERHER2.icd)
 
+
                 # Create NA-filled dataframe for unprocessed patients with matching structure
                 na_df <- data.frame(
                     PatientID = unprocessed_patients,
@@ -1298,76 +1305,76 @@ BS_Multi <- function(
 
     ## Map method names and align outputs by PatientID (robust to order/missing)
     names(results) <- methods
-    
+
     # Prefer se_NC samples; fall back to se_SSP if needed
-    samples_NC  <- if (!is.null(data_input$se_NC))  colnames(SummarizedExperiment::assay(data_input$se_NC))  else character(0)
+    samples_NC <- if (!is.null(data_input$se_NC)) colnames(SummarizedExperiment::assay(data_input$se_NC)) else character(0)
     samples_SSP <- if (!is.null(data_input$se_SSP)) colnames(SummarizedExperiment::assay(data_input$se_SSP)) else character(0)
     samples <- if (length(samples_NC)) samples_NC else samples_SSP
-    
+
     # Hold per-method calls; start empty and fill by matching PatientID
     res_subtypes <- data.table::data.table(row_id = samples)
     if (Subtype) {
-      res_subtypes.Subtype <- data.table::data.table(row_id = samples)
+        res_subtypes.Subtype <- data.table::data.table(row_id = samples)
     }
-    
+
     for (method in methods) {
-      x <- results[[method]]
-      # default (all NA) if the method failed or returned nothing usable
-      vec5 <- rep(NA_character_, length(samples))
-      vec4 <- rep(NA_character_, length(samples))
-      
-      if (!is.null(x) && is.data.frame(x$BS.all) && "PatientID" %in% names(x$BS.all)) {
-        i <- match(samples, x$BS.all$PatientID)  # align by PatientID
-        # 5-class column (may be absent for some SSPs or error cases)
-        if ("BS" %in% names(x$BS.all)) {
-          v <- x$BS.all$BS
-          # coerce to character to avoid factor levels surprises
-          if (is.factor(v)) v <- as.character(v)
-          vec5 <- v[i]
+        x <- results[[method]]
+        # default (all NA) if the method failed or returned nothing usable
+        vec5 <- rep(NA_character_, length(samples))
+        vec4 <- rep(NA_character_, length(samples))
+
+        if (!is.null(x) && is.data.frame(x$BS.all) && "PatientID" %in% names(x$BS.all)) {
+            i <- match(samples, x$BS.all$PatientID) # align by PatientID
+            # 5-class column (may be absent for some SSPs or error cases)
+            if ("BS" %in% names(x$BS.all)) {
+                v <- x$BS.all$BS
+                # coerce to character to avoid factor levels surprises
+                if (is.factor(v)) v <- as.character(v)
+                vec5 <- v[i]
+            }
+            # 4-class column (may not exist for some methods or when Subtype = FALSE)
+            if (Subtype && "BS.Subtype" %in% names(x$BS.all)) {
+                v <- x$BS.all$BS.Subtype
+                if (is.factor(v)) v <- as.character(v)
+                vec4 <- v[i]
+            }
         }
-        # 4-class column (may not exist for some methods or when Subtype = FALSE)
-        if (Subtype && "BS.Subtype" %in% names(x$BS.all)) {
-          v <- x$BS.all$BS.Subtype
-          if (is.factor(v)) v <- as.character(v)
-          vec4 <- v[i]
-        }
-      }
-      
-      data.table::set(res_subtypes, j = method, value = vec5)
-      if (Subtype) data.table::set(res_subtypes.Subtype, j = method, value = vec4)
+
+        data.table::set(res_subtypes, j = method, value = vec5)
+        if (Subtype) data.table::set(res_subtypes.Subtype, j = method, value = vec4)
     }
-    
+
     # Convert to data.frame and drop ONLY row_id once
     res_subtypes <- as.data.frame(res_subtypes, stringsAsFactors = FALSE, check.names = FALSE)
     rownames(res_subtypes) <- res_subtypes$row_id
     res_subtypes$row_id <- NULL
-    
+
     if (Subtype) {
-      res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype, stringsAsFactors = FALSE, check.names = FALSE)
-      rownames(res_subtypes.Subtype) <- res_subtypes.Subtype$row_id
-      res_subtypes.Subtype$row_id <- NULL
+        res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype, stringsAsFactors = FALSE, check.names = FALSE)
+        rownames(res_subtypes.Subtype) <- res_subtypes.Subtype$row_id
+        res_subtypes.Subtype$row_id <- NULL
     }
-    
+
     ## entropy index (compute on method columns; don't drop any)
     if (ncol(res_subtypes) > 0) {
-      res_subtypes$entropy <- apply(res_subtypes, 1, get_entropy)
+        res_subtypes$entropy <- apply(res_subtypes, 1, get_entropy)
     } else {
-      res_subtypes$entropy <- NA_real_
+        res_subtypes$entropy <- NA_real_
     }
-    
+
     if (Subtype) {
-      # AIMS is 5-class; for 4-class summary set Normal to NA only if the column exists
-      if ("AIMS" %in% colnames(res_subtypes.Subtype)) {
-        ix <- which(res_subtypes.Subtype$AIMS == "Normal")
-        if (length(ix)) res_subtypes.Subtype$AIMS[ix] <- NA
-      }
-      if (ncol(res_subtypes.Subtype) > 0) {
-        res_subtypes.Subtype$entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
-      } else {
-        res_subtypes.Subtype$entropy <- NA_real_
-      }
+        # AIMS is 5-class; for 4-class summary set Normal to NA only if the column exists
+        if ("AIMS" %in% colnames(res_subtypes.Subtype)) {
+            ix <- which(res_subtypes.Subtype$AIMS == "Normal")
+            if (length(ix)) res_subtypes.Subtype$AIMS[ix] <- NA
+        }
+        if (ncol(res_subtypes.Subtype) > 0) {
+            res_subtypes.Subtype$entropy <- apply(res_subtypes.Subtype, 1, get_entropy)
+        } else {
+            res_subtypes.Subtype$entropy <- NA_real_
+        }
     }
-    
+
     if (Subtype) {
         res <- list(
             res_subtypes = res_subtypes,

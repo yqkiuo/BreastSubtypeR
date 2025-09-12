@@ -52,8 +52,10 @@ In this case, \code{rowData()} must also provide gene lengths (column \code{"Len
 }
 \value{
 A named list with:
+\describe{
 \item{se_NC}{\code{SummarizedExperiment} holding log2-transformed data prepared for NC-based methods (assay name: \code{counts}).}
 \item{se_SSP}{\code{SummarizedExperiment} holding linear-scale data prepared for SSP-based methods (assay name: \code{counts}).}
+}
 }
 \description{
 Preprocesses and maps gene expression input to prepare for
@@ -76,22 +78,22 @@ library(BreastSubtypeR)
 
 # Using raw RNA-seq counts (with gene lengths)
 se_obj <- SummarizedExperiment(
-  assays = list(counts = raw_counts_mat),
-  rowData = DataFrame(
-    probe = rownames(raw_counts_mat),
-    ENTREZID = entrez_ids,
-    Length = gene_lengths
-  )
+    assays = list(counts = raw_counts_mat),
+    rowData = DataFrame(
+        probe = rownames(raw_counts_mat),
+        ENTREZID = entrez_ids,
+        Length = gene_lengths
+    )
 )
 res <- Mapping(se_obj, RawCounts = TRUE)
 
 # Using pre-normalized log2(FPKM+1)
 se_obj_fpkm <- SummarizedExperiment(
-  assays = list(expr = log2_fpkm_mat),
-  rowData = DataFrame(
-    probe = rownames(log2_fpkm_mat),
-    ENTREZID = entrez_ids
-  )
+    assays = list(expr = log2_fpkm_mat),
+    rowData = DataFrame(
+        probe = rownames(log2_fpkm_mat),
+        ENTREZID = entrez_ids
+    )
 )
 res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
 }

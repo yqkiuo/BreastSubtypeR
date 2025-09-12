@@ -89,7 +89,7 @@
 #'   for \strong{11} expression/sequencing platforms, derived as described in
 #'   Picornell et al. (2019). Platform columns include:
 #'   \code{nCounter},
-#'   \code{totalRNA.FFPE.20151111}, \code{RNAseq.Freeze.20120907}, \code{RNAseq.V2}, \code{RNAseq.V1}, 
+#'   \code{totalRNA.FFPE.20151111}, \code{RNAseq.Freeze.20120907}, \code{RNAseq.V2}, \code{RNAseq.V1},
 #'   \code{GC.4x44Kcustom}, \code{Agilent_244K}, \code{commercial_1x44k_postMeanCollapse_WashU}, \code{commercial_4x44k_postMeanCollapse_WashU_v2},
 #'   \code{htp1.5_WU_update}, \code{arrayTrain_postMeanCollapse}.}
 #'   \item{\code{centroid}}{PAM50 centroids used by \code{parker.original}.}

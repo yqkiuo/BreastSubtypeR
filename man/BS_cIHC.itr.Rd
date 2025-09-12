@@ -64,10 +64,10 @@ match specific cohort assumptions (e.g., training distribution).
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_cIHC.itr(
-  se_obj = OSLO2EMIT0obj$data_input$se_NC,
-  iteration = 10,   ## for final analysis, use iteration = 100
-  Subtype = FALSE,
-  hasClinical = FALSE
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
+    iteration = 10, ## for final analysis, use iteration = 100
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }

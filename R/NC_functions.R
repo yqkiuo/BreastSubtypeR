@@ -33,7 +33,9 @@ rescale <- function(x, na.rm = FALSE, q = 0) {
         mi <- quantile(x, probs = q / 2, na.rm = na.rm, names = FALSE, type = 7)
     }
     rng <- ma - mi
-    if (!is.finite(rng) || rng == 0) return(x * 0)   # avoid NaN/Inf
+    if (!is.finite(rng) || rng == 0) {
+        return(x * 0)
+    } # avoid NaN/Inf
     xx <- (x - mi) / rng
 
     return(xx)
@@ -57,32 +59,36 @@ overlapSets <- function(x, y) {
 
 # Align multiple expression matrices by common gene rows, then cbind (columns)
 .align_and_cbind_by_genes <- function(...) {
-  mats <- list(...)
-  # keep only non-empty matrices
-  mats <- Filter(function(m) !is.null(m) && is.matrix(m) && nrow(m) > 0 && ncol(m) > 0, mats)
-  if (!length(mats)) {
-    # return an empty, well-formed matrix
-    return(matrix(numeric(0), nrow = 0, ncol = 0,
-                  dimnames = list(NULL, NULL)))
-  }
-  
-  # require rownames on all
-  if (any(vapply(mats, function(m) is.null(rownames(m)), logical(1)))) {
-    stop("All subgroup testData matrices must have rownames (gene IDs).")
-  }
-  
-  common <- Reduce(intersect, lapply(mats, rownames))
-  if (!length(common)) {
-    # no common genes: return a 0-row matrix with all sample columns
-    all_cols <- unlist(lapply(mats, colnames), use.names = FALSE)
-    return(matrix(numeric(0), nrow = 0, ncol = length(all_cols),
-                  dimnames = list(NULL, all_cols)))
-  }
-  
-  mats_aligned <- lapply(mats, function(m) m[common, , drop = FALSE])
-  # keep a consistent gene order across all mats
-  mats_aligned <- lapply(mats_aligned, function(m) m[match(common, rownames(m)), , drop = FALSE])
-  do.call(cbind, mats_aligned)
+    mats <- list(...)
+    # keep only non-empty matrices
+    mats <- Filter(function(m) !is.null(m) && is.matrix(m) && nrow(m) > 0 && ncol(m) > 0, mats)
+    if (!length(mats)) {
+        # return an empty, well-formed matrix
+        return(matrix(numeric(0),
+            nrow = 0, ncol = 0,
+            dimnames = list(NULL, NULL)
+        ))
+    }
+
+    # require rownames on all
+    if (any(vapply(mats, function(m) is.null(rownames(m)), logical(1)))) {
+        stop("All subgroup testData matrices must have rownames (gene IDs).")
+    }
+
+    common <- Reduce(intersect, lapply(mats, rownames))
+    if (!length(common)) {
+        # no common genes: return a 0-row matrix with all sample columns
+        all_cols <- unlist(lapply(mats, colnames), use.names = FALSE)
+        return(matrix(numeric(0),
+            nrow = 0, ncol = length(all_cols),
+            dimnames = list(NULL, all_cols)
+        ))
+    }
+
+    mats_aligned <- lapply(mats, function(m) m[common, , drop = FALSE])
+    # keep a consistent gene order across all mats
+    mats_aligned <- lapply(mats_aligned, function(m) m[match(common, rownames(m)), , drop = FALSE])
+    do.call(cbind, mats_aligned)
 }
 
 #' Function for calibration methods
@@ -93,59 +99,57 @@ overlapSets <- function(x, y) {
 #' @param external    For External: NAME of a column in medians.all (e.g., "RNAseq.V2", "Given.mdns")
 #' @noRd
 docalibration <- function(y,
-                          medians.all,
-                          calibration = c("None", "Internal", "External"),
-                          internal = NA,
-                          external = NA) {
-  
-  calibration <- match.arg(calibration)
-  y <- as.matrix(y)
-  mq <- 0.05  # robust quantiles for 'qCtr' (genefu.robust)
-  
-  # ---- No calibration ----
-    if (calibration == "None") {
-    message("No calibration")
-    return(as.matrix(y))
-  }
-  
-  # ---- Internal ----
-  if (calibration == "Internal") {
-    if (length(internal) == 0L || is.na(internal) || identical(internal, "medianCtr")) {
-      y <- medianCtr(y)
-      
-    } else if (identical(internal, "meanCtr")) {
-      y <- t(scale(t(y), center = TRUE, scale = TRUE))
-      
-    } else if (identical(internal, "qCtr")) {
-      y <- t(apply(y, 1, function(x) (rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2))
-      
-    } else if (!is.null(medians.all) && !is.null(colnames(medians.all)) && internal %in% colnames(medians.all)) {
-      # use a cohort-derived *internal* medians column (e.g., "IHC.mdns")
-      tm <- overlapSets(medians.all, y)                 # align genes
-      med <- tm$x[, internal, drop = TRUE]
-      y   <- tm$y - med
-      
-    } else {
-      stop("Invalid internal calibration '", internal,
-           "'. Use 'medianCtr', 'meanCtr', 'qCtr', or a column present in 'medians.all'.")
-    }
-    return(y)
-  }
-  
-  
-  # ---- External ----
-  if (length(external) == 0L || is.na(external)) {
-    stop("For calibration='External', please supply 'external' as a column name in medians.")
-  }
-  if (is.null(medians.all) || is.null(colnames(medians.all)) || !(external %in% colnames(medians.all))) {
-    stop("Column '", external, "' not found in medians table. Available: ",
-         paste(colnames(medians.all), collapse = ", "))
-  }
-  tm <- overlapSets(medians.all, y)                     # align genes
-  y  <- tm$y - tm$x[, external, drop = TRUE]            # subtract EXTERNAL medians
-  
-  return(y)
+    medians.all,
+    calibration = c("None", "Internal", "External"),
+    internal = NA,
+    external = NA) {
+    calibration <- match.arg(calibration)
+    y <- as.matrix(y)
+    mq <- 0.05 # robust quantiles for 'qCtr' (genefu.robust)
 
+    # ---- No calibration ----
+    if (calibration == "None") {
+        message("No calibration")
+        return(as.matrix(y))
+    }
+
+    # ---- Internal ----
+    if (calibration == "Internal") {
+        if (length(internal) == 0L || is.na(internal) || identical(internal, "medianCtr")) {
+            y <- medianCtr(y)
+        } else if (identical(internal, "meanCtr")) {
+            y <- t(scale(t(y), center = TRUE, scale = TRUE))
+        } else if (identical(internal, "qCtr")) {
+            y <- t(apply(y, 1, function(x) (rescale(x, q = mq, na.rm = TRUE) - 0.5) * 2))
+        } else if (!is.null(medians.all) && !is.null(colnames(medians.all)) && internal %in% colnames(medians.all)) {
+            # use a cohort-derived *internal* medians column (e.g., "IHC.mdns")
+            tm <- overlapSets(medians.all, y) # align genes
+            med <- tm$x[, internal, drop = TRUE]
+            y <- tm$y - med
+        } else {
+            stop(
+                "Invalid internal calibration '", internal,
+                "'. Use 'medianCtr', 'meanCtr', 'qCtr', or a column present in 'medians.all'."
+            )
+        }
+        return(y)
+    }
+
+
+    # ---- External ----
+    if (length(external) == 0L || is.na(external)) {
+        stop("For calibration='External', please supply 'external' as a column name in medians.")
+    }
+    if (is.null(medians.all) || is.null(colnames(medians.all)) || !(external %in% colnames(medians.all))) {
+        stop(
+            "Column '", external, "' not found in medians table. Available: ",
+            paste(colnames(medians.all), collapse = ", ")
+        )
+    }
+    tm <- overlapSets(medians.all, y) # align genes
+    y <- tm$y - tm$x[, external, drop = TRUE] # subtract EXTERNAL medians
+
+    return(y)
 }
 
 
@@ -163,9 +167,10 @@ standardize <- function(x) {
 
 #' Function for suffix of medians for gene centering
 #' @noRd
-getsuffix <- function(calibration,
-    internal = NA,
-    external = NA) {
+getsuffix <- function(
+        calibration,
+        internal = NA,
+        external = NA) {
     calibration <- match.arg(calibration, choices = c("None", "Internal", "External"))
 
     suffix <- switch(calibration,
@@ -185,127 +190,133 @@ getsuffix <- function(calibration,
 #' @param Subtype Logic. Please specify if it predicts Subtype-like subtype
 #' @noRd
 sspPredict <- function(x, y, std = FALSE, distm = "spearman", Subtype = TRUE) {
-  distm <- match.arg(distm, choices = c("spearman", "euclidean", "correlation", "pearson"))
-  
-  dataMatrix <- x
-  tdataMatrix <- y
-  
-  tmp <- overlapSets(dataMatrix, tdataMatrix)
-  dataMatrix <- tmp$x
-  tdataMatrix <- tmp$y
-  
-  dataMatrix_main  <- dataMatrix
-  tdataMatrix_main <- tdataMatrix
-  
-  if (nrow(dataMatrix) == 0L || ncol(tdataMatrix) == 0L) {
-    # return an empty but well-formed object
-    pred <- setNames(character(0), character(0))
-    res <- list(
-      predictions     = pred,
-      testData        = as.matrix(tdataMatrix_main),
-      distances       = matrix(numeric(0), nrow = 0, ncol = ncol(dataMatrix), dimnames = list(NULL, colnames(dataMatrix))),
-      dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = min(4, ncol(dataMatrix)), dimnames = list(NULL, colnames(dataMatrix)[seq_len(min(4, ncol(dataMatrix)))])),
-      centroids       = dataMatrix_main
+    distm <- match.arg(distm, choices = c("spearman", "euclidean", "correlation", "pearson"))
+
+    dataMatrix <- x
+    tdataMatrix <- y
+
+    tmp <- overlapSets(dataMatrix, tdataMatrix)
+    dataMatrix <- tmp$x
+    tdataMatrix <- tmp$y
+
+    dataMatrix_main <- dataMatrix
+    tdataMatrix_main <- tdataMatrix
+
+    if (nrow(dataMatrix) == 0L || ncol(tdataMatrix) == 0L) {
+        # return an empty but well-formed object
+        pred <- setNames(character(0), character(0))
+        res <- list(
+            predictions     = pred,
+            testData        = as.matrix(tdataMatrix_main),
+            distances       = matrix(numeric(0), nrow = 0, ncol = ncol(dataMatrix), dimnames = list(NULL, colnames(dataMatrix))),
+            dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = min(4, ncol(dataMatrix)), dimnames = list(NULL, colnames(dataMatrix)[seq_len(min(4, ncol(dataMatrix)))])),
+            centroids       = dataMatrix_main
+        )
+        if (Subtype) res$predictions.FourSubtype <- pred
+        return(res)
+    }
+
+    sfeatureNames <- rownames(dataMatrix)
+
+    if (std) {
+        dataMatrix <- standardize(dataMatrix)
+        tdataMatrix <- standardize(tdataMatrix)
+    }
+
+    nClasses <- ncol(dataMatrix)
+    classLevels <- colnames(dataMatrix)
+
+    distances <- matrix(NA_real_,
+        ncol = nClasses, nrow = ncol(tdataMatrix),
+        dimnames = list(colnames(tdataMatrix), colnames(dataMatrix))
     )
-    if (Subtype) res$predictions.FourSubtype <- pred
-    return(res)
-  }
-  
-  sfeatureNames <- rownames(dataMatrix)
-  
-  if (std) {
-    dataMatrix  <- standardize(dataMatrix)
-    tdataMatrix <- standardize(tdataMatrix)
-  }
-  
-  nClasses   <- ncol(dataMatrix)
-  classLevels<- colnames(dataMatrix)
-  
-  distances <- matrix(NA_real_, ncol = nClasses, nrow = ncol(tdataMatrix),
-                      dimnames = list(colnames(tdataMatrix), colnames(dataMatrix)))
-  
-  for (j in seq_len(nClasses)) {
-    if (distm == "euclidean") {
-      combined <- cbind(dataMatrix[, j], tdataMatrix)
-      dv <- dist(t(combined))
-      distances[, j] <- dv[seq_len(ncol(tdataMatrix))]
+
+    for (j in seq_len(nClasses)) {
+        if (distm == "euclidean") {
+            combined <- cbind(dataMatrix[, j], tdataMatrix)
+            dv <- dist(t(combined))
+            distances[, j] <- dv[seq_len(ncol(tdataMatrix))]
+        } else {
+            mth <- if (distm == "spearman") "spearman" else "pearson"
+            distances[, j] <- apply(tdataMatrix, 2, function(xx) {
+                -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
+            })
+        }
+    }
+
+    # If a row is all NA (no finite distances), prediction := NA
+    prediction <- rep(NA_character_, nrow(distances))
+    names(prediction) <- rownames(distances)
+    good <- rowSums(is.finite(distances)) > 0
+    if (any(good)) {
+        prediction[good] <- classLevels[apply(distances[good, , drop = FALSE], 1, which.min)]
+    }
+
+    if (Subtype) {
+        nClasses4 <- min(4, nClasses)
+        classLevels4 <- classLevels[seq_len(nClasses4)]
+        dist4 <- matrix(NA_real_,
+            ncol = nClasses4, nrow = ncol(tdataMatrix),
+            dimnames = list(colnames(tdataMatrix), classLevels4)
+        )
+        for (j in seq_len(nClasses4)) {
+            if (distm == "euclidean") {
+                combined <- cbind(dataMatrix[, j], tdataMatrix)
+                dv <- dist(t(combined))
+                dist4[, j] <- dv[seq_len(ncol(tdataMatrix))]
+            } else {
+                mth <- if (distm == "spearman") "spearman" else "pearson"
+                dist4[, j] <- apply(tdataMatrix, 2, function(xx) {
+                    -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
+                })
+            }
+        }
+        prediction.Subtype <- rep(NA_character_, nrow(dist4))
+        names(prediction.Subtype) <- rownames(dist4)
+        good4 <- rowSums(is.finite(dist4)) > 0
+        if (any(good4)) {
+            prediction.Subtype[good4] <- classLevels4[apply(dist4[good4, , drop = FALSE], 1, which.min)]
+        }
+    }
+
+    ## ROR distances: drop the 4 excluded genes first
+    genes.ex <- c("BIRC5", "CCNB1", "GRB7", "MYBL2")
+    t4 <- tdataMatrix_main[!(rownames(tdataMatrix_main) %in% genes.ex), , drop = FALSE]
+    tmp4 <- overlapSets(dataMatrix, t4)
+    cent4 <- tmp4$x[, seq_len(min(4, ncol(tmp4$x))), drop = FALSE]
+    dat4 <- tmp4$y
+
+    dist.RORSubtype <- matrix(NA_real_,
+        ncol = ncol(cent4), nrow = ncol(dat4),
+        dimnames = list(colnames(dat4), colnames(cent4))
+    )
+    if (ncol(dat4) > 0L) {
+        for (j in seq_len(ncol(cent4))) {
+            dist.RORSubtype[, j] <- apply(dat4, 2, function(xx) {
+                -cor(cent4[, j], xx, method = "spearman", use = "pairwise.complete.obs")
+            })
+        }
+    }
+
+    if (Subtype) {
+        res <- list(
+            predictions = prediction,
+            predictions.FourSubtype = prediction.Subtype,
+            testData = as.matrix(tdataMatrix_main),
+            distances = distances,
+            dist.RORSubtype = dist.RORSubtype,
+            centroids = dataMatrix_main
+        )
     } else {
-      mth <- if (distm == "spearman") "spearman" else "pearson"
-      distances[, j] <- apply(tdataMatrix, 2, function(xx) {
-        -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
-      })
+        res <- list(
+            predictions            = prediction,
+            testData               = as.matrix(tdataMatrix_main),
+            distances              = distances,
+            dist.RORSubtype        = dist.RORSubtype,
+            centroids              = dataMatrix_main
+        )
     }
-  }
-  
-  # If a row is all NA (no finite distances), prediction := NA
-  prediction <- rep(NA_character_, nrow(distances))
-  names(prediction) <- rownames(distances)
-  good <- rowSums(is.finite(distances)) > 0
-  if (any(good)) {
-    prediction[good] <- classLevels[apply(distances[good, , drop = FALSE], 1, which.min)]
-  }
-  
-  if (Subtype) {
-    nClasses4    <- min(4, nClasses)
-    classLevels4 <- classLevels[seq_len(nClasses4)]
-    dist4 <- matrix(NA_real_, ncol = nClasses4, nrow = ncol(tdataMatrix),
-                    dimnames = list(colnames(tdataMatrix), classLevels4))
-    for (j in seq_len(nClasses4)) {
-      if (distm == "euclidean") {
-        combined <- cbind(dataMatrix[, j], tdataMatrix)
-        dv <- dist(t(combined))
-        dist4[, j] <- dv[seq_len(ncol(tdataMatrix))]
-      } else {
-        mth <- if (distm == "spearman") "spearman" else "pearson"
-        dist4[, j] <- apply(tdataMatrix, 2, function(xx) {
-          -cor(dataMatrix[, j], xx, method = mth, use = "pairwise.complete.obs")
-        })
-      }
-    }
-    prediction.Subtype <- rep(NA_character_, nrow(dist4))
-    names(prediction.Subtype) <- rownames(dist4)
-    good4 <- rowSums(is.finite(dist4)) > 0
-    if (any(good4)) {
-      prediction.Subtype[good4] <- classLevels4[apply(dist4[good4, , drop = FALSE], 1, which.min)]
-    }
-  }
-  
-  ## ROR distances: drop the 4 excluded genes first
-  genes.ex <- c("BIRC5","CCNB1","GRB7","MYBL2")
-  t4 <- tdataMatrix_main[!(rownames(tdataMatrix_main) %in% genes.ex), , drop = FALSE]
-  tmp4 <- overlapSets(dataMatrix, t4)
-  cent4 <- tmp4$x[, seq_len(min(4, ncol(tmp4$x))), drop = FALSE]
-  dat4  <- tmp4$y
-  
-  dist.RORSubtype <- matrix(NA_real_, ncol = ncol(cent4), nrow = ncol(dat4),
-                            dimnames = list(colnames(dat4), colnames(cent4)))
-  if (ncol(dat4) > 0L) {
-    for (j in seq_len(ncol(cent4))) {
-      dist.RORSubtype[, j] <- apply(dat4, 2, function(xx) {
-        -cor(cent4[, j], xx, method = "spearman", use = "pairwise.complete.obs")
-      })
-    }
-  }
-  
-  if (Subtype) {
-    res <- list(
-      predictions            = prediction,
-      predictions.FourSubtype= prediction.Subtype,
-      testData               = as.matrix(tdataMatrix_main),
-      distances              = distances,
-      dist.RORSubtype        = dist.RORSubtype,
-      centroids              = dataMatrix_main
-    )
-  } else {
-    res <- list(
-      predictions            = prediction,
-      testData               = as.matrix(tdataMatrix_main),
-      distances              = distances,
-      dist.RORSubtype        = dist.RORSubtype,
-      centroids              = dataMatrix_main
-    )
-  }
-  res
+    res
 }
 
 
@@ -320,10 +331,11 @@ sspPredict <- function(x, y, std = FALSE, distm = "spearman", Subtype = TRUE) {
 #' @return ROR, ROR risk group and other indications
 #' @noRd
 
-RORgroup <- function(out,
-    df.cln,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+RORgroup <- function(
+        out,
+        df.cln,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     sample <- data.frame(patientID = names(out$predictions))
 
     distance <- data.frame(out$distances, row.names = names(out$predictions))
@@ -400,23 +412,23 @@ RORgroup <- function(out,
 
     ## ER and HER2 score
     # out$testData = mat
-    
+
     # Safe extraction of ESR1 / ERBB2 scores; fill with NA if missing
     n_samp <- if (is.matrix(out$testData)) ncol(out$testData) else 0L
     samp_names <- if (n_samp) colnames(out$testData) else character(0)
-    
+
     erScore <- if (!is.null(rownames(out$testData)) && "ESR1" %in% rownames(out$testData)) {
-      out$testData["ESR1", ]
+        out$testData["ESR1", ]
     } else {
-      setNames(rep(NA_real_, n_samp), samp_names)
+        setNames(rep(NA_real_, n_samp), samp_names)
     }
-    
+
     her2Score <- if (!is.null(rownames(out$testData)) && "ERBB2" %in% rownames(out$testData)) {
-      out$testData["ERBB2", ]
+        out$testData["ERBB2", ]
     } else {
-      setNames(rep(NA_real_, n_samp), samp_names)
+        setNames(rep(NA_real_, n_samp), samp_names)
     }
-    
+
 
     er_her2 <- data.frame(
         "ER" = erScore,
@@ -446,24 +458,29 @@ RORgroup <- function(out,
     # }
 
     for (j in seq_len(length(out$predictions))) {
-          centroid_col <- which(colnames(out$centroids) == out$predictions[j])
-          x <- out$testData[, j, drop = TRUE]
-          y <- out$centroids[, centroid_col, drop = TRUE]
-          common <- intersect(names(x), rownames(out$centroids))
-          # if names are NULL, fall back to positional intersection with rownames
-            if (length(common) > 0L) {
-              xi <- x[common]; yi <- y[common]
-            } else {
-              # assume already aligned; trim to min length to avoid accidental mismatch
-              n <- min(length(x), length(y))
-              xi <- x[seq_len(n)]; yi <- y[seq_len(n)]
-            }
-            ok <- is.finite(xi) & is.finite(yi)
-            pv <- tryCatch({
-              if (sum(ok) >= 3L) cor.test(xi[ok], yi[ok], method="spearman", exact=FALSE)$p.value else 1
-            }, error = function(e) 1)
-          call.conf[j] <- 1 - pv
+        centroid_col <- which(colnames(out$centroids) == out$predictions[j])
+        x <- out$testData[, j, drop = TRUE]
+        y <- out$centroids[, centroid_col, drop = TRUE]
+        common <- intersect(names(x), rownames(out$centroids))
+        # if names are NULL, fall back to positional intersection with rownames
+        if (length(common) > 0L) {
+            xi <- x[common]
+            yi <- y[common]
+        } else {
+            # assume already aligned; trim to min length to avoid accidental mismatch
+            n <- min(length(x), length(y))
+            xi <- x[seq_len(n)]
+            yi <- y[seq_len(n)]
         }
+        ok <- is.finite(xi) & is.finite(yi)
+        pv <- tryCatch(
+            {
+                if (sum(ok) >= 3L) cor.test(xi[ok], yi[ok], method = "spearman", exact = FALSE)$p.value else 1
+            },
+            error = function(e) 1
+        )
+        call.conf[j] <- 1 - pv
+    }
     call.conf <- as.numeric(call.conf)
     call.conf[!is.finite(call.conf)] <- NA_real_
     call.conf <- round(call.conf, 2)
@@ -654,12 +671,12 @@ RORgroup <- function(out,
         )
         outtable <- cbind(outtable, Call.Subtype)
         ord <- c(
-                "patientID",
-                colnames(distance),
-                "Call",
-                "Call.Subtype",
-                setdiff(colnames(outtable), c("patientID", colnames(distance), "Call", "Call.Subtype"))
-            )
+            "patientID",
+            colnames(distance),
+            "Call",
+            "Call.Subtype",
+            setdiff(colnames(outtable), c("patientID", colnames(distance), "Call", "Call.Subtype"))
+        )
         outtable <- outtable[, ord, drop = FALSE]
     }
 
@@ -700,14 +717,15 @@ RORgroup <- function(out,
 #' @noRd
 #'
 
-makeCalls.parker <- function(mat,
-    df.cln,
-    calibration = c("None", "Internal", "External"),
-    internal = NA,
-    external = NA,
-    medians = NULL,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+makeCalls.parker <- function(
+        mat,
+        df.cln,
+        calibration = c("None", "Internal", "External"),
+        internal = NA,
+        external = NA,
+        medians = NULL,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -817,15 +835,16 @@ makeCalls.parker <- function(mat,
 #' @noRd
 
 
-makeCalls_ihc <- function(mat,
-    df.cln,
-    calibration = "Internal",
-    internal = "IHC.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls_ihc <- function(
+        mat,
+        df.cln,
+        calibration = "Internal",
+        internal = "IHC.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -954,17 +973,18 @@ makeCalls_ihc <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls_ihc.iterative <- function(mat,
-    df.cln,
-    iteration = 100,
-    ratio = 54 / 64,
-    calibration = "Internal",
-    internal = "ER.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+makeCalls_ihc.iterative <- function(
+        mat,
+        df.cln,
+        iteration = 100,
+        ratio = 54 / 64,
+        calibration = "Internal",
+        internal = "ER.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1151,16 +1171,15 @@ makeCalls_ihc.iterative <- function(mat,
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.PC1ihc <- function(
-        mat,
-        df.cln,
-        calibration = "Internal",
-        internal = "PC1ihc.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls.PC1ihc <- function(mat,
+    df.cln,
+    calibration = "Internal",
+    internal = "PC1ihc.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1344,16 +1363,15 @@ makeCalls.PC1ihc <- function(
 #' @param seed An integer value is used to set the random seed.
 #' @noRd
 
-makeCalls.v1PAM <- function(
-        mat,
-        df.pam,
-        calibration = "Internal",
-        internal = "v1PAM.mdns",
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+makeCalls.v1PAM <- function(mat,
+    df.pam,
+    calibration = "Internal",
+    internal = "v1PAM.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1471,12 +1489,11 @@ makeCalls.v1PAM <- function(
 #'   should be in the "NODE" column.
 #' @noRd
 
-makeCalls.ssBC <- function(
-        mat,
-        df.cln,
-        s = c("ER", "TN", "ER.v2", "TN.v2"),
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+makeCalls.ssBC <- function(mat,
+    df.cln,
+    s = c("ER", "TN", "ER.v2", "TN.v2"),
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1537,67 +1554,78 @@ makeCalls.ssBC <- function(
     }
 
     res <- mapply(
-      function(element) {
-        # restrict to PAM50 genes first
-        pam50 <- rownames(BreastSubtypeRobj$centroid)
-        samp  <- samples_selected[[element]]
-        if (length(samp) == 0L) {
-          # return a well-formed empty result for this subgroup
-          pred <- setNames(character(0), character(0))
-          empty <- list(
-            predictions     = pred,
-            testData        = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
-            distances       = matrix(numeric(0), nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
-                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))),
-            dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = 4,
-                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4]))
-          )
-          if (Subtype) empty$predictions.FourSubtype <- pred
-          return(empty)
-        }
-        
-        x.m <- mat[rownames(mat) %in% pam50, samp, drop = FALSE]
-        if (nrow(x.m) == 0L) {
-          # no overlapping PAM50 genes in this subgroup
-          pred <- setNames(character(0), character(0))
-          empty <- list(
-            predictions     = pred,
-            testData        = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
-            distances       = matrix(numeric(0), nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
-                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))),
-            dist.RORSubtype = matrix(numeric(0), nrow = 0, ncol = 4,
-                                     dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4]))
-          )
-          if (Subtype) empty$predictions.FourSubtype <- pred
-          return(empty)
-        }
-        
-        # gene-specific quantiles: align safely
-        gene.sigma.o <- gene.sigma[rownames(x.m), element, drop = TRUE]
-        
-        # per-row quantile with guards
-        x.sigma <- vapply(seq_len(nrow(x.m)), function(i) {
-          p <- gene.sigma.o[i]
-          if (!is.finite(p)) return(NA_real_)
-          tryCatch(quantile(x.m[i, ], probs = p, na.rm = TRUE, names = FALSE, type = 7),
-                   error = function(e) NA_real_)
-        }, numeric(1))
-        
-        x.m <- sweep(x.m, 1, x.sigma, FUN = "-")
-        
-        sspPredict(
-          BreastSubtypeRobj$centroid,
-          x.m,
-          std = FALSE,
-          distm = "spearman",
-          Subtype = Subtype
-        )
-      },
-      names(samples_selected),
-      SIMPLIFY = FALSE,
-      USE.NAMES = TRUE
+        function(element) {
+            # restrict to PAM50 genes first
+            pam50 <- rownames(BreastSubtypeRobj$centroid)
+            samp <- samples_selected[[element]]
+            if (length(samp) == 0L) {
+                # return a well-formed empty result for this subgroup
+                pred <- setNames(character(0), character(0))
+                empty <- list(
+                    predictions = pred,
+                    testData = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
+                    distances = matrix(numeric(0),
+                        nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
+                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))
+                    ),
+                    dist.RORSubtype = matrix(numeric(0),
+                        nrow = 0, ncol = 4,
+                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4])
+                    )
+                )
+                if (Subtype) empty$predictions.FourSubtype <- pred
+                return(empty)
+            }
+
+            x.m <- mat[rownames(mat) %in% pam50, samp, drop = FALSE]
+            if (nrow(x.m) == 0L) {
+                # no overlapping PAM50 genes in this subgroup
+                pred <- setNames(character(0), character(0))
+                empty <- list(
+                    predictions = pred,
+                    testData = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
+                    distances = matrix(numeric(0),
+                        nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
+                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))
+                    ),
+                    dist.RORSubtype = matrix(numeric(0),
+                        nrow = 0, ncol = 4,
+                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[1:4])
+                    )
+                )
+                if (Subtype) empty$predictions.FourSubtype <- pred
+                return(empty)
+            }
+
+            # gene-specific quantiles: align safely
+            gene.sigma.o <- gene.sigma[rownames(x.m), element, drop = TRUE]
+
+            # per-row quantile with guards
+            x.sigma <- vapply(seq_len(nrow(x.m)), function(i) {
+                p <- gene.sigma.o[i]
+                if (!is.finite(p)) {
+                    return(NA_real_)
+                }
+                tryCatch(quantile(x.m[i, ], probs = p, na.rm = TRUE, names = FALSE, type = 7),
+                    error = function(e) NA_real_
+                )
+            }, numeric(1))
+
+            x.m <- sweep(x.m, 1, x.sigma, FUN = "-")
+
+            sspPredict(
+                BreastSubtypeRobj$centroid,
+                x.m,
+                std = FALSE,
+                distm = "spearman",
+                Subtype = Subtype
+            )
+        },
+        names(samples_selected),
+        SIMPLIFY = FALSE,
+        USE.NAMES = TRUE
     )
-    
+
 
     ## prepare data for ROR
 
@@ -1694,7 +1722,7 @@ makeCalls.ssBC <- function(
             BS.Subtype = predictions.FourSubtype,
             row.names = names(predictions),
             check.names = FALSE
-          )
+        )
 
         ## out list
         out <- list(

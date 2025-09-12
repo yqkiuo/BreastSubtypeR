@@ -38,8 +38,8 @@ multiple model variants for different applications.
 ## Example using SSPBC with the PAM50 model
 data("OSLO2EMIT0obj")
 res <- BS_sspbc(
-  se_obj = OSLO2EMIT0obj$data_input$se_SSP,
-  ssp.name = "ssp.pam50"
+    se_obj = OSLO2EMIT0obj$data_input$se_SSP,
+    ssp.name = "ssp.pam50"
 )
 
 }

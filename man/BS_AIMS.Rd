@@ -32,7 +32,7 @@ rules. This makes it robust to cohort composition and scaling.
 ## Example using SummarizedExperiment input
 data("OSLO2EMIT0obj")
 res <- BS_AIMS(
-  se_obj = OSLO2EMIT0obj$data_input$se_SSP
+    se_obj = OSLO2EMIT0obj$data_input$se_SSP
 )
 
 }

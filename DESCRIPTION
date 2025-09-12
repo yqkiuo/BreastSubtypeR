@@ -1,7 +1,6 @@
 Package: BreastSubtypeR
 Type: Package
 Title: Cohort-aware methods for intrinsic molecular subtyping of breast cancer
-Maintainer: Qiao Yang <yq.kiuo@gmail.com>
 Description: BreastSubtypeR provides an assumption-aware, multi-method framework
     for intrinsic molecular subtyping of breast cancer. The package harmonizes
     several published nearest-centroid (NC) and single-sample predictor (SSP)
@@ -15,9 +14,9 @@ Version: 1.1.3
 biocViews: RNASeq, Software, GeneExpression, Classification
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
-	          role = c("aut", "cre"), 
-            email="yq.kiuo@gmail.com", 
-            comment = c(ORCID = "0000-0002-4098-3246")),
+	   role = c("aut", "cre"), 
+           email="yq.kiuo@gmail.com", 
+           comment = c(ORCID = "0000-0002-4098-3246")),
     person(given = "Emmanouil", family = "Sifakis",
            role = c("aut"),
            email = "emmanouil.sifakis@ki.se",
@@ -46,6 +45,7 @@ Imports:
     SummarizedExperiment,
     utils
 Suggests:
+    lifecycle,
     tidyverse,
     shiny (>= 1.9.1),
     bslib (>= 0.8.0),

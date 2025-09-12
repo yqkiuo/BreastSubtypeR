@@ -43,9 +43,9 @@ approach improves subtype consistency, particularly in ER-skewed cohorts.
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_PCAPAM50(
-  se_obj = OSLO2EMIT0obj$data_input$se_NC,
-  Subtype = FALSE,
-  hasClinical = FALSE
+    se_obj = OSLO2EMIT0obj$data_input$se_NC,
+    Subtype = FALSE,
+    hasClinical = FALSE
 )
 
 }

@@ -79,7 +79,7 @@ data("OSLO2EMIT0obj")
 res <- BS_parker(
     se_obj = OSLO2EMIT0obj$data_input$se_NC,
     calibration = "Internal",
-    internal = NA,                     # NA ≡ "medianCtr"
+    internal = NA, # NA ≡ "medianCtr"
     Subtype = FALSE,
     hasClinical = FALSE
 )

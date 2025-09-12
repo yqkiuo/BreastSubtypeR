@@ -29,11 +29,11 @@ unqualified functions like \code{tags}, \code{icon}, \code{fileInput}, etc.
 }
 \examples{
 \donttest{
-  # Basic
-  iBreastSubtypeR()
+# Basic
+iBreastSubtypeR()
 
-  # Skip attaching packages (if UI/server fully qualify all calls)
-  iBreastSubtypeR(attach = character(0))
+# Skip attaching packages (if UI/server fully qualify all calls)
+iBreastSubtypeR(attach = character(0))
 }
 
 }
