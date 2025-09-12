@@ -9,34 +9,34 @@ BS_sspbc(se_obj, ssp.name = "ssp.pam50")
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A gene expression matrix with genes (EntrezID) as rows and samples as columns.
-Important: The gene expression values should not be gene-centered.
-All expression values must be \strong{positive}.
+\item \strong{Assay data}: A gene expression matrix with genes (Entrez IDs) as rows
+and samples as columns.
+\itemize{
+\item Expression values must be \strong{positive} (e.g., FPKM or log₂(FPKM+1)).
+\item Values should not be gene-centered or globally scaled.
+}
 }}
 
-\item{ssp.name}{Specifies the model to use. Options are:
+\item{ssp.name}{Character. Specifies the SSPBC model to use:
 \itemize{
-\item "ssp.pam50": For PAM50-based predictions.
-\item "ssp.subtype": For predicting Prosigna-like subtypes (four subtypes, \strong{excluding} the Normal-like subtype).
+\item \code{"ssp.pam50"}: Predicts PAM50-based intrinsic subtypes.
+\item \code{"ssp.subtype"}: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).
 }}
 }
 \value{
-Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-by the SSPBC method.
+A character vector of intrinsic subtype predictions for each sample,
+as estimated by the SSPBC method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-SSPBC (Single Sample Predictor for Breast Cancer). SSPBC is
-based on a refined version of the original AIMS methodology, utilizing a large,
-uniformly accrued population-based cohort (SCAN-B) for training. This method supports
-RNA sequencing data and provides flexibility in selecting the prediction model.
+Implements \strong{SSPBC (Single Sample Predictor for Breast Cancer)}, a
+refinement of the original AIMS methodology trained on the large,
+population-based SCAN-B RNA-seq cohort. SSPBC provides robust
+single-sample predictions, independent of cohort composition, and supports
+multiple model variants for different applications.
 }
 \examples{
-
-# Load required dataset
+## Example using SSPBC with the PAM50 model
 data("OSLO2EMIT0obj")
-
-# Perform subtyping with the SSPBC method
 res <- BS_sspbc(
     se_obj = OSLO2EMIT0obj$data_input$se_SSP,
     ssp.name = "ssp.pam50"
@@ -44,10 +44,8 @@ res <- BS_sspbc(
 
 }
 \references{
-\itemize{
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
-risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
-Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+\emph{RNA sequencing-based single sample predictors of molecular subtype and risk of recurrence for clinical assessment of early-stage breast cancer.}
+NPJ Breast Cancer. 2022;8(1):27.
+https://doi.org/10.1038/s41523-022-00465-3
 }

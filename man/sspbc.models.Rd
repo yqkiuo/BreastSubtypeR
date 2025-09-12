@@ -3,7 +3,7 @@
 \docType{data}
 \name{sspbc.models}
 \alias{sspbc.models}
-\title{The sspbc models (short name) for the 11 developed predictors}
+\title{sspbc.models: Short names for 11 SSPBC predictors}
 \format{
 An object of class \code{list} of length 11.
 }
@@ -11,27 +11,24 @@ An object of class \code{list} of length 11.
 data("sspbc.models")
 }
 \value{
-\item{sspbc.models}{The collection of 11 ssp models used by sspbc.}
-
-#' @references
-\itemize{
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
-risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
-Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+\item{sspbc.models}{Named list of 11 SSP models used by \code{sspbc}.}
 }
 \description{
-List with the 11 SSP models from Staaf J. et al. medRxiv 2021.12.03.21267116.
+List of 11 single-sample predictor (SSP) models from Staaf et al. (2022),
+indexed by short names used by \code{sspbc}.
 }
 \details{
-List elements are named with short name for respective ssp model.
-The ssp models in list sspbc.models are the same as in list sspbc.models.fullname.
+Names correspond to short model identifiers. The contents are identical to
+\code{sspbc.models.fullname}, which uses full model names.
 }
 \examples{
 library(BreastSubtypeR)
-## Load the sspbc.models
 data("sspbc.models")
-
+}
+\references{
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+RNA sequencing-based single sample predictors of molecular subtype and risk of
+recurrence for clinical assessment of early-stage breast cancer.
+\emph{NPJ Breast Cancer}. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 }
 \keyword{datasets}

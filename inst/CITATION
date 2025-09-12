@@ -18,7 +18,10 @@ paper <- bibentry(
   journal = "NAR Genomics and Bioinformatics",
   year    = "2025",
   note    = "Editor's Choice",
-  doi     = "in press"
+  doi     = "10.1093/nargab/lqaf131",
+  url     = "https://doi.org/10.1093/nargab/lqaf131",
+  textVersion =
+    "Yang Q., Hartman J., Sifakis E.G. BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131"
 )
 
 # Package manual

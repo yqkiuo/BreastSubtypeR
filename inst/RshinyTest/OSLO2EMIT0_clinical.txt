@@ -1,4 +1,4 @@
-PatientID	ER	PR	HER2	T	NODE	IHC	Prosigna.Subtype	Prosigna.ROR	MKI67.corrected	Ki67.estimated	IHC.estimated
+PatientID	ER	PR	HER2	TSIZE	NODE	IHC	Prosigna.Subtype	Prosigna.ROR	MKI67.corrected	Ki67.estimated	IHC.estimated
 OSLO2EMIT0.001	ER+	Positive	HER2-	0	0	LA	LumB	51	0.885328316519476	Low	LA
 OSLO2EMIT0.002	ER-	Negative	HER2-	0	0	TN	Basal	55	4.08188568360642	High	TN
 OSLO2EMIT0.003	ER+	Positive	HER2-	0	0	LA	LumA	52	2.13245863022578	High	LB1

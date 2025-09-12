@@ -9,34 +9,37 @@ BS_cIHC(se_obj, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-as rows and samples as columns.
-\item \strong{Column metadata} (\code{colData}): A clinical information table, which must include:
+\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+genes (Gene Symbols) as rows and samples as columns.
+\item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{
-\item \code{"PatientID"}: Unique sample or patient identifiers.
-\item \code{"ER"}: Estrogen receptor (ER) status, recorded as \code{"ER+"} or \code{"ER-"}.
+\item \code{"PatientID"}: Unique sample or patient identifier.
+\item \code{"ER"}: Estrogen receptor status, coded as \code{"ER+"} or \code{"ER-"}.
 }
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, returns only the four main subtypes
+(Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates additional clinical
+variables from \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
 }}
 
-\item{seed}{An integer used to set the random seed for reproducibility.}
+\item{seed}{Integer. Random seed for reproducibility of ER-balancing.}
 }
 \value{
-Returns a data frame containing intrinsic subtypes estimated using the
-conventional IHC (cIHC) method.
+A \code{data.frame} containing intrinsic subtype assignments estimated
+using the conventional IHC (cIHC) approach.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-the conventional estrogen receptor (ER)-balancing via immunohistochemistry (cIHC).
+Implements the conventional immunohistochemistry-based (cIHC) intrinsic
+subtyping approach, which balances cohorts by estrogen receptor (ER) status
+before applying gene-expression–based subtyping. This method is useful for
+ER-skewed cohorts where assumptions of nearest-centroid classifiers are
+violated.
 }
 \examples{
 data("OSLO2EMIT0obj")
@@ -48,9 +51,8 @@ res <- BS_cIHC(
 
 }
 \references{
-\itemize{
-\item Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A,
-et al. \emph{Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer}.
-Cell. 2015;163(2). https://doi.org/10.1016/j.cell.2015.09.033
-}
+Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
+\emph{Comprehensive Molecular Portraits of Invasive Lobular Breast Cancer.}
+Cell. 2015;163(2):506–519.
+https://doi.org/10.1016/j.cell.2015.09.033
 }

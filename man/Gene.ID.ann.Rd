@@ -3,7 +3,7 @@
 \docType{data}
 \name{Gene.ID.ann}
 \alias{Gene.ID.ann}
-\title{Gene annotation table.}
+\title{Gene.ID.ann: Gene annotation table}
 \format{
 An object of class \code{data.frame} with 19675 rows and 6 columns.
 }
@@ -11,31 +11,25 @@ An object of class \code{data.frame} with 19675 rows and 6 columns.
 data("Gene.ID.ann")
 }
 \value{
-\item{Gene.ID.ann}{Annotation table for GENCODE Human Release 27
-genes.}
+\item{Gene.ID.ann}{Data frame of annotations for GENCODE v27 genes.}
 }
 \description{
-Annotation table for the GENCODE Human Release 27 genes
-(Gene.ID) included in the StringTie target when summarizing gene expression.
-The annotation are from from GENCODE Human Release 27 metadata files and
-include HGNC, EntrezGene and RefSeq.
+Annotation table for GENCODE Human Release 27 genes (\code{Gene.ID}) used by
+StringTie summarisation. Includes HGNC, EntrezGene, and RefSeq identifiers
+derived from GENCODE v27 metadata.
 }
 \details{
-Annotation table used by the applySSP to translate gene identifiers
-as needed before classification with provided ssp models.
+Used by internal SSP application functions to translate identifiers prior to
+classification with SSP models.
 }
 \examples{
 library(BreastSubtypeR)
-## Load the Gene.ID.ann
-data(Gene.ID.ann)
-
+data("Gene.ID.ann")
 }
 \references{
-\itemize{
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
-risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
-Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+RNA sequencing-based single sample predictors of molecular subtype and risk of
+recurrence for clinical assessment of early-stage breast cancer.
+\emph{NPJ Breast Cancer}. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 }
 \keyword{datasets}

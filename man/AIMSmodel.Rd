@@ -3,7 +3,7 @@
 \docType{data}
 \name{AIMSmodel}
 \alias{AIMSmodel}
-\title{The AIMS model}
+\title{AIMSmodel: Model object for AIMS}
 \format{
 An object of class \code{list} of length 4.
 }
@@ -11,45 +11,28 @@ An object of class \code{list} of length 4.
 data("AIMSmodel")
 }
 \value{
-\item{all.pairs}{The 100 rules in AIMS in the form EntrezID gene A < EntrezID gene B}
-\item{k}{The selected number of optimal rules. For AIMS we have shown it is 20}
-\item{one.vs.all.tsp}{The Naive bayes classifier used in combination with the 100 rules}
-\item{selected.pairs.list}{The list of rules sorted from the best discriminating rule to the least discriminating rules subdivided by subtype}
+\item{all.pairs}{Character vector of the 100 AIMS rules (EntrezID comparisons).}
+\item{k}{Integer; number of optimal rules (commonly 20).}
+\item{one.vs.all.tsp}{Naive Bayes classifier object used with the rules.}
+\item{selected.pairs.list}{Rules ranked by discriminative power per subtype.}
 }
 \description{
-This is the model definition for AIMS. It contains the
-naive bayes classifier composed of the 100 rules described in Paquet et al.
-"Absolute assignment of breast cancer intrinsic molecular subtype" (under
-review at JNCI).
+Model definition for AIMS consisting of 100 pairwise rules and a Naive Bayes
+classifier (via \pkg{e1071}) as described by Paquet & Hallett (2015).
 }
 \details{
-This is the AIMS model define using 100 simple rules of the form
-gene A < gene B and combine within a naive bayes classifier within e1071.
-(Paquet et al. under review JNCI).
-
-Briefly, using a suitably large training dataset(~5000 gene breast cancer
-gene expression profiles), the approach identifies a small set of simple
-binary rules (~20) that examine the raw expression measurements for pairs of
-genes from a single breast cancer patient, and only that patient. The binary
-rules are of the form "if the expression of gene x is greater than gene y,
-then tend to assign subtype z for that patient". Subtypes could be : Basal,
-Her2, LumA, LumB, or Normal. The collection of binary rules is combined for a
-single estimation of a patient subtype via a single probabilistic model using
-naiveBayes in e1071. In this way, since only expression levels of genes with
-a single patient is considered, the method represents a promising approach to
-ablate the instability caused by relativistic approaches (Paquet et al. in
-review at JNCI).
+The 100 rules are of the form “EntrezID gene A < EntrezID gene B”. A subset
+of \code{k} rules (typically 20) is used within a Naive Bayes classifier to
+assign subtypes (Basal-like, HER2-enriched, LumA, LumB, Normal-like) on a
+per-sample basis.
 }
 \examples{
 library(BreastSubtypeR)
 data("AIMSmodel")
-
 }
 \references{
-\itemize{
-\item Paquet ER, Hallett MT. \emph{Absolute assignment of breast cancer
-intrinsic molecular subtype.} J Natl Cancer Inst. 2015;107(1).
-https://doi.org/10.1093/jnci/dju357
-}
+Paquet ER, Hallett MT.
+Absolute assignment of breast cancer intrinsic molecular subtype.
+\emph{J Natl Cancer Inst}. 2015;107(1):dju357. https://doi.org/10.1093/jnci/dju357
 }
 \keyword{datasets}

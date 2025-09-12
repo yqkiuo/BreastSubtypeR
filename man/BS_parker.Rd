@@ -19,60 +19,67 @@ BS_parker(
 \itemize{
 \item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbols) as rows
 and samples as columns.
-\item \strong{Column metadata} (\code{colData}): Optional clinical information.
+\item \strong{Column metadata} (\code{colData}): Optional sample- or patient-level
+information.
 }}
 
-\item{calibration}{Specifies the calibration method to apply. Options include:
+\item{calibration}{Character. One of:
 \itemize{
-\item \code{"None"}: No calibration is applied.
-\item \code{"Internal"}: Uses internal calibration strategies (see \code{internal} argument).
-\item \code{"External"}: Uses external medians (see \code{external} argument).
+\item \code{"None"}: no centering/scaling.
+\item \code{"Internal"}: center by a method derived from the current cohort (see \code{internal}).
+\item \code{"External"}: center by medians from an external cohort (see \code{external}).
 }}
 
-\item{internal}{Specifies the internal calibration strategy when \code{calibration = "Internal"}. Options include:
+\item{internal}{Internal calibration method used when \code{calibration = "Internal"}.
+Accepts:
 \itemize{
-\item \code{"-1"} (default): Median-centered calibration.
-\item \code{"meanCtr"}: Mean-centered calibration (aligned with \code{genefu.scale}).
-\item \code{"qCtr"}: Quantile-based calibration (aligned with \code{genefu.robust}).
+\item \code{NA} or \code{"medianCtr"} (identical): gene-wise median centering (as in Parker et al.).
+\item \code{"meanCtr"}: gene-wise z-scoring (mean 0, sd 1; as implemented in \code{genefu.scale}).
+\item \code{"qCtr"}: robust centering (quantile rescale with mq = 0.05; as in \code{genefu.robust}).
+Defaults to \code{NA} (median centering).
 }}
 
-\item{external}{Specifies the platform name (i.e., column name) for external
-medians derived from the training cohort.
+\item{external}{Character string specifying the external calibration source.
 \itemize{
-\item To use user-provided medians, set \verb{"external = "Given.mdns"} and provide values via the
-\code{medians} argument.
+\item To use training cohort medians, provide the platform/column name.
+\item To supply user-defined medians, set \code{external = "Given.mdns"} and pass
+values via \code{medians}.
 }}
 
-\item{medians}{A matrix or table of user-provided median values, required if
-\code{external = "Given.mdns"}.
+\item{medians}{A matrix or data.frame of user-provided medians (required if
+\code{external = "Given.mdns"}).
 \itemize{
-\item The first column should contain 50 genes.
-\item The second column should contain the corresponding median values.
+\item First column: 50 PAM50 genes.
+\item Second column: Corresponding median expression values.
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, assigns only the four main intrinsic
+subtypes (Luminal A, Luminal B, HER2-enriched, Basal-like),
+excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates clinical variables from
+\code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
 }}
 }
 \value{
-Returns a list containing intrinsic subtypes assigned using the Parker-based method, or its variations.
+A list containing PAM50 intrinsic subtype calls using the Parker
+classifier and selected calibration strategy.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-the original Parker et al. (2019) method, along with variations of the original approach.
+Implements the original PAM50 nearest-centroid classifier as described by
+Parker et al. (2009), along with supported calibration strategies and
+variations. This function assigns intrinsic breast cancer subtypes
+(Luminal A, Luminal B, HER2-enriched, Basal-like, and optionally Normal-like).
 }
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_parker(
     se_obj = OSLO2EMIT0obj$data_input$se_NC,
     calibration = "Internal",
-    internal = "-1",
+    internal = NA, # NA ≡ "medianCtr"
     Subtype = FALSE,
     hasClinical = FALSE
 )
@@ -84,9 +91,9 @@ res <- BS_parker(
 \emph{Supervised risk predictor of breast cancer based on intrinsic subtypes}.
 Journal of Clinical Oncology. 2009;27(8).
 https://doi.org/10.1200/JCO.2008.18.1370
-\item Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et
-al. \emph{Genefu: An R/Bioconductor package for computation of gene
-expression-based signatures in breast cancer}. Bioinformatics. 2016;32(7).
+\item Gendoo DMA, Ratanasirigulchai N, Schröder MS, Paré L, Parker JS, Prat A, et al.
+\emph{Genefu: An R/Bioconductor package for computation of gene expression-based signatures in breast cancer}.
+Bioinformatics. 2016;32(7).
 https://doi.org/10.1093/bioinformatics/btv693
 }
 }

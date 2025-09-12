@@ -3,7 +3,7 @@
 \docType{data}
 \name{sspbc.models.fullname}
 \alias{sspbc.models.fullname}
-\title{The sspbc models (full name) for the 11 developed predictors}
+\title{sspbc.models.fullname: Full names for 11 SSPBC predictors}
 \format{
 An object of class \code{list} of length 11.
 }
@@ -11,27 +11,22 @@ An object of class \code{list} of length 11.
 data("sspbc.models.fullname")
 }
 \value{
-\item{sspbc.models.fullname}{The collection of 11 ssp models used by sspbc.}
+\item{sspbc.models.fullname}{Named list of 11 SSP models used by \code{sspbc}.}
 }
 \description{
-List with the 11 SSP models from Staaf J. et al. medRxiv 2021.12.03.21267116.
+List of the same 11 SSP models (Staaf et al., 2022) indexed by full model names.
 }
 \details{
-List elements are named with full name for respective ssp model.
-Note that ssp models in list sspbc.models.fullname are the same as in list sspbc.models.
+Identical content to \code{sspbc.models} but with full model names as list keys.
 }
 \examples{
 library(BreastSubtypeR)
-## Load the sspbc.models
-data(sspbc.models.fullname)
-
+data("sspbc.models.fullname")
 }
 \references{
-\itemize{
-\item Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I,
-et al. \emph{RNA sequencing-based single sample predictors of molecular subtype and
-risk of recurrence for clinical assessment of early-stage breast cancer}. NPJ
-Breast Cancer. 2022;8(1). https://doi.org/10.1038/s41523-022-00465-3
-}
+Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
+RNA sequencing-based single sample predictors of molecular subtype and risk of
+recurrence for clinical assessment of early-stage breast cancer.
+\emph{NPJ Breast Cancer}. 2022;8(1):27. https://doi.org/10.1038/s41523-022-00465-3
 }
 \keyword{datasets}

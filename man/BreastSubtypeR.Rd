@@ -4,33 +4,47 @@
 \name{BreastSubtypeR}
 \alias{BreastSubtypeR}
 \alias{BreastSubtypeR-package}
-\title{BreastSubtypeR: A Unified R Package for Intrinsic Molecular Subtyping in Breast Cancer Research}
+\title{BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research}
 \description{
-\strong{BreastSubtypeR} is an R package designed to unify and
-streamline intrinsic molecular subtyping methods for breast cancer (BC).
+\strong{BreastSubtypeR} is an R/Bioconductor package that unifies multiple
+published intrinsic subtyping (IS) methods for breast cancer into a single,
+reproducible framework. It supports both nearest-centroid (NC-based) and
+single-sample predictor (SSP-based) classifiers and introduces an
+assumption-aware \strong{AUTO mode} that dynamically selects methods compatible
+with the input cohort.
 
-It integrates both nearest-centroid (NC-based) and single-sample predictor
-(SSP-based) approaches, along with an innovative \strong{AUTO mode} feature
-(described below).The package utilizes standardized input and output
-formats, providing a cohesive framework that is fully compatible with other
-R packages in the gene expression profiling field. Additionally, its core
-functions are accessible through an \strong{interactive Shiny app}, making it
-user-friendly for researchers and clinicians with limited R programming
-experience.
-\subsection{\strong{Workflow}}{
+By standardising input handling, applying method-specific normalisation,
+and providing optimised probe-to-gene mapping, BreastSubtypeR reduces
+inconsistencies across platforms and improves reproducibility in translational
+research. A companion Shiny app (\strong{iBreastSubtypeR}) offers an intuitive GUI
+for non-programmers while preserving data privacy.
+\subsection{Workflow}{
 \enumerate{
-\item \strong{Data Input}: Load example data or supply your own gene expression dataset as a SummarizedExperiment object.
-\item \strong{Gene Mapping}: Prepare your dataset for subtyping using the \code{\link{Mapping}} function.
-\item \strong{Subtyping}: Run multiple subtyping methods (or leverage AUTO mode) with the \code{\link{BS_Multi}} function.
-\item \strong{Visualization}: Explore and interpret the subtyping results using the \code{\link{Vis_Multi}} function.
+\item \strong{Data Input}: Supply a gene expression dataset as a \code{SummarizedExperiment}.
+Supported inputs include raw RNA-seq counts (with gene lengths),
+log₂(FPKM+1) RNA-seq, or log₂-normalised microarray/nCounter data.
+\item \strong{Gene Mapping}: Prepare expression data with \code{\link{Mapping}},
+including Entrez ID-based resolution of duplicates.
+\item \strong{Subtyping}: Apply multiple classifiers simultaneously using
+\code{\link{BS_Multi}}, or enable \strong{AUTO mode} for
+cohort-aware method selection.
+\item \strong{Visualisation}: Summarise and interpret subtyping results with
+\code{\link{Vis_Multi}}.
 }
 }
 
-\subsection{\strong{Key Functions}}{
+\subsection{Key Features}{
 \itemize{
-\item \code{\link{Mapping}}: Prepares gene expression data for subtyping.
-\item \code{\link{BS_Multi}}: Executes multiple subtyping methods simultaneously, including an \strong{AUTO} mode for method selection based on cohort characteristics.
-\item \code{\link{Vis_Multi}}: Generates visualizations to facilitate interpretation of the subtyping outcomes.
+\item \strong{Multi-method framework}: Ten published NC- and SSP-based classifiers,
+harmonised under one interface.
+\item \strong{AUTO mode}: Evaluates cohort composition (e.g., ER/HER2 prevalence,
+subtype purity, subgroup sizes) and disables classifiers with violated
+assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
+\item \strong{Standardised normalisation}: Upper-quartile log₂-CPM for NC-based
+methods; FPKM for SSP-based methods.
+\item \strong{Optimised gene mapping}: Entrez ID-based mapping with conflict resolution.
+\item \strong{Dual accessibility}: A Bioconductor-compliant R API and a local Shiny app
+(iBreastSubtypeR).
 }
 }
 }

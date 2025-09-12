@@ -15,64 +15,91 @@ Mapping(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log2-transformed, normalized gene expression matrix,
-where rows correspond to probes (e.g., ProbeID, TranscriptID, or Gene
-Symbol) and columns correspond to samples. This should be stored in the
-\code{assay()} slot.
-\item \strong{Row metadata}: A data frame with probe annotations, including at least the following columns:
+\item \strong{Assay data}:
 \itemize{
-\item \code{"probe"}: Unique identifiers for the probes (e.g., ProbeID, TranscriptID or Gene Symbol).
-\item \code{"ENTREZID"}: Entrez Gene IDs corresponding to the probes.
+\item If \code{RawCounts = FALSE}: \code{assay()} must contain log₂-normalized expression (e.g., pre-normalized microarray/nCounter, or log₂(FPKM+1) RNAseq).
+\item If \code{RawCounts = TRUE}: \code{assay()} contains raw RNA-seq counts (see \code{RawCounts}).
 }
-\item \strong{Column metadata} (optional): Sample metadata stored in the \code{colData()} slot.
-}}
-
-\item{RawCounts}{Logical. Indicates whether the assay data in \code{se_obj}
-contains \strong{raw RNA-seq counts}. If "TRUE", please provide matched gene
-lengths in raw matedata.}
-
-\item{method}{A string specifying the method for resolving duplicate probes
-in microarray or RNA-seq data. Options include:
+\item \strong{Row metadata} (required):
 \itemize{
-\item \code{"iqr"}: Selects the probe with the highest interquartile range (IQR), typically used for short-oligo arrays (e.g., Affymetrix).
-\item \code{"mean"}: Chooses the probe with the highest average expression, commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-\item \code{"max"}: Retains the probe with the highest expression value, often used for RNA-seq data.
-\item \code{"stdev"}: Selects the probe with the highest standard deviation.
-\item \code{"median"}: Chooses the probe with the highest median expression value.
+\item \code{"probe"}: feature identifiers (e.g., gene symbols or probe IDs)
+\item \code{"ENTREZID"}: corresponding Entrez Gene IDs.
+\item If row names are gene symbols, provide an additional \code{SYMBOL} column,
+renamed as \code{probe}.
+}
+\item \strong{Column metadata} (optional): sample-level metadata in \code{colData()}.
 }}
 
-\item{impute}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, performs K-Nearest
-Neighbors (KNN) imputation to handle missing data (\code{NA} values).}
+\item{RawCounts}{Logical. If \code{TRUE}, indicates that \code{assay()} holds raw RNA-seq counts.
+In this case, \code{rowData()} must also provide gene lengths (column \code{"Length"}, in base pairs), used for:
+\itemize{
+\item NC-based methods: log₂-CPM (upper-quartile normalization).
+\item SSP-based methods: linear FPKM (not log-transformed).
+}}
 
-\item{verbose}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, displays progress
-messages during execution.}
+\item{method}{Strategy for resolving duplicate probes/genes. Options:
+\itemize{
+\item \code{"iqr"}: probe with highest interquartile range (short-oligo arrays, e.g., Affymetrix).
+\item \code{"mean"}: probe with highest mean expression (long-oligo arrays, e.g., Agilent/Illumina).
+\item \code{"max"}: probe with highest expression value (often used for RNA-seq).
+\item \code{"stdev"}: probe with highest standard deviation.
+\item \code{"median"}: probe with highest median expression.
+}}
+
+\item{impute}{Logical. If \code{TRUE}, applies KNN-based imputation to missing values.}
+
+\item{verbose}{Logical. If \code{TRUE}, prints progress messages during execution.}
 }
 \value{
-Returns a list containing two preprocessed gene expression datasets:
-\itemize{
-\item \code{"x_NC"}: A \code{SummarizedExperiment} object containing: 1) The log2-transformed gene expression matrix
-for nearest-centroid (NC)-based methods; 2) clinical metadata.
-\item \code{"x_SSP"}: A \code{SummarizedExperiment} object containing: 1) The exponential-transformed gene expression matrix
-for single-sample predictor (SSP)-based methods; 2) clinical metadata.
+A named list with:
+\describe{
+\item{se_NC}{\code{SummarizedExperiment} holding log2-transformed data prepared for NC-based methods (assay name: \code{counts}).}
+\item{se_SSP}{\code{SummarizedExperiment} holding linear-scale data prepared for SSP-based methods (assay name: \code{counts}).}
 }
 }
 \description{
-A function to map gene identifiers and preprocess gene
-expression data for downstream analyses.
+Preprocesses and maps gene expression input to prepare for
+intrinsic subtyping workflows (NC- and SSP-based).
 }
 \details{
-If gene symbols are used as row identifiers in the gene expression
-matrix, an additional \code{SYMBOL} column must be added to the feature table
-and renamed as\code{probe}.
+\code{Mapping()} supports multiple input types:
+\itemize{
+\item \strong{Raw RNA-seq counts} (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
+\item \strong{Precomputed log₂(FPKM+1)}: used directly for NC; back-transformed for SSP.
+\item \strong{Log₂-normalized microarray/nCounter data}: used directly for NC; back-transformed for SSP.
+}
+
+This design allows users to supply a single expression format, while
+BreastSubtypeR automatically applies method-specific preprocessing.
 }
 \examples{
-data("OSLO2EMIT0obj")
-data_input <- Mapping(
-    se_obj = OSLO2EMIT0obj$se_obj,
-    RawCounts = FALSE,
-    method = "max",
-    impute = TRUE,
-    verbose = FALSE
-)
+\donttest{
+library(BreastSubtypeR)
 
+# Using raw RNA-seq counts (with gene lengths)
+se_obj <- SummarizedExperiment(
+    assays = list(counts = raw_counts_mat),
+    rowData = DataFrame(
+        probe = rownames(raw_counts_mat),
+        ENTREZID = entrez_ids,
+        Length = gene_lengths
+    )
+)
+res <- Mapping(se_obj, RawCounts = TRUE)
+
+# Using pre-normalized log2(FPKM+1)
+se_obj_fpkm <- SummarizedExperiment(
+    assays = list(expr = log2_fpkm_mat),
+    rowData = DataFrame(
+        probe = rownames(log2_fpkm_mat),
+        ENTREZID = entrez_ids
+    )
+)
+res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
+}
+}
+\references{
+Yang Q, Hartman J, Sifakis EG.
+\emph{BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research.}
+NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131. Selected as Editor’s Choice.
 }

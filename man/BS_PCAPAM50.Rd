@@ -9,35 +9,36 @@ BS_PCAPAM50(se_obj, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log-transformed, normalized gene expression matrix with genes (Gene Symbols)
-as rows and samples as columns.
-\item \strong{Column metadata} (\code{colData}): Clinical information table.
+\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+genes (Gene Symbols) as rows and samples as columns.
+\item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{
-\item \code{"PatientID"}: Unique sample or patient identifiers.
-\item \code{"ER"}: Estrogen receptor (ER) status, recorded as \code{"ER+"} or \code{"ER-"}.
+\item \code{"PatientID"}: Unique sample or patient identifier.
+\item \code{"ER"}: Estrogen receptor status, coded as \code{"ER+"} or \code{"ER-"}.
 }
 }}
 
-\item{Subtype}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function predicts four subtypes,
-\strong{excluding} the Normal-like subtype.}
+\item{Subtype}{Logical. If \code{TRUE}, returns only the four main subtypes
+(Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.}
 
-\item{hasClinical}{Logical (\code{TRUE} or \code{FALSE}). If \code{TRUE}, the function incorporates clinical data from
-the phenotype (\code{pheno}) table. Required columns:
+\item{hasClinical}{Logical. If \code{TRUE}, incorporates additional clinical
+variables from \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} for <= 2cm, \code{1} for > 2cm).
-\item \code{"NODE"}: Lymph node status (\code{0} for negative, \code{1} or higher for positive nodes; this column must be numeric).
+\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
 }}
 
-\item{seed}{An integer used to set the random seed for reproducibility.}
+\item{seed}{Integer. Random seed for reproducibility.}
 }
 \value{
-Returns a vector of intrinsic subtypes assigned to the samples, as estimated
-by the PCA-PAM50 method.
+A character vector of intrinsic subtype predictions assigned to each
+sample using the PCA-PAM50 method.
 }
 \description{
-This function predicts breast cancer intrinsic subtypes using
-the PCA-PAM50 method. This approach integrates \strong{Principal Component Analysis (PCA)}
-to perform estrogen receptor (ER) balancing based on ESR1 gene expression.
+Implements the PCA-PAM50 method, which integrates \strong{Principal Component
+Analysis (PCA)} of ESR1 expression to adjust for estrogen receptor (ER)
+imbalance prior to applying the PAM50 nearest-centroid classifier. This
+approach improves subtype consistency, particularly in ER-skewed cohorts.
 }
 \examples{
 data("OSLO2EMIT0obj")
@@ -49,10 +50,8 @@ res <- BS_PCAPAM50(
 
 }
 \references{
-\itemize{
-\item Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver
-CD, et al. \emph{PCA-PAM50 improves consistency between breast cancer intrinsic
-and clinical subtyping, reclassifying a subset of luminal A tumors as luminal
-B.} Sci Rep. 2019;9(1). https://doi.org/10.1038/s41598-019-44339-4
-}
+Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.
+\emph{PCA-PAM50 improves consistency between breast cancer intrinsic and clinical subtyping, reclassifying a subset of luminal A tumors as luminal B.}
+Scientific Reports. 2019;9(1):1–12.
+https://doi.org/10.1038/s41598-019-44339-4
 }
