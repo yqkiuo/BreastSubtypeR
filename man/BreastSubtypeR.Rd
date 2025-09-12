@@ -52,7 +52,7 @@ methods; FPKM for SSP-based methods.
 \code{\link{Mapping}}, \code{\link{BS_Multi}}, \code{\link{Vis_Multi}}
 }
 \author{
-\strong{Maintainer}: Qiao Yang \email{yq.kiuo@gmail.com} (\href{https://orcid.org/0000-0002-4098-3246}{ORCID}) [funder]
+\strong{Maintainer}: Qiao Yang \email{yq.kiuo@gmail.com} (\href{https://orcid.org/0000-0002-4098-3246}{ORCID})
 
 Authors:
 \itemize{
