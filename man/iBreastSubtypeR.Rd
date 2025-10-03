@@ -28,12 +28,9 @@ The launcher can (optionally) attach Shiny/Bslib so UI/server can use
 unqualified functions like \code{tags}, \code{icon}, \code{fileInput}, etc.
 }
 \examples{
-\donttest{
-# Basic
-iBreastSubtypeR()
-
-# Skip attaching packages (if UI/server fully qualify all calls)
-iBreastSubtypeR(attach = character(0))
+if (interactive()) {
+  iBreastSubtypeR()
+  iBreastSubtypeR(attach = character(0))
 }
 
 }

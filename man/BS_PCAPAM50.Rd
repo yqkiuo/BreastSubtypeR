@@ -9,7 +9,7 @@ BS_PCAPAM50(se_obj, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+\item \strong{Assay data}: A log2-transformed, normalised expression matrix with
 genes (Gene Symbols) as rows and samples as columns.
 \item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{
@@ -24,8 +24,8 @@ genes (Gene Symbols) as rows and samples as columns.
 \item{hasClinical}{Logical. If \code{TRUE}, incorporates additional clinical
 variables from \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
-\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
+\item "TSIZE": Tumor size (0 = \eqn{\le 2}{<= 2} cm; 1 = \eqn{> 2}{> 2} cm).
+\item "NODE": Lymph node status (0 = negative; \eqn{\ge 1}{>= 1} = positive). Must be numeric.
 }}
 
 \item{seed}{Integer. Random seed for reproducibility.}

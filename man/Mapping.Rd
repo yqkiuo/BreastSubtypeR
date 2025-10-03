@@ -17,7 +17,7 @@ Mapping(
 \itemize{
 \item \strong{Assay data}:
 \itemize{
-\item If \code{RawCounts = FALSE}: \code{assay()} must contain log₂-normalized expression (e.g., pre-normalized microarray/nCounter, or log₂(FPKM+1) RNAseq).
+\item If \code{RawCounts = FALSE}: \code{assay()} must contain log2-normalized expression (e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
 \item If \code{RawCounts = TRUE}: \code{assay()} contains raw RNA-seq counts (see \code{RawCounts}).
 }
 \item \strong{Row metadata} (required):
@@ -33,7 +33,7 @@ renamed as \code{probe}.
 \item{RawCounts}{Logical. If \code{TRUE}, indicates that \code{assay()} holds raw RNA-seq counts.
 In this case, \code{rowData()} must also provide gene lengths (column \code{"Length"}, in base pairs), used for:
 \itemize{
-\item NC-based methods: log₂-CPM (upper-quartile normalization).
+\item NC-based methods: log2-CPM (upper-quartile normalization).
 \item SSP-based methods: linear FPKM (not log-transformed).
 }}
 
@@ -65,8 +65,8 @@ intrinsic subtyping workflows (NC- and SSP-based).
 \code{Mapping()} supports multiple input types:
 \itemize{
 \item \strong{Raw RNA-seq counts} (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
-\item \strong{Precomputed log₂(FPKM+1)}: used directly for NC; back-transformed for SSP.
-\item \strong{Log₂-normalized microarray/nCounter data}: used directly for NC; back-transformed for SSP.
+\item \strong{Precomputed log2(FPKM+1)}: used directly for NC; back-transformed for SSP.
+\item \strong{log2-normalized microarray/nCounter data}: used directly for NC; back-transformed for SSP.
 }
 
 This design allows users to supply a single expression format, while
@@ -74,29 +74,20 @@ BreastSubtypeR automatically applies method-specific preprocessing.
 }
 \examples{
 \donttest{
-library(BreastSubtypeR)
+if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
 
-# Using raw RNA-seq counts (with gene lengths)
-se_obj <- SummarizedExperiment(
-    assays = list(counts = raw_counts_mat),
-    rowData = DataFrame(
-        probe = rownames(raw_counts_mat),
-        ENTREZID = entrez_ids,
-        Length = gene_lengths
-    )
-)
-res <- Mapping(se_obj, RawCounts = TRUE)
+# Using example raw RNA-seq counts (with gene lengths)
+data("TCGABRCAobj")
+se_obj_counts <- TCGABRCAobj$se_obj
+res <- Mapping(se_obj_counts, RawCounts = TRUE)
 
-# Using pre-normalized log2(FPKM+1)
-se_obj_fpkm <- SummarizedExperiment(
-    assays = list(expr = log2_fpkm_mat),
-    rowData = DataFrame(
-        probe = rownames(log2_fpkm_mat),
-        ENTREZID = entrez_ids
-    )
-)
+# Using example pre-normalized log2(FPKM+0.1)
+data("OSLO2EMIT0obj")
+se_obj_fpkm <- OSLO2EMIT0obj$se_obj
 res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
 }
+}
+
 }
 \references{
 Yang Q, Hartman J, Sifakis EG.
