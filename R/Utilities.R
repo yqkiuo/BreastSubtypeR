@@ -169,12 +169,11 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
 #'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
-domapping <- function(
-        se_obj,
-        RawCounts = FALSE,
-        method = "max",
-        impute = TRUE,
-        verbose = TRUE) {
+domapping <- function(se_obj,
+    RawCounts = FALSE,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     ## 1. Input raw counts
     if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
         stop(

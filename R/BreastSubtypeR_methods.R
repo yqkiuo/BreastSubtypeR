@@ -41,7 +41,7 @@ NULL
 #' ## Workflow
 #' 1. **Data Input**: Supply a gene expression dataset as a `SummarizedExperiment`.
 #'    Supported inputs include raw RNA-seq counts (with gene lengths),
-#'    log₂(FPKM+1) RNA-seq, or log₂-normalised microarray/nCounter data.
+#'    log2(FPKM+1) RNA-seq, or log2-normalised microarray/nCounter data.
 #' 2. **Gene Mapping**: Prepare expression data with \code{\link{Mapping}},
 #'    including Entrez ID-based resolution of duplicates.
 #' 3. **Subtyping**: Apply multiple classifiers simultaneously using
@@ -57,7 +57,7 @@ NULL
 #' - **AUTO mode**: Evaluates cohort composition (e.g., ER/HER2 prevalence,
 #'   subtype purity, subgroup sizes) and disables classifiers with violated
 #'   assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
-#' - **Standardised normalisation**: Upper-quartile log₂-CPM for NC-based
+#' - **Standardised normalisation**: Upper-quartile log2-CPM for NC-based
 #'   methods; FPKM for SSP-based methods.
 #' - **Optimised gene mapping**: Entrez ID-based mapping with conflict resolution.
 #' - **Dual accessibility**: A Bioconductor-compliant R API and a local Shiny app
@@ -77,7 +77,7 @@ NULL
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**:
-#'     - If `RawCounts = FALSE`: `assay()` must contain log₂-normalized expression (e.g., pre-normalized microarray/nCounter, or log₂(FPKM+1) RNAseq).
+#'     - If `RawCounts = FALSE`: `assay()` must contain log2-normalized expression (e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
 #'     - If `RawCounts = TRUE`: `assay()` contains raw RNA-seq counts (see `RawCounts`).
 #'   - **Row metadata** (required):
 #'     - `"probe"`: feature identifiers (e.g., gene symbols or probe IDs)
@@ -88,7 +88,7 @@ NULL
 #'
 #' @param RawCounts Logical. If `TRUE`, indicates that `assay()` holds raw RNA-seq counts.
 #'   In this case, `rowData()` must also provide gene lengths (column `"Length"`, in base pairs), used for:
-#'   - NC-based methods: log₂-CPM (upper-quartile normalization).
+#'   - NC-based methods: log2-CPM (upper-quartile normalization).
 #'   - SSP-based methods: linear FPKM (not log-transformed).
 #'
 #' @param method Strategy for resolving duplicate probes/genes. Options:
@@ -116,8 +116,8 @@ NULL
 #' @details
 #' `Mapping()` supports multiple input types:
 #' - **Raw RNA-seq counts** (with gene lengths): normalized to CPM (NC) or FPKM (SSP).
-#' - **Precomputed log₂(FPKM+1)**: used directly for NC; back-transformed for SSP.
-#' - **Log₂-normalized microarray/nCounter data**: used directly for NC; back-transformed for SSP.
+#' - **Precomputed log2(FPKM+1)**: used directly for NC; back-transformed for SSP.
+#' - **log2-normalized microarray/nCounter data**: used directly for NC; back-transformed for SSP.
 #'
 #' This design allows users to supply a single expression format, while
 #' BreastSubtypeR automatically applies method-specific preprocessing.
@@ -149,11 +149,12 @@ NULL
 #' }
 #' @export
 
-Mapping <- function(se_obj,
-    RawCounts = FALSE,
-    method = c("max", "mean", "median", "iqr", "stdev"),
-    impute = TRUE,
-    verbose = TRUE) {
+Mapping <- function(
+        se_obj,
+        RawCounts = FALSE,
+        method = c("max", "mean", "median", "iqr", "stdev"),
+        impute = TRUE,
+        verbose = TRUE) {
     method <- match.arg(method)
 
     arguments <- rlang::dots_list(
@@ -230,8 +231,8 @@ Mapping <- function(se_obj,
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates clinical variables from
 #'   `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive). Must be numeric.
 #'
 #' @return A list containing PAM50 intrinsic subtype calls using the Parker
 #'   classifier and selected calibration strategy.
@@ -253,20 +254,21 @@ Mapping <- function(se_obj,
 #' res <- BS_parker(
 #'     se_obj = OSLO2EMIT0obj$data_input$se_NC,
 #'     calibration = "Internal",
-#'     internal = NA, # NA ≡ "medianCtr"
+#'     internal = NA, # NA is equal to "medianCtr"
 #'     Subtype = FALSE,
 #'     hasClinical = FALSE
 #' )
 #'
 #' @export
 
-BS_parker <- function(se_obj,
-    calibration = "None",
-    internal = NA,
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_parker <- function(
+        se_obj,
+        calibration = "None",
+        internal = NA,
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -346,7 +348,7 @@ BS_parker <- function(se_obj,
 #' violated.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -357,8 +359,8 @@ BS_parker <- function(se_obj,
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
 #'   variables from `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive). Must be numeric.
 #'
 #' @param seed Integer. Random seed for reproducibility of ER-balancing.
 #'
@@ -382,11 +384,10 @@ BS_parker <- function(se_obj,
 #' @export
 
 
-BS_cIHC <- function(
-        se_obj,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_cIHC <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -436,7 +437,7 @@ BS_cIHC <- function(
 #' match specific cohort assumptions (e.g., training distribution).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -454,8 +455,8 @@ BS_cIHC <- function(
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
 #'   variables from `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive). Must be numeric.
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
@@ -481,13 +482,12 @@ BS_cIHC <- function(
 #'
 #' @export
 
-BS_cIHC.itr <- function(
-        se_obj,
-        iteration = 100,
-        ratio = 54 / 64,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_cIHC.itr <- function(se_obj,
+    iteration = 100,
+    ratio = 54 / 64,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -538,7 +538,7 @@ BS_cIHC.itr <- function(
 #' approach improves subtype consistency, particularly in ER-skewed cohorts.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -549,8 +549,8 @@ BS_cIHC.itr <- function(
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
 #'   variables from `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive). Must be numeric.
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
@@ -573,11 +573,10 @@ BS_cIHC.itr <- function(
 #'
 #' @export
 
-BS_PCAPAM50 <- function(
-        se_obj,
-        Subtype = FALSE,
-        hasClinical = FALSE,
-        seed = 118) {
+BS_PCAPAM50 <- function(se_obj,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -679,7 +678,7 @@ BS_PCAPAM50 <- function(
 #' training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log₂-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalised expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): If `hasClinical = TRUE`, must include:
 #'     - `"PatientID"`: Unique patient/sample identifier.
@@ -697,8 +696,8 @@ BS_PCAPAM50 <- function(
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates additional clinical
 #'   variables from `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive). Must be numeric.
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive). Must be numeric.
 #'
 #' @return A character vector of intrinsic subtype predictions assigned to each
 #'   sample using the ssBC method.
@@ -726,11 +725,10 @@ BS_PCAPAM50 <- function(
 #'
 #' @export
 
-BS_ssBC <- function(
-        se_obj,
-        s,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_ssBC <- function(se_obj,
+    s,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -796,7 +794,7 @@ BS_ssBC <- function(
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
 #'     and samples as columns.
-#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).
+#'     - Expression values must be **positive** (e.g., FPKM or log2(FPKM+1)).
 #'     - Values should not be gene-centered or globally scaled.
 #'
 #' @return A character vector of intrinsic subtype predictions assigned to each
@@ -868,7 +866,7 @@ BS_AIMS <- function(se_obj) {
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**: A gene expression matrix with genes (Entrez IDs) as rows
 #'     and samples as columns.
-#'     - Expression values must be **positive** (e.g., FPKM or log₂(FPKM+1)).
+#'     - Expression values must be **positive** (e.g., FPKM or log2(FPKM+1)).
 #'     - Values should not be gene-centered or globally scaled.
 #'
 #' @param ssp.name Character. Specifies the SSPBC model to use:
@@ -960,8 +958,8 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @param hasClinical Logical. If `TRUE`, incorporates clinical data from
 #'   `colData(se_obj)`. Required columns:
-#'   - `"TSIZE"`: Tumor size (`0` = ≤2 cm; `1` = >2 cm).
-#'   - `"NODE"`: Lymph node status (`0` = negative; `≥1` = positive; must be numeric).
+#'   - `"TSIZE"`: Tumor size (`0` = &le;2 cm; `1` = >2 cm).
+#'   - `"NODE"`: Lymph node status (`0` = negative; &ge;1 = positive; must be numeric).
 #'
 #' @return A list containing per-method subtype assignments for each sample.
 #'
@@ -1015,10 +1013,11 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(data_input,
-    methods = "AUTO",
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_Multi <- function(
+        data_input,
+        methods = "AUTO",
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
