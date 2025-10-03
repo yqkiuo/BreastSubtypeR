@@ -12,7 +12,7 @@ BS_sspbc(se_obj, ssp.name = "ssp.pam50")
 \item \strong{Assay data}: A gene expression matrix with genes (Entrez IDs) as rows
 and samples as columns.
 \itemize{
-\item Expression values must be \strong{positive} (e.g., FPKM or log₂(FPKM+1)).
+\item Expression values must be \strong{positive} (e.g., FPKM or log2(FPKM+1)).
 \item Values should not be gene-centered or globally scaled.
 }
 }}

@@ -9,7 +9,7 @@ BS_ssBC(se_obj, s, Subtype = FALSE, hasClinical = FALSE)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log₂-transformed, normalised expression matrix with
+\item \strong{Assay data}: A log2-transformed, normalised expression matrix with
 genes (Gene Symbols) as rows and samples as columns.
 \item \strong{Column metadata} (\code{colData}): If \code{hasClinical = TRUE}, must include:
 \itemize{
@@ -36,7 +36,7 @@ genes (Gene Symbols) as rows and samples as columns.
 variables from \code{colData(se_obj)}. Required columns:
 \itemize{
 \item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
-\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; ≥1 = positive). Must be numeric.
 }}
 }
 \value{

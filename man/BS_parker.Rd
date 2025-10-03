@@ -61,7 +61,7 @@ excluding Normal-like.}
 \code{colData(se_obj)}. Required columns:
 \itemize{
 \item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
-\item \code{"NODE"}: Lymph node status (\code{0} = negative; \verb{≥1} = positive). Must be numeric.
+\item \code{"NODE"}: Lymph node status (\code{0} = negative; ≥1 = positive). Must be numeric.
 }}
 }
 \value{
@@ -79,7 +79,7 @@ data("OSLO2EMIT0obj")
 res <- BS_parker(
     se_obj = OSLO2EMIT0obj$data_input$se_NC,
     calibration = "Internal",
-    internal = NA, # NA ≡ "medianCtr"
+    internal = NA, # NA is equal to "medianCtr"
     Subtype = FALSE,
     hasClinical = FALSE
 )

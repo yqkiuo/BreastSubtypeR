@@ -22,7 +22,7 @@ for non-programmers while preserving data privacy.
 \enumerate{
 \item \strong{Data Input}: Supply a gene expression dataset as a \code{SummarizedExperiment}.
 Supported inputs include raw RNA-seq counts (with gene lengths),
-log₂(FPKM+1) RNA-seq, or log₂-normalised microarray/nCounter data.
+log2(FPKM+1) RNA-seq, or log2-normalised microarray/nCounter data.
 \item \strong{Gene Mapping}: Prepare expression data with \code{\link{Mapping}},
 including Entrez ID-based resolution of duplicates.
 \item \strong{Subtyping}: Apply multiple classifiers simultaneously using
@@ -40,7 +40,7 @@ harmonised under one interface.
 \item \strong{AUTO mode}: Evaluates cohort composition (e.g., ER/HER2 prevalence,
 subtype purity, subgroup sizes) and disables classifiers with violated
 assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
-\item \strong{Standardised normalisation}: Upper-quartile log₂-CPM for NC-based
+\item \strong{Standardised normalisation}: Upper-quartile log2-CPM for NC-based
 methods; FPKM for SSP-based methods.
 \item \strong{Optimised gene mapping}: Entrez ID-based mapping with conflict resolution.
 \item \strong{Dual accessibility}: A Bioconductor-compliant R API and a local Shiny app
