@@ -9,7 +9,7 @@
 #' @param attach_tidyverse Logical; if TRUE and tidyverse is installed, it will
 #'        be attached quietly for the session (purely optional).
 #' @param max_upload_mb Numeric; Shiny upload size limit (in MB). Default 1000.
-#' @return Opens the app; returns the value of `shiny::runApp()`.
+#' @return The value returned by `shiny::runApp()` (usually `invisible(NULL)`).
 #'
 #' @examples
 #' if (interactive()) {
@@ -67,14 +67,12 @@ iBreastSubtypeR <- function(attach = c("shiny", "bslib"),
   shiny::runApp(appDir, display.mode = "normal")
 }
 
-#' @title (Deprecated) Run iBreastSubtypeR
-#' @description Back-compat wrapper; use [iBreastSubtypeR()] instead.
-#' @param ... Arguments passed on to [iBreastSubtypeR()].
-#' @export
+#' (Deprecated) Run iBreastSubtypeR
+#'
+#' Internal wrapper kept for back-compat. Use [iBreastSubtypeR()] directly.
+#' @keywords internal
+#' @noRd
 runShinyBreastSubtypeR <- function(...) {
-  .Deprecated("iBreastSubtypeR",
-              package = "BreastSubtypeR",
-              msg = "runShinyBreastSubtypeR() is deprecated; use iBreastSubtypeR()."
-  )
   iBreastSubtypeR(...)
 }
+

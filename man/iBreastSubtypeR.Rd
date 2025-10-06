@@ -20,7 +20,7 @@ be attached quietly for the session (purely optional).}
 \item{max_upload_mb}{Numeric; Shiny upload size limit (in MB). Default 1000.}
 }
 \value{
-Opens the app; returns the value of \code{shiny::runApp()}.
+The value returned by \code{shiny::runApp()} (usually \code{invisible(NULL)}).
 }
 \description{
 Starts the Shiny UI bundled with the BreastSubtypeR package.

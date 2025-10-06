@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
     collapse = TRUE,
     comment  = "#>",
     fig.path = "figures/",
+    fig.crop = FALSE,
     warning  = FALSE,
     message  = FALSE
 )
@@ -91,7 +92,7 @@ The package includes implementations of commonly used subtyping methods (NC-base
 
 The examples below use small example datasets shipped with the package. For your own data, provide a `SummarizedExperiment` **with clinical metadata in `colData`** (e.g., `PatientID`, ER/HER2; for ROR: `TSIZE`, `NODE`).
 
-```{r, eval=FALSE}
+```{r pkgs-and-data, message=FALSE}
 library(BreastSubtypeR)
 
 # Example data
@@ -101,7 +102,7 @@ data("OSLO2EMIT0obj")
 
 **1) Map & prepare (method-specific pre-processing + mapping)**
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 # Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, and (optionally) impute missing values
 data_input <- Mapping(
     OSLO2EMIT0obj$se_obj,
@@ -127,7 +128,7 @@ data_input <- Mapping(
 
 **2) Multi-method run (user-defined)**
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 
 res <- BS_Multi(
@@ -145,7 +146,7 @@ head(res$res_subtypes, 5)
 
 AUTO evaluates cohort diagnostics (for example, ER/HER2 distribution, subtype purity, and subgroup sizes) and selects methods compatible with the cohort. It disables classifiers whose distributional assumptions would likely be violated.
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 res_auto <- BS_Multi(
     data_input = data_input,
     methods = "AUTO",
@@ -161,7 +162,7 @@ Vis_Multi(res_auto$res_subtypes)
 
 PAM50 (NC-based)
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 res_pam <- BS_parker(
     se_obj = data_input$se_NC, # object prepared for NC-based methods
     calibration = "Internal",
@@ -173,7 +174,7 @@ res_pam <- BS_parker(
 
 AIMS (SSP-based)
 
-```{r, eval=FALSE}
+```{r, eval=TRUE}
 res_aims <- BS_AIMS(data_input$se_SSP)
 ```
 
