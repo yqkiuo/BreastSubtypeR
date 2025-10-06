@@ -38,8 +38,8 @@ HER2-enriched, Basal-like), excluding Normal-like.}
 \item{hasClinical}{Logical. If \code{TRUE}, incorporates clinical data from
 \code{colData(se_obj)}. Required columns:
 \itemize{
-\item \code{"TSIZE"}: Tumor size (\code{0} = ≤2 cm; \code{1} = >2 cm).
-\item \code{"NODE"}: Lymph node status (\code{0} = negative; ≥1 = positive; must be numeric).
+\item "TSIZE": Tumor size (0 = \eqn{\le 2}{<= 2} cm; 1 = \eqn{> 2}{> 2} cm).
+\item "NODE": Lymph node status (0 = negative; \eqn{\ge 1}{>= 1} = positive).
 }}
 }
 \value{
