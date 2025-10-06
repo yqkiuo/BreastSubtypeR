@@ -1,19 +1,18 @@
-name: "Sync ALL branches & tags to org (SSH, prune)"
+name: "Sync main & tags to org (SSH, prune)"
 
 on:
   push:
     branches:
-      - main          # only run when pushing to main
+      - main       # only when main changes
     tags:
-      - "*"           # and on any tag push
+      - "*"        # and on any tag push
   release:
-    types:
-      - published     # also when a GitHub release is published
-  workflow_dispatch:   # allow manual runs
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   sync:
-    # Run only from the source repo (so the fork doesn't need secrets)
+    # only from the source repo (so the fork doesn't need secrets)
     if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
 
@@ -21,8 +20,8 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0               # full history
-          persist-credentials: false   # we'll use SSH key, not GITHUB_TOKEN
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Ensure secret exists
         run: |
@@ -51,18 +50,18 @@ jobs:
           git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
           git remote -v
 
-      - name: Fetch ALL branches & tags from origin
+      - name: Fetch origin & mirror (for safe lease)
         run: |
           set -e
-          # Update tags and prune deleted ones
           git fetch --tags --prune origin
-          # Fetch every branch into remote-tracking refs
           git fetch --prune origin +refs/heads/*:refs/remotes/origin/*
+          git fetch --tags --prune mirror
+          git fetch --prune mirror +refs/heads/*:refs/remotes/mirror/*
 
-      - name: Push ALL branches & tags to mirror (prune deletions)
+      - name: Push main & tags to mirror (prune deleted tags)
         run: |
           set -e
-          # Push all branches (remote-tracking -> real branches on mirror), pruning deletions
-          git push --prune mirror 'refs/remotes/origin/*:refs/heads/*'
-          # Push tags, pruning tags deleted at source
+          # Push main with a safe force (only if mirror hasn't moved unexpectedly)
+          git push --force-with-lease mirror refs/remotes/origin/main:refs/heads/main
+          # Push all tags, pruning tag deletions
           git push --prune --tags mirror
