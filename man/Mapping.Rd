@@ -17,7 +17,8 @@ Mapping(
 \itemize{
 \item \strong{Assay data}:
 \itemize{
-\item If \code{RawCounts = FALSE}: \code{assay()} must contain log2-normalized expression (e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
+\item If \code{RawCounts = FALSE}: \code{assay()} must contain log2-normalized expression
+(e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
 \item If \code{RawCounts = TRUE}: \code{assay()} contains raw RNA-seq counts (see \code{RawCounts}).
 }
 \item \strong{Row metadata} (required):
@@ -31,7 +32,8 @@ renamed as \code{probe}.
 }}
 
 \item{RawCounts}{Logical. If \code{TRUE}, indicates that \code{assay()} holds raw RNA-seq counts.
-In this case, \code{rowData()} must also provide gene lengths (column \code{"Length"}, in base pairs), used for:
+In this case, \code{rowData()} must also provide gene lengths
+(column \code{"Length"}, in base pairs), used for:
 \itemize{
 \item NC-based methods: log2-CPM (upper-quartile normalization).
 \item SSP-based methods: linear FPKM (not log-transformed).
@@ -53,8 +55,10 @@ In this case, \code{rowData()} must also provide gene lengths (column \code{"Len
 \value{
 A named list with:
 \describe{
-\item{se_NC}{\code{SummarizedExperiment} holding log2-transformed data prepared for NC-based methods (assay name: \code{counts}).}
-\item{se_SSP}{\code{SummarizedExperiment} holding linear-scale data prepared for SSP-based methods (assay name: \code{counts}).}
+\item{se_NC}{\code{SummarizedExperiment} holding log2-transformed data prepared for NC-based methods
+(assay name: \code{counts}).}
+\item{se_SSP}{\code{SummarizedExperiment} holding linear-scale data prepared for SSP-based methods
+(assay name: \code{counts}).}
 }
 }
 \description{

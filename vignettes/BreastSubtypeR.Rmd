@@ -103,7 +103,8 @@ data("OSLO2EMIT0obj")
 **1) Map & prepare (method-specific pre-processing + mapping)**
 
 ```{r, eval=TRUE}
-# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, and (optionally) impute missing values
+# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, 
+# and (optionally) impute missing values
 data_input <- Mapping(
     OSLO2EMIT0obj$se_obj,
     method = "max", # mapping strategy (example)
@@ -192,7 +193,8 @@ res_aims <- BS_AIMS(data_input$se_SSP)
 
 - Use `methods = "AUTO"` (i.e. `BS_Multi(methods = "AUTO", ...)`) for exploratory datasets or cohorts of unknown / skewed composition.
 - Use `AUTO` when you want the package to **select only classifiers compatible with the cohort** (it disables methods whose assumptions appear violated).
-- For validation against a single published method or a clinical assay (e.g., Prosigna®), run the corresponding **single-method** implementation directly (e.g., `BS_parker()`).
+- For validation against a single published method or a clinical assay (e.g., Prosigna®), 
+run the corresponding **single-method** implementation directly (e.g., `BS_parker()`).
 
 ## Interpretation
 
@@ -227,7 +229,8 @@ The app runs locally; **no data leave your machine**.
 
 BreastSubtypeR harmonises many published, signature-based classifiers but has known limitations:\
 
-- It is not a clinical-grade replacement for assays like Prosigna; clinical validation requires paired clinical assay data.\
+- It is not a clinical-grade replacement for assays like Prosigna; 
+clinical validation requires paired clinical assay data.\
 
 - AUTO selects compatible methods; it does not perform consensus voting by default.
 

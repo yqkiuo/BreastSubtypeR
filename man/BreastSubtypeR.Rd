@@ -4,7 +4,8 @@
 \name{BreastSubtypeR}
 \alias{BreastSubtypeR}
 \alias{BreastSubtypeR-package}
-\title{BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research}
+\title{BreastSubtypeR: A Unified R/Bioconductor Package
+for Intrinsic Molecular Subtyping in Breast Cancer Research}
 \description{
 \strong{BreastSubtypeR} is an R/Bioconductor package that unifies multiple
 published intrinsic subtyping (IS) methods for breast cancer into a single,

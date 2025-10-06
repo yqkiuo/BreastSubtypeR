@@ -17,7 +17,8 @@
 #'
 NULL
 
-#' BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research
+#' BreastSubtypeR: A Unified R/Bioconductor Package 
+#' for Intrinsic Molecular Subtyping in Breast Cancer Research
 #'
 #'
 #' @name BreastSubtypeR
@@ -77,7 +78,8 @@ NULL
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
 #'   - **Assay data**:
-#'     - If `RawCounts = FALSE`: `assay()` must contain log2-normalized expression (e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
+#'     - If `RawCounts = FALSE`: `assay()` must contain log2-normalized expression 
+#'     (e.g., pre-normalized microarray/nCounter, or log2(FPKM+1) RNAseq).
 #'     - If `RawCounts = TRUE`: `assay()` contains raw RNA-seq counts (see `RawCounts`).
 #'   - **Row metadata** (required):
 #'     - `"probe"`: feature identifiers (e.g., gene symbols or probe IDs)
@@ -87,7 +89,8 @@ NULL
 #'   - **Column metadata** (optional): sample-level metadata in `colData()`.
 #'
 #' @param RawCounts Logical. If `TRUE`, indicates that `assay()` holds raw RNA-seq counts.
-#'   In this case, `rowData()` must also provide gene lengths (column `"Length"`, in base pairs), used for:
+#'   In this case, `rowData()` must also provide gene lengths 
+#'   (column `"Length"`, in base pairs), used for:
 #'   - NC-based methods: log2-CPM (upper-quartile normalization).
 #'   - SSP-based methods: linear FPKM (not log-transformed).
 #'
@@ -104,8 +107,10 @@ NULL
 #'
 #' @return A named list with:
 #' \describe{
-#'   \item{se_NC}{`SummarizedExperiment` holding log2-transformed data prepared for NC-based methods (assay name: `counts`).}
-#'   \item{se_SSP}{`SummarizedExperiment` holding linear-scale data prepared for SSP-based methods (assay name: `counts`).}
+#'   \item{se_NC}{`SummarizedExperiment` holding log2-transformed data prepared for NC-based methods 
+#'   (assay name: `counts`).}
+#'   \item{se_SSP}{`SummarizedExperiment` holding linear-scale data prepared for SSP-based methods 
+#'   (assay name: `counts`).}
 #' }
 #'
 #' @references
@@ -186,8 +191,8 @@ Mapping <- function(
 #' (Luminal A, Luminal B, HER2-enriched, Basal-like, and optionally Normal-like).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes (Gene Symbols) as rows
-#'   and samples as columns.
+#'   - **Assay data**: A log-transformed, normalized gene expression matrix with genes 
+#'   (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Optional sample- or patient-level
 #'     information.
 #'
@@ -394,7 +399,8 @@ BS_cIHC <- function(se_obj,
     if (hasClinical) {
         req <- c("TSIZE", "NODE")
         miss <- setdiff(req, colnames(pheno))
-        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. 
+                               Missing: ", paste(miss, collapse = ", "), ".")
         if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
 
@@ -494,7 +500,8 @@ BS_cIHC.itr <- function(se_obj,
     if (hasClinical) {
         req <- c("TSIZE", "NODE")
         miss <- setdiff(req, colnames(pheno))
-        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. 
+                               Missing: ", paste(miss, collapse = ", "), ".")
         if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
 
@@ -583,7 +590,8 @@ BS_PCAPAM50 <- function(se_obj,
     if (hasClinical) {
         req <- c("TSIZE", "NODE")
         miss <- setdiff(req, colnames(pheno))
-        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. 
+                               Missing: ", paste(miss, collapse = ", "), ".")
         if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
 
@@ -735,7 +743,8 @@ BS_ssBC <- function(se_obj,
     if (hasClinical) {
         req <- c("TSIZE", "NODE")
         miss <- setdiff(req, colnames(pheno))
-        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. Missing: ", paste(miss, collapse = ", "), ".")
+        if (length(miss)) stop("When hasClinical = TRUE, colData(se_obj) must include: TSIZE and NODE. 
+                               Missing: ", paste(miss, collapse = ", "), ".")
         if (!is.numeric(pheno$NODE)) stop("colData(se_obj)$NODE must be numeric.")
     }
 
@@ -750,7 +759,8 @@ BS_ssBC <- function(se_obj,
 
     missing_columns <- setdiff(required_columns, colnames(pheno))
     if (length(missing_columns) > 0) {
-        stop(paste("The following required columns are missing from 'colData':", paste(missing_columns, collapse = ", ")))
+        stop(paste("The following required columns are missing from 'colData':", 
+                   paste(missing_columns, collapse = ", ")))
     }
 
     arguments <- rlang::dots_list(
@@ -1032,7 +1042,8 @@ BS_Multi <- function(
     rownames(pheno) <- pheno$PatientID
 
     # Check ER and HER2 columns in pheno
-    if (!("ER" %in% colnames(pheno)) && any(methods %in% c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
+    if (!("ER" %in% colnames(pheno)) && any(methods %in% 
+                                            c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
         stop("The 'ER' column is required for selected methods.")
     }
     if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
@@ -1294,8 +1305,10 @@ BS_Multi <- function(
     names(results) <- methods
 
     # Prefer se_NC samples; fall back to se_SSP if needed
-    samples_NC <- if (!is.null(data_input$se_NC)) colnames(SummarizedExperiment::assay(data_input$se_NC)) else character(0)
-    samples_SSP <- if (!is.null(data_input$se_SSP)) colnames(SummarizedExperiment::assay(data_input$se_SSP)) else character(0)
+    samples_NC <- if (!is.null(data_input$se_NC)) 
+      colnames(SummarizedExperiment::assay(data_input$se_NC)) else character(0)
+    samples_SSP <- if (!is.null(data_input$se_SSP)) 
+      colnames(SummarizedExperiment::assay(data_input$se_SSP)) else character(0)
     samples <- if (length(samples_NC)) samples_NC else samples_SSP
 
     # Hold per-method calls; start empty and fill by matching PatientID
@@ -1337,7 +1350,8 @@ BS_Multi <- function(
     res_subtypes$row_id <- NULL
 
     if (Subtype) {
-        res_subtypes.Subtype <- as.data.frame(res_subtypes.Subtype, stringsAsFactors = FALSE, check.names = FALSE)
+        res_subtypes.Subtype <- 
+          as.data.frame(res_subtypes.Subtype, stringsAsFactors = FALSE, check.names = FALSE)
         rownames(res_subtypes.Subtype) <- res_subtypes.Subtype$row_id
         res_subtypes.Subtype$row_id <- NULL
     }
