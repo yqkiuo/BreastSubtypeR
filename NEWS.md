@@ -1,9 +1,9 @@
-# BreastSubtypeR 1.1.3
+# BreastSubtypeR 1.1.5
 
 ## Highlights
 - Paper published in *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** (DOI: 10.1093/nargab/lqaf131).
-- **New:** Support for raw RNA-seq counts (requires gene lengths).
-- Major **iBreastSubtypeR** refresh: cleaner UX, smarter AUTO guidance, consistent exports.
+- Support for raw RNA-seq counts (requires gene lengths).
+- **iBreastSubtypeR** refresh: cleaner UX, smarter AUTO guidance, consistent exports.
 - Refined, data-driven thresholds for ER/HER2 skew detection in AUTO.
 - Broader input-validation across the subtyping pipeline.
 
@@ -41,4 +41,4 @@
 ## Upgrade Notes
 - Raw RNA-seq counts are supported **from v1.1.3 onward** (requires gene lengths).
 - If you previously parsed `BS` / `BS.Subtype`, switch to **`Call_5class` / `Call_4class`**.
-- Package API unchanged (the `Subtype` argument remains).
+- Package API unchanged.

@@ -20,7 +20,7 @@ be attached quietly for the session (purely optional).}
 \item{max_upload_mb}{Numeric; Shiny upload size limit (in MB). Default 1000.}
 }
 \value{
-Opens the app; returns the value of \code{shiny::runApp()}.
+The value returned by \code{shiny::runApp()} (usually \code{invisible(NULL)}).
 }
 \description{
 Starts the Shiny UI bundled with the BreastSubtypeR package.
@@ -28,12 +28,9 @@ The launcher can (optionally) attach Shiny/Bslib so UI/server can use
 unqualified functions like \code{tags}, \code{icon}, \code{fileInput}, etc.
 }
 \examples{
-\donttest{
-# Basic
-iBreastSubtypeR()
-
-# Skip attaching packages (if UI/server fully qualify all calls)
-iBreastSubtypeR(attach = character(0))
+if (interactive()) {
+    iBreastSubtypeR()
+    iBreastSubtypeR(attach = character(0))
 }
 
 }

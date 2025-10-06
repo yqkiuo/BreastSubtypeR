@@ -1,0 +1,67 @@
+name: "Sync main & tags to org (SSH, prune)"
+
+on:
+  push:
+    branches:
+      - main       # only when main changes
+    tags:
+      - "*"        # and on any tag push
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    # only from the source repo (so the fork doesn't need secrets)
+    if: github.repository == 'yqkiuo/BreastSubtypeR'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Ensure secret exists
+        run: |
+          if [ -z "${{ secrets.MIRROR_DEPLOY_KEY }}" ]; then
+            echo "::error:: Secret MIRROR_DEPLOY_KEY is missing in yqkiuo/BreastSubtypeR."
+            exit 1
+          fi
+
+      - name: Start ssh-agent & add deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MIRROR_DEPLOY_KEY }}
+
+      - name: Trust github.com host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa,ecdsa,ed25519 github.com >> ~/.ssh/known_hosts
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add mirror remote (org fork)
+        run: |
+          git remote add mirror git@github.com:JohanHartmanGroupBioteam/BreastSubtypeR.git
+          git remote -v
+
+      - name: Fetch origin & mirror (for safe lease)
+        run: |
+          set -e
+          git fetch --tags --prune origin
+          git fetch --prune origin +refs/heads/*:refs/remotes/origin/*
+          git fetch --tags --prune mirror
+          git fetch --prune mirror +refs/heads/*:refs/remotes/mirror/*
+
+      - name: Push main & tags to mirror (prune deleted tags)
+        run: |
+          set -e
+          # Push main with a safe force (only if mirror hasn't moved unexpectedly)
+          git push --force-with-lease mirror refs/remotes/origin/main:refs/heads/main
+          # Push all tags, pruning tag deletions
+          git push --prune --tags mirror
