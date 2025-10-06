@@ -13,58 +13,58 @@
 #'
 #' @examples
 #' if (interactive()) {
-#'   iBreastSubtypeR()
-#'   iBreastSubtypeR(attach = character(0))
+#'     iBreastSubtypeR()
+#'     iBreastSubtypeR(attach = character(0))
 #' }
-#' 
+#'
 #' @export
 iBreastSubtypeR <- function(attach = c("shiny", "bslib"),
                             attach_tidyverse = FALSE,
                             max_upload_mb = 1000) {
-  # helper: check install + attach quietly
-  .attach_if <- function(pkgs) {
-    pkgs <- unique(pkgs)
-    if (!length(pkgs)) {
-      return(invisible(NULL))
+    # helper: check install + attach quietly
+    .attach_if <- function(pkgs) {
+        pkgs <- unique(pkgs)
+        if (!length(pkgs)) {
+            return(invisible(NULL))
+        }
+        installed <- rownames(utils::installed.packages())
+        missing <- setdiff(pkgs, installed)
+        if (length(missing)) {
+            stop(
+                sprintf(
+                    "Please install required package(s) before launching the app: %s",
+                    paste(missing, collapse = ", ")
+                ),
+                call. = FALSE
+            )
+        }
+        # Attach to search path so ui.R/server.R can use unqualified calls
+        for (p in pkgs) {
+            suppressPackageStartupMessages(
+                requireNamespace(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
+            )
+        }
+        invisible(NULL)
     }
-    installed <- rownames(utils::installed.packages())
-    missing <- setdiff(pkgs, installed)
-    if (length(missing)) {
-      stop(
-        sprintf(
-          "Please install required package(s) before launching the app: %s",
-          paste(missing, collapse = ", ")
-        ),
-        call. = FALSE
-      )
+
+    # Attach Shiny/Bslib (and optionally tidyverse) for this R session
+    .attach_if(attach)
+    if (isTRUE(attach_tidyverse) && "tidyverse" %in% rownames(utils::installed.packages())) {
+        suppressPackageStartupMessages(
+            requireNamespace("tidyverse", quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
+        )
     }
-    # Attach to search path so ui.R/server.R can use unqualified calls
-    for (p in pkgs) {
-      suppressPackageStartupMessages(
-        requireNamespace(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
-      )
+
+    # App directory shipped inside the package
+    appDir <- system.file("ShinyBreastSubtypeR", package = "BreastSubtypeR")
+    if (identical(appDir, "") || !dir.exists(appDir)) {
+        stop("Shiny app directory 'inst/ShinyBreastSubtypeR' not found in the package.", call. = FALSE)
     }
-    invisible(NULL)
-  }
-  
-  # Attach Shiny/Bslib (and optionally tidyverse) for this R session
-  .attach_if(attach)
-  if (isTRUE(attach_tidyverse) && "tidyverse" %in% rownames(utils::installed.packages())) {
-    suppressPackageStartupMessages(
-      requireNamespace("tidyverse", quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
-    )
-  }
-  
-  # App directory shipped inside the package
-  appDir <- system.file("ShinyBreastSubtypeR", package = "BreastSubtypeR")
-  if (identical(appDir, "") || !dir.exists(appDir)) {
-    stop("Shiny app directory 'inst/ShinyBreastSubtypeR' not found in the package.", call. = FALSE)
-  }
-  
-  # Increase upload limit (MB -> bytes)
-  options(shiny.maxRequestSize = max_upload_mb * 1024^2)
-  
-  shiny::runApp(appDir, display.mode = "normal")
+
+    # Increase upload limit (MB -> bytes)
+    options(shiny.maxRequestSize = max_upload_mb * 1024^2)
+
+    shiny::runApp(appDir, display.mode = "normal")
 }
 
 #' (Deprecated) Run iBreastSubtypeR
@@ -73,6 +73,5 @@ iBreastSubtypeR <- function(attach = c("shiny", "bslib"),
 #' @keywords internal
 #' @noRd
 runShinyBreastSubtypeR <- function(...) {
-  iBreastSubtypeR(...)
+    iBreastSubtypeR(...)
 }
-

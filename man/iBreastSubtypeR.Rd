@@ -29,8 +29,8 @@ unqualified functions like \code{tags}, \code{icon}, \code{fileInput}, etc.
 }
 \examples{
 if (interactive()) {
-  iBreastSubtypeR()
-  iBreastSubtypeR(attach = character(0))
+    iBreastSubtypeR()
+    iBreastSubtypeR(attach = character(0))
 }
 
 }

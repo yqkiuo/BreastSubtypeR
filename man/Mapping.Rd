@@ -74,16 +74,15 @@ BreastSubtypeR automatically applies method-specific preprocessing.
 }
 \examples{
 if (requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+    # Using example raw RNA-seq counts (with gene lengths)
+    data("TCGABRCAobj")
+    se_obj_counts <- TCGABRCAobj$se_obj[, 1:3] # tiny subset to keep checks fast
+    res <- Mapping(se_obj_counts, RawCounts = TRUE)
 
-# Using example raw RNA-seq counts (with gene lengths)
-data("TCGABRCAobj")
-se_obj_counts <- TCGABRCAobj$se_obj[, 1:3]  # tiny subset to keep checks fast
-res <- Mapping(se_obj_counts, RawCounts = TRUE)
-
-# Using example pre-normalized log2(FPKM+0.1)
-data("OSLO2EMIT0obj")
-se_obj_fpkm <- OSLO2EMIT0obj$se_obj[, 1:3]  # tiny subset to keep checks fast
-res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
+    # Using example pre-normalized log2(FPKM+0.1)
+    data("OSLO2EMIT0obj")
+    se_obj_fpkm <- OSLO2EMIT0obj$se_obj[, 1:3] # tiny subset to keep checks fast
+    res <- Mapping(se_obj_fpkm, RawCounts = FALSE)
 }
 
 }
