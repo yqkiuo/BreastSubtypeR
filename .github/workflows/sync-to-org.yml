@@ -3,7 +3,7 @@ name: "Sync ALL branches & tags to org (SSH, prune)"
 on:
   push:
     branches:
-      - "**"          # run on any branch push
+      - main          # only run when pushing to main
     tags:
       - "*"           # and on any tag push
   release:
@@ -13,7 +13,7 @@ on:
 
 jobs:
   sync:
-    # Run only from the source repo so the fork doesn't need secrets
+    # Run only from the source repo (so the fork doesn't need secrets)
     if: github.repository == 'yqkiuo/BreastSubtypeR'
     runs-on: ubuntu-latest
 
