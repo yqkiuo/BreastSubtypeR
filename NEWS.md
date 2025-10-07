@@ -1,4 +1,4 @@
-# BreastSubtypeR 1.1.5
+# BreastSubtypeR 1.1.6
 
 ## Highlights
 - Paper published in *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** (DOI: 10.1093/nargab/lqaf131).
