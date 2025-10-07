@@ -17,7 +17,7 @@ Authors@R: c(
 	   role = c("aut", "cre"), 
            email="yq.kiuo@gmail.com", 
            comment = c(ORCID = "0000-0002-4098-3246")),
-    person(given = "Emmanouil", family = "Sifakis",
+    person(given = "Emmanouil G.", family = "Sifakis",
            role = c("aut"),
            email = "emmanouil.sifakis@ki.se",
            comment = c(ORCID = "0000-0001-9919-4471"))
@@ -53,7 +53,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
-URL: https://doi.org/10.1093/nargab/lqaf131, https://github.com/yqkiuo/BreastSubtypeR
+URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR
 BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL-3
 VignetteBuilder: knitr

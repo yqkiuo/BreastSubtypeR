@@ -26,12 +26,15 @@ Yang Q, Hartman J, Sifakis EG. BreastSubtypeR: a unified R/Bioconductor package 
 ```bibtex
 @article{Yang2025BreastSubtypeR,
   author  = {Yang, Qiao and Hartman, Johan and Sifakis, Emmanouil G.},
-  title   = {BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research},
+  title   = {{BreastSubtypeR}: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research},
   journal = {NAR Genomics and Bioinformatics},
   year    = {2025},
+  volume  = {7},
+  number  = {4},
   doi     = {10.1093/nargab/lqaf131},
   url     = {https://doi.org/10.1093/nargab/lqaf131}
 }
+
 ```
 </details>
 
