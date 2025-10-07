@@ -1,41 +1,22 @@
 ## inst/CITATION
 
-pkg <- utils::packageDescription("BreastSubtypeR")
-pkgVersion <- pkg$Version
-pkgYear <- if (!is.null(pkg$Date)) substr(pkg$Date, 1, 4) else format(Sys.Date(), "%Y")
+citHeader("To cite BreastSubtypeR, please use the following references.")
 
-citHeader("To cite BreastSubtypeR, please use the following references.\n")
-
-# Journal article
 paper <- bibentry(
   bibtype = "Article",
-  author = c(
+  title   = "BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research",
+  author  = c(
     person(given = "Qiao",  family = "Yang"),
     person(given = "Johan", family = "Hartman"),
-    person(given = "Emmanouil", family = "Sifakis")
+    person(given = "Emmanouil G.", family = "Sifakis")
   ),
-  title   = "BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research",
   journal = "NAR Genomics and Bioinformatics",
   year    = "2025",
-  note    = "Editor's Choice",
+  volume  = "7",
+  number  = "4",
   doi     = "10.1093/nargab/lqaf131",
-  url     = "https://doi.org/10.1093/nargab/lqaf131",
-  textVersion =
-    "Yang Q., Hartman J., Sifakis E.G. BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. NAR Genomics and Bioinformatics. 2025. https://doi.org/10.1093/nargab/lqaf131"
+  url     = "https://doi.org/10.1093/nargab/lqaf131"
 )
 
-# Package manual
-pkgCite <- bibentry(
-  bibtype = "Manual",
-  title   = sprintf("BreastSubtypeR: R package version %s", pkgVersion),
-  author  = c(
-    person(given = "Qiao",      family = "Yang"),
-    person(given = "Emmanouil", family = "Sifakis")
-  ),
-  year    = pkgYear,
-  url     = "https://github.com/yqkiuo/BreastSubtypeR"
-)
-
-citFooter("\nPlease also cite R itself and the packages on which BreastSubtypeR depends.")
-
-invisible()  # <-- do NOT return c(paper, pkgCite)
+## Auto-generate the “Manual” entry from DESCRIPTION
+pkg_manual <- citation(auto = meta)
