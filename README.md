@@ -20,7 +20,7 @@ It consolidates published intrinsic subtyping methods under one API and lets you
 
 **Plain text**
 
-Yang Q, Hartman J, Sifakis EG. BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*. 2025. https://doi.org/10.1093/nargab/lqaf131
+Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*. <https://doi.org/10.1093/nargab/lqaf131>
 
 **BibTeX**
 ```bibtex
@@ -31,6 +31,7 @@ Yang Q, Hartman J, Sifakis EG. BreastSubtypeR: a unified R/Bioconductor package 
   year    = {2025},
   volume  = {7},
   number  = {4},
+  pages   = {lqaf131},
   doi     = {10.1093/nargab/lqaf131},
   url     = {https://doi.org/10.1093/nargab/lqaf131}
 }
