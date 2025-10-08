@@ -99,11 +99,11 @@ overlapSets <- function(x, y) {
 #' @param external    For External: NAME of a column in medians.all (e.g., "RNAseq.V2", "Given.mdns")
 #' @noRd
 docalibration <- function(
-    y,
-    medians.all,
-    calibration = c("None", "Internal", "External"),
-    internal = NA,
-    external = NA) {
+        y,
+        medians.all,
+        calibration = c("None", "Internal", "External"),
+        internal = NA,
+        external = NA) {
     calibration <- match.arg(calibration)
     y <- as.matrix(y)
     mq <- 0.05 # robust quantiles for 'qCtr' (genefu.robust)
@@ -169,8 +169,8 @@ standardize <- function(x) {
 #' Function for suffix of medians for gene centering
 #' @noRd
 getsuffix <- function(calibration,
-                      internal = NA,
-                      external = NA) {
+    internal = NA,
+    external = NA) {
     calibration <- match.arg(calibration, choices = c("None", "Internal", "External"))
 
     suffix <- switch(calibration,
@@ -332,9 +332,9 @@ sspPredict <- function(x, y, std = FALSE, distm = "spearman", Subtype = TRUE) {
 #' @noRd
 
 RORgroup <- function(out,
-                     df.cln,
-                     Subtype = FALSE,
-                     hasClinical = FALSE) {
+    df.cln,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     sample <- data.frame(patientID = names(out$predictions))
 
     distance <- data.frame(out$distances, row.names = names(out$predictions))
@@ -717,13 +717,13 @@ RORgroup <- function(out,
 #'
 
 makeCalls.parker <- function(mat,
-                             df.cln,
-                             calibration = c("None", "Internal", "External"),
-                             internal = NA,
-                             external = NA,
-                             medians = NULL,
-                             Subtype = FALSE,
-                             hasClinical = FALSE) {
+    df.cln,
+    calibration = c("None", "Internal", "External"),
+    internal = NA,
+    external = NA,
+    medians = NULL,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -834,14 +834,14 @@ makeCalls.parker <- function(mat,
 
 
 makeCalls_ihc <- function(mat,
-                          df.cln,
-                          calibration = "Internal",
-                          internal = "IHC.mdns",
-                          external = NA,
-                          medians = NA,
-                          Subtype = FALSE,
-                          hasClinical = FALSE,
-                          seed = 118) {
+    df.cln,
+    calibration = "Internal",
+    internal = "IHC.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -971,16 +971,16 @@ makeCalls_ihc <- function(mat,
 #' @noRd
 
 makeCalls_ihc.iterative <- function(mat,
-                                    df.cln,
-                                    iteration = 100,
-                                    ratio = 54 / 64,
-                                    calibration = "Internal",
-                                    internal = "ER.mdns",
-                                    external = NA,
-                                    medians = NA,
-                                    Subtype = FALSE,
-                                    hasClinical = FALSE,
-                                    seed = 118) {
+    df.cln,
+    iteration = 100,
+    ratio = 54 / 64,
+    calibration = "Internal",
+    internal = "ER.mdns",
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE,
+    seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1168,15 +1168,15 @@ makeCalls_ihc.iterative <- function(mat,
 #' @noRd
 
 makeCalls.PC1ihc <- function(
-    mat,
-    df.cln,
-    calibration = "Internal",
-    internal = "PC1ihc.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+        mat,
+        df.cln,
+        calibration = "Internal",
+        internal = "PC1ihc.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1361,15 +1361,15 @@ makeCalls.PC1ihc <- function(
 #' @noRd
 
 makeCalls.v1PAM <- function(
-    mat,
-    df.pam,
-    calibration = "Internal",
-    internal = "v1PAM.mdns",
-    external = NA,
-    medians = NA,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+        mat,
+        df.pam,
+        calibration = "Internal",
+        internal = "v1PAM.mdns",
+        external = NA,
+        medians = NA,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")
@@ -1488,11 +1488,11 @@ makeCalls.v1PAM <- function(
 #' @noRd
 
 makeCalls.ssBC <- function(
-    mat,
-    df.cln,
-    s = c("ER", "TN", "ER.v2", "TN.v2"),
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+        mat,
+        df.cln,
+        s = c("ER", "TN", "ER.v2", "TN.v2"),
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     ## loading dataset
     data_env <- new.env(parent = emptyenv())
     data("BreastSubtypeRobj", envir = data_env, package = "BreastSubtypeR")

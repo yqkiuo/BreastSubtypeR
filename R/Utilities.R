@@ -171,10 +171,10 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
 #' @noRd
 
 domapping <- function(se_obj,
-                      RawCounts = FALSE,
-                      method = "max",
-                      impute = TRUE,
-                      verbose = TRUE) {
+    RawCounts = FALSE,
+    method = "max",
+    impute = TRUE,
+    verbose = TRUE) {
     ## 1. Input raw counts
     if (RawCounts && !"Length" %in% colnames(rowData(se_obj))) {
         stop(
