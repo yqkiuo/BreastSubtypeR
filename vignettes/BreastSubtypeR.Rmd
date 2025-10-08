@@ -44,7 +44,7 @@ BiocManager::install("BreastSubtypeR")
 
 If you use **BreastSubtypeR**, please cite:
 
-- Yang Q., Hartman J., Sifakis E.G. (2025). *BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research*. **NAR Genomics and Bioinformatics**. <https://doi.org/10.1093/nargab/lqaf131>
+- Yang Q., Hartman J., Sifakis E.G. (2025). *BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research*. **NAR Genomics and Bioinformatics**, 7(4):131. <https://doi.org/10.1093/nargab/lqaf131>
 
 For BibTeX/LaTeX, run in R:
 
@@ -239,7 +239,7 @@ clinical validation requires paired clinical assay data.\
 
 ## References
 
-- Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research. *NAR Genomics and Bioinformatics*. <https://doi.org/10.1093/nargab/lqaf131>
+- Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*, 7(4):131. <https://doi.org/10.1093/nargab/lqaf131>
 
 -  Parker JS, Mullins M, Cheang MCU, Leung S, Voduc D, Vickery T, *et al.* (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *J Clin Oncol*, 27(8):1160–1167. <https://doi.org/10.1200/JCO.2008.18.1370>
 

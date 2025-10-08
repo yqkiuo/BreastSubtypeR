@@ -57,7 +57,7 @@ methods; FPKM for SSP-based methods.
 
 Authors:
 \itemize{
-  \item Emmanouil Sifakis \email{emmanouil.sifakis@ki.se} (\href{https://orcid.org/0000-0001-9919-4471}{ORCID})
+  \item Emmanouil G. Sifakis \email{emmanouil.sifakis@ki.se} (\href{https://orcid.org/0000-0001-9919-4471}{ORCID})
 }
 
 }
