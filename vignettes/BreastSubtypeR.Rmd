@@ -103,7 +103,7 @@ data("OSLO2EMIT0obj")
 **1) Map & prepare (method-specific pre-processing + mapping)**
 
 ```{r, eval=TRUE}
-# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez, 
+# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez,
 # and (optionally) impute missing values
 data_input <- Mapping(
     OSLO2EMIT0obj$se_obj,
