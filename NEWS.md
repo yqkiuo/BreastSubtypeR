@@ -1,4 +1,4 @@
-# BreastSubtypeR 1.1.6
+# BreastSubtypeR 1.1.7
 
 ## Highlights
 - Paper published in *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** (DOI: 10.1093/nargab/lqaf131).
@@ -8,6 +8,10 @@
 - Broader input-validation across the subtyping pipeline.
 
 ## Bug Fixes
+- AUTO: fixed ER/HER2 strata messaging for ER+/HER2− and ER−/HER2− cohorts.
+The spurious message “ssBC.v2 for samples: ERnegHER2neg” no longer appears in ER+/HER2− cohorts.
+- AUTO: Minor guard-rails to prefer ssBC.v2 in HER2+ strata, 
+while still allowing it in HER2− cohorts when thresholds are met.
 - PAM50 variants no longer error with `calibration = "None"` or `"External"`.
 - ssBC variants handle datasets with <50 PAM50 genes more robustly.
 - Fixed `data.frame` issue (“`check.names` matched by multiple arguments”) via safe builders.
@@ -15,6 +19,20 @@
 - Safer ROR merges on `PatientID` with clearer notifications.
 - Eliminated `jsonlite` named-vector warning in plotting.
 
+## Changes
+- Documentation: clarified guidance for subtype-specific cohorts:
+  - HER2− (**ER+/HER2−** or **ER−/HER2−**) → NC-based: *ssBC and/or ssBC.v2*; plus SSP-based (AIMS, sspbc).
+  - HER2+ (**ER+/HER2+** or **ER−/HER2+**) → NC-based: *ssBC.v2*; plus SSP-based.
+  - TNBC → NC-based: *ssBC and/or ssBC.v2*; plus SSP-based (AIMS, sspbc).
+- Documentation: clarified AUTO guidance for **TNBC** cohorts.
+- **AUTO clarifications (simulation-based defaults):**
+  - ER balance gate: `lower_ratio = 0.39`, `upper_ratio = 0.69`.
+  - Minimum sizes: **ER+ total = 15**, **ER− total = 18**,  **TN total = 18**.
+  - Subgroup gates (rounded): ER+ subgroups (HER2+ / HER2−) use `round(15 / 2)`; 
+  ER− subgroups (HER2+ / HER2−) use `round(18 / 2)`.
+  - Notes: these thresholds gate method eligibility; 
+  they do **not** force a consensus call. Details in the vignette (“AUTO logic”).
+  
 ## Shiny (iBreastSubtypeR)
 - New hero card + method chips (NC, SSP, ROR, AUTO) and “Why AUTO?” explainer modal.
 - **AIMS:** 4-class toggle disabled (AIMS is 5-class only).
