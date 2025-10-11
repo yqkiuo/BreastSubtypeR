@@ -252,7 +252,15 @@ clinical validation requires paired clinical assay data.\
 - AUTO selects compatible methods; it does not perform consensus voting by default.
 
 
+
 # Appendix
+
+## Sources & support
+
+- **Bioconductor package page:** <https://bioconductor.org/packages/BreastSubtypeR>  
+- **Bioconductor DOI:** <https://doi.org/10.18129/B9.bioc.BreastSubtypeR>  
+- **GitHub mirrors:** <https://github.com/yqkiuo/BreastSubtypeR> (personal), <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR> (org)  
+- **Bugs / pull requests:** <https://github.com/yqkiuo/BreastSubtypeR/issues>
 
 ## References
 

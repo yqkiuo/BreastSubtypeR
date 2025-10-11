@@ -53,7 +53,7 @@ Suggests:
     knitr,
     rmarkdown,
     testthat
-URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR
+URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR,https://github.com/yqkiuo/BreastSubtypeR,https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR
 BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL-3
 VignetteBuilder: knitr

@@ -26,10 +26,9 @@ via safe builders.
 ## Changes
 - Documentation: clarified guidance for subtype-specific cohorts:
   -  **ER/HER2-defined cohorts** (ER+/HER2−, ER−/HER2−, ER+/HER2+, ER−/HER2+): 
-  NC-based → **ssBC.v2 only**; plus SSP-based (AIMS, sspbc)..
+  NC-based → **ssBC.v2 only**; plus SSP-based (AIMS, sspbc).
   -  **ER-only** (ER+ or ER−) and **TNBC**: 
   NC-based → **ssBC and/or ssBC.v2** (subject to minimum sizes); plus SSP-based.
-  - TNBC → NC-based: *ssBC and/or ssBC.v2*; plus SSP-based (AIMS, sspbc).
 - **AUTO clarifications (simulation-based defaults):**
   - ER balance gate: `lower_ratio = 0.39`, `upper_ratio = 0.69`.
   - Minimum sizes: **ER+ total = 15**, **ER− total = 18**,  **TN total = 18**.
