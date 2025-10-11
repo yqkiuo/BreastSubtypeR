@@ -162,9 +162,9 @@ Vis_Multi(res_auto$res_subtypes)
 
 ***AUTO logic (clarifications)***
 
--   For HER2− subgroup-specific cohorts (**ER+/HER2−** or **ER−/HER2−**), AUTO runs **ssBC and/or ssBC.v2** in addition to SSP-based methods (AIMS, sspbc).  
--   For HER2+ cohorts (**ER+/HER2+** or **ER−/HER2+**), AUTO runs **ssBC.v2**, plus SSP-based methods.
--   **ER+ fraction gate (simulations-based)**: `lower_ratio = 0.39`, `upper_ratio = 0.69`.
+-   **ER/HER2-defined cohorts** (any of **ER+/HER2−**, **ER−/HER2−**, **ER+/HER2+**, **ER−/HER2+**): AUTO runs **ssBC.v2 only**, plus SSP-based methods (AIMS, sspbc).  
+- **ER-only cohorts** (**ER+** or **ER−**) and **TNBC**: when above minimum sizes (see below), AUTO runs **ssBC and/or ssBC.v2**, plus SSP-based methods.
+-   **ER+ fraction gate (simulation-based)**: `lower_ratio = 0.39`, `upper_ratio = 0.69`.
 -   **Minimum sample group sizes (defaults used by AUTO)**:
     -   ER+ total: `n_ERpos_threshold = 15`
     -   ER− total: `n_ERneg_threshold = 18`

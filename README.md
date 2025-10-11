@@ -126,9 +126,10 @@ Vis_Multi(res_auto$res_subtypes)
 
 ***AUTO logic (clarifications)***
 
-- HER2− cohorts (**ER+/HER2−**, **ER−/HER2−**): run **ssBC and/or ssBC.v2** + SSP (AIMS, sspbc).
-- HER2+ cohorts (**ER+/HER2+**, **ER−/HER2+**): run **ssBC.v2** + SSP.
-- TNBC cohorts: run **ssBC and/or ssBC.v2** + SSP.
+- **ER/HER2-defined cohorts** (ER+/HER2−, ER−/HER2−, ER+/HER2+, ER−/HER2+): 
+**ssBC.v2 only** + SSP (AIMS, sspbc).
+- **ER-only** (ER+ or ER−) and **TNBC** (size permitting): 
+**ssBC and/or ssBC.v2** + SSP.
 - ER balance gate (simulation-based): `lower_ratio = 0.39`, `upper_ratio = 0.69`.
 - Minimum sizes (defaults): ER+ = 15, ER− = 18, TN = 18. 
 Subgroups use half of ER totals (rounded):
