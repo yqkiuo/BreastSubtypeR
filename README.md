@@ -162,7 +162,13 @@ See function help pages for specifics (e.g., `?BS_Multi`, `?Mapping`, `?iBreastS
 
 ## Contributing & issues
 
-Contributions and issue reports are welcome: <https://github.com/yqkiuo/BreastSubtypeR/issues>.
+**Canonical source**  
+Bioconductor package page: <https://bioconductor.org/packages/BreastSubtypeR>  
+Bioconductor DOI: <https://doi.org/10.18129/B9.bioc.BreastSubtypeR>  
+Mirrors: <https://github.com/yqkiuo/BreastSubtypeR> (personal), <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR> (org)
+
+**Support & bugs**  
+Bugs/PRs: <https://github.com/yqkiuo/BreastSubtypeR/issues>
 
 ## License
 
