@@ -1,4 +1,4 @@
-# BreastSubtypeR <a href='https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" alt="BreastSubtypeR logo" align="right" height="110"/></a>
+# BreastSubtypeR <a href='https://github.com/yqkiuo/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" alt="BreastSubtypeR logo" align="right" height="110"/></a>
 
 <!-- badges: start -->
 [![Bioconductor Release](https://bioconductor.org/shields/years-in-bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/BreastSubtypeR)
@@ -124,6 +124,23 @@ res_auto <- BS_Multi(data_input = data_input, methods = "AUTO")
 Vis_Multi(res_auto$res_subtypes)
 ```
 
+***AUTO logic (clarifications)***
+
+- **ER/HER2-defined cohorts** (ER+/HER2−, ER−/HER2−, ER+/HER2+, ER−/HER2+): 
+**ssBC.v2 only** + SSP (AIMS, sspbc).
+- **ER-only** (ER+ or ER−) and **TNBC** (size permitting): 
+**ssBC and/or ssBC.v2** + SSP.
+- ER balance gate (simulation-based): `lower_ratio = 0.39`, `upper_ratio = 0.69`.
+- Minimum sizes (defaults): ER+ = 15, ER− = 18, TN = 18. 
+Subgroups use half of ER totals (rounded):
+    -   ER+: `n_ERposHER2pos_threshold = n_ERposHER2neg_threshold = round(15 / 2)`
+    -   ER−: `n_ERnegHER2pos_threshold = n_ERnegHER2neg_threshold = round(18 / 2)`
+
+*Provenance*: ER+/ER− minimums are simulation-based defaults. 
+TN currently uses the ER− minimum (18). 
+Subgroup gates and TN minimum may be refined in future releases 
+as additional simulations become available.
+
 **4) Launch the local Shiny app**
 
 ``` r
@@ -145,7 +162,13 @@ See function help pages for specifics (e.g., `?BS_Multi`, `?Mapping`, `?iBreastS
 
 ## Contributing & issues
 
-Contributions and issue reports are welcome: <https://github.com/yqkiuo/BreastSubtypeR/issues>.
+**Canonical source**  
+Bioconductor package page: <https://bioconductor.org/packages/BreastSubtypeR>  
+Bioconductor DOI: <https://doi.org/10.18129/B9.bioc.BreastSubtypeR>  
+Mirrors: <https://github.com/yqkiuo/BreastSubtypeR> (personal), <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR> (org)
+
+**Support & bugs**  
+Bugs/PRs: <https://github.com/yqkiuo/BreastSubtypeR/issues>
 
 ## License
 

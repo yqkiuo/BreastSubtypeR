@@ -44,7 +44,7 @@ BiocManager::install("BreastSubtypeR")
 
 If you use **BreastSubtypeR**, please cite:
 
-- Yang Q., Hartman J., Sifakis E.G. (2025). *BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research*. **NAR Genomics and Bioinformatics**, 7(4):131. <https://doi.org/10.1093/nargab/lqaf131>
+- Yang Q., Hartman J., Sifakis E.G. (2025). *BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research*. **NAR Genomics and Bioinformatics**, 7(4):lqaf131. <https://doi.org/10.1093/nargab/lqaf131>
 
 For BibTeX/LaTeX, run in R:
 
@@ -114,7 +114,7 @@ data_input <- Mapping(
 )
 ```
 
-## Notes
+***Notes***
 
 -   `Mapping()` prepares expression inputs for downstream subtyping functions by:
     -   automatically applying tailored normalisation workflows depending on input type
@@ -141,6 +141,7 @@ res <- BS_Multi(
 
 # Per-sample calls (methods × samples)
 head(res$res_subtypes, 5)
+
 ```
 
 **3) AUTO mode (cohort-aware selection) + visualize**
@@ -158,6 +159,22 @@ res_auto <- BS_Multi(
 # Visualise multi-method output and concordance
 Vis_Multi(res_auto$res_subtypes)
 ```
+
+***AUTO logic (clarifications)***
+
+-   **ER/HER2-defined cohorts** (any of **ER+/HER2−**, **ER−/HER2−**, **ER+/HER2+**, **ER−/HER2+**): AUTO runs **ssBC.v2 only**, plus SSP-based methods (AIMS, sspbc).  
+- **ER-only cohorts** (**ER+** or **ER−**) and **TNBC**: when above minimum sizes (see below), AUTO runs **ssBC and/or ssBC.v2**, plus SSP-based methods.
+-   **ER+ fraction gate (simulation-based)**: `lower_ratio = 0.39`, `upper_ratio = 0.69`.
+-   **Minimum sample group sizes (defaults used by AUTO)**:
+    -   ER+ total: `n_ERpos_threshold = 15`
+    -   ER− total: `n_ERneg_threshold = 18`
+    -   TNBC total: `n_TN_threshold = 18` (currently aligned with ER−)
+    -   ER+ subgroups (HER2+ or HER2−): `n_ERposHER2pos_threshold = n_ERposHER2neg_threshold = round(n_ERpos_threshold / 2)`
+    -   ER− subgroups (HER2+ or HER2−): `n_ERnegHER2pos_threshold = n_ERnegHER2neg_threshold = round(n_ERneg_threshold / 2)`
+
+**Notes.** Thresholds are *selection gates* for method eligibility; they do not force a consensus call.
+
+**Provenance & future updates.** The ER+ (15) and ER− (18) cohort minimums are simulation-based defaults. ER/HER2 subgroup thresholds (approx. half of each ER total) are heuristic and may be updated as additional simulation studies are completed. For TNBC, we currently use the ER− minimum (18) as the cohort cutoff; TN-specific thresholds may likewise refined in future releases.
 
 **4) Single-method run**
 
@@ -235,11 +252,19 @@ clinical validation requires paired clinical assay data.\
 - AUTO selects compatible methods; it does not perform consensus voting by default.
 
 
+
 # Appendix
+
+## Sources & support
+
+- **Bioconductor package page:** <https://bioconductor.org/packages/BreastSubtypeR>  
+- **Bioconductor DOI:** <https://doi.org/10.18129/B9.bioc.BreastSubtypeR>  
+- **GitHub mirrors:** <https://github.com/yqkiuo/BreastSubtypeR> (personal), <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR> (org)  
+- **Bugs / pull requests:** <https://github.com/yqkiuo/BreastSubtypeR/issues>
 
 ## References
 
-- Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*, 7(4):131. <https://doi.org/10.1093/nargab/lqaf131>
+- Yang Q., Hartman J., Sifakis E.G. (2025). BreastSubtypeR: a unified R/Bioconductor package for intrinsic molecular subtyping in breast cancer research. *NAR Genomics and Bioinformatics*, 7(4):lqaf131. <https://doi.org/10.1093/nargab/lqaf131>
 
 -  Parker JS, Mullins M, Cheang MCU, Leung S, Voduc D, Vickery T, *et al.* (2009). Supervised risk predictor of breast cancer based on intrinsic subtypes. *J Clin Oncol*, 27(8):1160–1167. <https://doi.org/10.1200/JCO.2008.18.1370>
 
