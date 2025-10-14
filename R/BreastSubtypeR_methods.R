@@ -797,8 +797,20 @@ BS_ssBC <- function(se_obj,
 #'     - Expression values must be **positive** (e.g., FPKM or log2(FPKM+1)).
 #'     - Values should not be gene-centered or globally scaled.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the AIMS method.
+#' @return A **list** with the following elements:
+#' \itemize{
+#'   \item \code{cl}: Character vector of AIMS subtype calls per sample.
+#'         One of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, or \code{"Normal"}.
+#'   \item \code{prob}: Numeric vector of posterior probabilities corresponding
+#'         to the assigned subtype in \code{cl} (one value per sample).
+#'   \item \code{all.probs}: Matrix of posterior probabilities for all samples
+#'         and all subtypes (rows = samples, columns = subtypes).
+#'   \item \code{rules.matrix}: 0/1 matrix of the 100 AIMS rules used for assignment
+#'         (rows = rules, columns = samples); \code{1} indicates the rule evaluated to TRUE.
+#'   \item \code{data.used}: Expression values actually used to evaluate the rules
+#'         (filtered/ordered subset aligned to the AIMS gene set).
+#'   \item \code{EntrezID.used}: Character vector of Entrez IDs used by AIMS.
+#' }
 #'
 #' @references
 #' Paquet ER, Hallett MT.
@@ -873,8 +885,20 @@ BS_AIMS <- function(se_obj) {
 #'   - `"ssp.pam50"`: Predicts PAM50-based intrinsic subtypes.
 #'   - `"ssp.subtype"`: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).
 #'
-#' @return A character vector of intrinsic subtype predictions for each sample,
-#'   as estimated by the SSPBC method.
+#' @return A **list** with the following elements:
+#' \itemize{
+#'   \item \code{cl}: Molecular class identified by the sspbc models for each sample
+#'         (one of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, with or without \code{"Normal"}).
+#'   \item \code{prob}: Numeric vector of posterior probabilities corresponding
+#'         to the assigned subtype in \code{cl} (one value per sample).
+#'   \item \code{all.probs}: Matrix of posterior probability values for all samples
+#'         and all subtypes (rows = samples, columns = subtypes).
+#'   \item \code{rules.matrix}: Binary (0/1) matrix of the pairwise gene-expression
+#'         rules (\emph{gene A < gene B}) used for assignment (rows = rules, columns = samples);
+#'         \code{1} indicates the rule evaluated to TRUE for that sample.
+#'   \item \code{data.used}: Expression values actually used to evaluate the simple rules.
+#'   \item \code{EntrezID.used}: Character vector of EntrezGene IDs used for rule evaluation.
+#' }
 #'
 #' @references
 #' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
@@ -1283,10 +1307,9 @@ BS_Multi <- function(
                 ssp.name = "ssp.pam50"
             )
 
-            BS.all <- data.frame(
-                PatientID = rownames(res_sspbc),
-                BS = res_sspbc[, 1],
-                row.names = rownames(res_sspbc)
+            res_sspbc$BS.all <- data.frame(
+                PatientID = rownames(res_sspbc$cl),
+                BS = res_sspbc$cl[, 1]
             )
 
             if (Subtype) {
@@ -1294,10 +1317,10 @@ BS_Multi <- function(
                     se_obj = data_input$se_SSP,
                     ssp.name = "ssp.subtype"
                 )
-                BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
+                res_sspbc$BS.all$BS.Subtype <- res_sspbc.Subtype$cl[, 1]
             }
 
-            return(list(BS.all = BS.all))
+            return(res_sspbc)
         }
 
         stop("Unknown method: ", method)
