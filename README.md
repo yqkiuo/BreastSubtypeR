@@ -146,12 +146,31 @@ as additional simulations become available.
 ``` r
 BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
+
 ***Notes:***
--   The app runs locally; no data leave your machine.
--   If you see a missing UI dependency:
+
+- The app runs locally; no data leave your machine.
+
+- If you see a missing UI dependency:
 
 ``` r
 install.packages(c("shiny","bslib"))
+```
+
+***Example data (for Shiny & scripts)***
+
+You can explore the app without preparing files:
+
+- In **iBreastSubtypeR**, click **“Load example data…”** to pre-fill
+  the UI with a small demo cohort. Then click **Preprocess & map** and proceed to Step 2.
+
+- Programmatically, the same files are shipped inside the package:
+```r
+  exdir   <- system.file("RshinyTest", package = "BreastSubtypeR")
+  gex     <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
+  clin    <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
+  anno    <- file.path(exdir, "OSLO2EMIT0_anno.txt")
+  stopifnot(all(file.exists(gex, clin, anno)))
 ```
 
 ## Vignette & documentation

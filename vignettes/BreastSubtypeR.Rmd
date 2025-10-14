@@ -236,11 +236,28 @@ install.packages(c("shiny", "bslib"))
 The app runs locally; **no data leave your machine**.
 
 **What you can do**:\
-- Upload expression, clinical, and feature-annotation tables (clinical lives in `colData`). - Run single methods, or run multiple classifiers at once with `BS_Multi` and `AUTO` enabled for cohort-aware selection.\
+- Upload expression, clinical, and feature-annotation tables (clinical lives in `colData`).\
+- Run single methods, or run multiple classifiers at once with `BS_Multi` and `AUTO` enabled for cohort-aware selection.\
 - Choose 5-class (incl. Normal-like) or 4-class (AIMS is 5-class only).\
 - Inspect per-sample concordance (entropy), heatmap and pie summaries.\
 - Export Calls-only or Full metrics. ROR is available for NC methods when `TSIZE`/`NODE` are present and numeric.
 
+
+## Example data (for Shiny & scripts)
+
+The Shiny UI provides a **“Load example data…”** button that preloads a small
+demo cohort (expression, clinical, annotation). After loading, click
+**Preprocess & map** (Step 1), then proceed to analyses (Step 2).
+
+Programmatic access to the same files:
+
+```{r, eval = FALSE}
+exdir <- system.file("RshinyTest", package = "BreastSubtypeR")
+gex   <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
+clin  <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
+anno  <- file.path(exdir, "OSLO2EMIT0_anno.txt")
+file.exists(gex); file.exists(clin); file.exists(anno)
+```
 
 # Limitations
 
