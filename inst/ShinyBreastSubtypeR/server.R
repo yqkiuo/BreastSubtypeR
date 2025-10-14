@@ -888,13 +888,13 @@ server <- function(input, output, session) {
       if (input$BSmethod == "AIMS") {
         req(se_SSP)
         incProgress(0.55, detail = "BS_AIMS...")
-        data("BreastSubtypeRobj", package = "BreastSubtypeR")
-        res <- BreastSubtypeR::BS_AIMS(se_obj = se_SSP)
-        if (!is.null(res$cl) && is.matrix(res$cl) && ncol(res$cl) >= 1) {
+        # data("BreastSubtypeRobj", package = "BreastSubtypeR")
+        res_AIMS <- BreastSubtypeR::BS_AIMS(se_obj = se_SSP)
+        if (!is.null(res_AIMS$cl) && is.matrix(res_AIMS$cl) && ncol(res_AIMS$cl) >= 1) {
           res$BS.all <- data.frame(
-            PatientID = rownames(res$cl),
-            BS = res$cl[, 1, drop = TRUE],
-            row.names = rownames(res$cl),
+            PatientID = rownames(res_AIMS$cl),
+            BS = res_AIMS$cl[, 1, drop = TRUE],
+            row.names = rownames(res_AIMS$cl),
             check.names = FALSE
           )
         }
@@ -905,10 +905,14 @@ server <- function(input, output, session) {
         incProgress(0.55, detail = "BS_sspbc...")
         model <- if (want_4) "ssp.subtype" else "ssp.pam50"
         res_sspbc <- BreastSubtypeR::BS_sspbc(se_obj = se_SSP, ssp.name = model)
-        res <- list(BS.all = data.frame(PatientID = rownames(res_sspbc),
-                                        BS = res_sspbc[, 1, drop = TRUE],
-                                        row.names = rownames(res_sspbc),
-                                        check.names = FALSE))
+        if (!is.null(res_sspbc$cl) && is.matrix(res_sspbc$cl) && ncol(res_sspbc$cl) >= 1) {
+          res$BS.all <- data.frame(
+            PatientID = rownames(res_sspbc$cl),
+            BS = res_sspbc$cl[, 1, drop = TRUE],
+            row.names = rownames(res_sspbc$cl),
+            check.names = FALSE
+          )
+        }
       }
       
       incProgress(0.9, detail = "Finalizing...")
