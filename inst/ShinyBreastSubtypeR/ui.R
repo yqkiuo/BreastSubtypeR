@@ -88,7 +88,7 @@ ui <- bslib::page_fluid(
             ),
             tags$ul(class = "feature-list",
                     tags$li("Assumption-aware AUTO reduces bias in ER/HER2-skewed cohorts."),
-                    tags$li(HTML("Standardised mapping & normalisation (<i>log<sub>2</sub></i>-CPM for NC; FPKM for SSP).")),
+                    tags$li(HTML("standardized mapping & normalization (<i>log<sub>2</sub></i>-CPM for NC; FPKM for SSP).")),
                     tags$li("Choose 5-class (incl. Normal-like) or 4-class; AIMS is 5-class only."),
                     tags$li("All computation runs locally; exports are Bioconductor-ready.")
             ),
@@ -119,7 +119,7 @@ ui <- bslib::page_fluid(
       fileInput("GEX", "Upload expression matrix",
                 accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")),
       radioButtons("is_raw_counts", "Data type",
-                   choices  = list("Normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
+                   choices  = list("normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
                    selected = "norm", inline = TRUE),
       uiOutput("gex_help")
     ),

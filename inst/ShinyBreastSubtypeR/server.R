@@ -29,10 +29,65 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
                     quote = "", comment.char = "", stringsAsFactors = FALSE, fill = TRUE)
 }
 
-# Small helper to print tables like "ER+=42 · ER-=18"
+# Small helper to print tables like "ER+=42, ER-=18"
 .tab_str <- function(tab) {
   if (is.null(tab)) return("n/a")
   paste(sprintf("%s=%s", names(tab), as.integer(tab)), collapse = " · ")
+}
+
+# Helper: summarize cohort depending on what columns exist
+.summarize_cohort <- function(ph) {
+  out <- list(kind = "none", ok = FALSE, msg = "No cohort columns found", stats = NULL)
+  
+  # 1) TN cohort takes precedence if present
+  if ("TN" %in% names(ph)) {
+    vals <- na.omit(as.character(ph$TN))
+    bad  <- setdiff(unique(vals), c("TN","nonTN"))
+    if (length(bad)) {
+      out$kind <- "TN"; out$msg <- paste("Invalid TN values:", paste(bad, collapse=", "))
+      return(out)
+    }
+    nTN    <- sum(vals == "TN")
+    nNonTN <- sum(vals == "nonTN")
+    out$kind <- "TN"
+    out$ok   <- TRUE
+    out$msg  <- "OK"
+    out$stats <- list(nTN = nTN, nNonTN = nNonTN)
+    return(out)
+  }
+  
+  # 2) Otherwise fall back to ER/HER2, if available
+  haveER   <- "ER"   %in% names(ph)
+  haveHER2 <- "HER2" %in% names(ph)
+  if (haveER || haveHER2) {
+    msg <- character()
+    if (haveER) {
+      er <- na.omit(as.character(ph$ER))
+      badER <- setdiff(unique(er), c("ER+","ER-"))
+      if (length(badER)) msg <- c(msg, paste("Invalid ER:", paste(badER, collapse=", ")))
+    }
+    if (haveHER2) {
+      h2 <- na.omit(as.character(ph$HER2))
+      badH <- setdiff(unique(h2), c("HER2+","HER2-"))
+      if (length(badH)) msg <- c(msg, paste("Invalid HER2:", paste(badH, collapse=", ")))
+    }
+    out$kind <- if (haveER && haveHER2) "ERHER2" else if (haveER) "ER" else "HER2"
+    out$ok   <- length(msg) == 0
+    out$msg  <- if (out$ok) "OK" else paste(msg, collapse="; ")
+    if (haveER) {
+      out$stats <- c(out$stats,
+                     list(nERpos = sum(ph$ER   == "ER+",   na.rm=TRUE),
+                          nERneg = sum(ph$ER   == "ER-",   na.rm=TRUE)))
+    }
+    if (haveHER2) {
+      out$stats <- c(out$stats,
+                     list(nHpos  = sum(ph$HER2 == "HER2+", na.rm=TRUE),
+                          nHneg  = sum(ph$HER2 == "HER2-", na.rm=TRUE)))
+    }
+    return(out)
+  }
+  
+  out
 }
 
 # Force matrix numeric (keeps rownames)
@@ -259,52 +314,50 @@ server <- function(input, output, session) {
       return(list(show = TRUE, ready = FALSE, msg = "Run Step 1 (Preprocess & map) first."))
     
     ph <- as.data.frame(SummarizedExperiment::colData(di$se_NC))
-    msgs <- character(0)
-    miss <- setdiff(c("ER","HER2"), names(ph))
-    if (length(miss)) msgs <- c(msgs, paste0("Missing columns: ", paste(miss, collapse = ", ")))
+    summ <- .summarize_cohort(ph)
     
-    # only compute tables if columns exist
-    ER_tab   <- if ("ER"   %in% names(ph))   table(ph$ER,   useNA = "no") else NULL
-    HER2_tab <- if ("HER2" %in% names(ph))   table(ph$HER2, useNA = "no") else NULL
-    
-    ready <- length(msgs) == 0
-    list(show = TRUE, ready = ready, msg = if (length(msgs)) paste(msgs, collapse = "; ") else "OK",
-         n = nrow(ph), ER_tab = ER_tab, HER2_tab = HER2_tab)
+    # Ready only when coding is valid for the detected cohort-kind
+    list(
+      show  = TRUE,
+      ready = isTRUE(summ$ok),
+      msg   = if (summ$ok) "OK" else summ$msg,
+      kind  = summ$kind,
+      stats = summ$stats
+    )
   })
+  
   output$auto_preflight <- renderUI({
     chk <- auto_requirements()
     if (!isTRUE(chk$show)) return(NULL)
     
+    # Build a compact stats line
+    stat_line <- switch(chk$kind,
+                        "TN"     = sprintf("TN: %d · nonTN: %d", chk$stats$nTN %||% 0, chk$stats$nNonTN %||% 0),
+                        "ERHER2" = sprintf("ER+: %d · ER-: %d · HER2+: %d · HER2-: %d",
+                                           chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0,
+                                           chk$stats$nHpos  %||% 0, chk$stats$nHneg  %||% 0),
+                        "ER"     = sprintf("ER+: %d · ER-: %d", chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0),
+                        "HER2"   = sprintf("HER2+: %d · HER2-: %d", chk$stats$nHpos %||% 0, chk$stats$nHneg %||% 0),
+                        "none"   = "No cohort fields detected"
+    )
+    
     if (isTRUE(chk$ready)) {
-      # Build a compact stats line shown next to the ready message
-      stats_line <- tags$div(
-        style = "margin-top:6px; font-size: 0.95em; opacity: 0.85;",
-        tags$span(tags$b("n:"), chk$n),
-        HTML(" &nbsp; · &nbsp; "),
-        tags$span(tags$b("ER:"), .tab_str(chk$ER_tab)),
-        HTML(" &nbsp; · &nbsp; "),
-        tags$span(tags$b("HER2:"), .tab_str(chk$HER2_tab))
-      )
-      
-      bs_callout(
-        "AUTO preflight: ready",
-        tagList(
-          HTML("ER and HER2 present with valid coding (ER+/ER-, HER2+/HER2-)."),
-          stats_line
-        ),
-        "success"
-      )
+      bs_callout("AUTO preflight: ready",
+                 tagList(
+                   HTML("Cohort fields detected: <b>"), HTML(chk$kind), HTML("</b>"),
+                   tags$br(), HTML(stat_line),
+                   tags$br(), tags$small("Coding OK. You can run AUTO.")
+                 ),
+                 "success")
     } else {
-      bs_callout(
-        "AUTO preflight: action needed",
-        HTML(sprintf(
-          "<p><b>Fix these before running AUTO:</b></p>
-         <ul><li>%s</li></ul>
-         <p>Or pick a single method from the dropdown.</p>",
-          chk$msg
-        )),
-        "danger"
-      )
+      bs_callout("AUTO preflight: action needed",
+                 tagList(
+                   HTML("Cohort fields detected: <b>"), HTML(chk$kind), HTML("</b>"),
+                   tags$br(), HTML(stat_line),
+                   tags$br(), HTML(sprintf("<b>Issue:</b> %s", chk$msg)),
+                   tags$p("Fix the coding or supply the required columns, or choose a single method.")
+                 ),
+                 "danger")
     }
   })
   
