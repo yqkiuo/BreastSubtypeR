@@ -33,7 +33,7 @@ NULL
 #' assumption-aware **AUTO mode** that dynamically selects methods compatible
 #' with the input cohort.
 #'
-#' By standardising input handling, applying method-specific normalisation,
+#' By standardizing input handling, applying method-specific normalization,
 #' and providing optimised probe-to-gene mapping, BreastSubtypeR reduces
 #' inconsistencies across platforms and improves reproducibility in translational
 #' research. A companion Shiny app (**iBreastSubtypeR**) offers an intuitive GUI
@@ -42,13 +42,13 @@ NULL
 #' ## Workflow
 #' 1. **Data Input**: Supply a gene expression dataset as a `SummarizedExperiment`.
 #'    Supported inputs include raw RNA-seq counts (with gene lengths),
-#'    log2(FPKM+1) RNA-seq, or log2-normalised microarray/nCounter data.
+#'    log2(FPKM+1) RNA-seq, or log2-normalized microarray/nCounter data.
 #' 2. **Gene Mapping**: Prepare expression data with \code{\link{Mapping}},
 #'    including Entrez ID-based resolution of duplicates.
 #' 3. **Subtyping**: Apply multiple classifiers simultaneously using
 #'    \code{\link{BS_Multi}}, or enable **AUTO mode** for
 #'    cohort-aware method selection.
-#' 4. **Visualisation**: Summarise and interpret subtyping results with
+#' 4. **visualization**: Summarise and interpret subtyping results with
 #'    \code{\link{Vis_Multi}}.
 #'
 #'
@@ -58,7 +58,7 @@ NULL
 #' - **AUTO mode**: Evaluates cohort composition (e.g., ER/HER2 prevalence,
 #'   subtype purity, subgroup sizes) and disables classifiers with violated
 #'   assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
-#' - **Standardised normalisation**: Upper-quartile log2-CPM for NC-based
+#' - **standardized normalization**: Upper-quartile log2-CPM for NC-based
 #'   methods; FPKM for SSP-based methods.
 #' - **Optimised gene mapping**: Entrez ID-based mapping with conflict resolution.
 #' - **Dual accessibility**: A Bioconductor-compliant R API and a local Shiny app
@@ -341,7 +341,7 @@ BS_parker <- function(
 #' violated.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -431,7 +431,7 @@ BS_cIHC <- function(se_obj,
 #' match specific cohort assumptions (e.g., training distribution).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -461,7 +461,7 @@ BS_cIHC <- function(se_obj,
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
+#' *The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.*
 #' Nature. 2012;486(7403):346–352.
 #' https://doi.org/10.1038/nature10983
 #'
@@ -533,7 +533,7 @@ BS_cIHC.itr <- function(se_obj,
 #' approach improves subtype consistency, particularly in ER-skewed cohorts.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -674,7 +674,7 @@ BS_PCAPAM50 <- function(se_obj,
 #' training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): If `hasClinical = TRUE`, must include:
 #'     - `"PatientID"`: Unique patient/sample identifier.
@@ -1005,7 +1005,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
+#' *The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.*
 #' Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
 #'
 #' Zhao X, Rodland EA, Tibshirani R, Plevritis S.

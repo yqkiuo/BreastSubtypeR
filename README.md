@@ -11,7 +11,7 @@
 It consolidates published intrinsic subtyping methods under one API and lets you run multiple classifiers at once.
 **AUTO** inspects cohort diagnostics to select compatible methods and reduce misclassification.
 
-> *Research use only; in clinical practice, intrinsic molecular subtyping is standardised via approved diagnostics (e.g., Prosigna®).*
+> *Research use only; in clinical practice, intrinsic molecular subtyping is standardized via approved diagnostics (e.g., Prosigna®).*
 
 📄 **Publication:** *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** → [doi:10.1093/nargab/lqaf131](https://doi.org/10.1093/nargab/lqaf131)
 
