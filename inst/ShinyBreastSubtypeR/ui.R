@@ -119,7 +119,7 @@ ui <- bslib::page_fluid(
       fileInput("GEX", "Upload expression matrix",
                 accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")),
       radioButtons("is_raw_counts", "Data type",
-                   choices  = list("normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
+                   choices  = list("normalized (log2)" = "norm", "Raw counts (RNA-seq only)" = "raw"),
                    selected = "norm", inline = TRUE),
       uiOutput("gex_help")
     ),
