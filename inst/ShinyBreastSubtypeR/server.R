@@ -250,18 +250,23 @@ server <- function(input, output, session) {
   
   # Method help + AUTO chip + lock AIMS to 5-class unchanged (shortened)
   output$method_help <- renderUI({
-    m <- input$BSmethod; if (is.null(m)) return(NULL)
+    m <- input$BSmethod
+    if (is.null(m) || length(m) < 1) return(NULL)
+    m <- as.character(m)[1]  # ensure length-1 scalar
+    
     .p <- function(title, items) {
       lis <- Map(function(k, v) tags$li(HTML(paste0("<b>", k, ":</b> ", v))), names(items), items)
       div(class = "method-help", tags$b(title), tags$br(), tags$ul(lis))
     }
+    
     switch(m,
            "AIMS"   = .p("AIMS", list("Category"="SSP-based","Description"="Absolute Intrinsic Molecular Subtyping.","Key refs"="Paquet & Hallett, 2015 JNCI")),
            "sspbc"  = .p("SSPBC", list("Category"="SSP-based","Description"="SCAN-B SSP models (4 or 5 classes).","Key refs"="Staaf et al., 2022 npj Breast Cancer")),
            "PAM50"  = .p("PAM50", list("Variants"="parker.original | genefu.scale | genefu.robust")),
-           "AUTO Mode" = .p("AUTO Mode", list("Description"="Cohort-aware method selection"))
-    )
+           "AUTO Mode" = .p("AUTO Mode", list("Description"="Cohort-aware method selection")),
+           NULL)
   })
+  
   output$auto_chip <- renderUI({
     chk <- auto_requirements()
     cls <- if (isTRUE(chk$ready)) "chip auto ready" else "chip auto blocked"
@@ -330,15 +335,18 @@ server <- function(input, output, session) {
     chk <- auto_requirements()
     if (!isTRUE(chk$show)) return(NULL)
     
-    # Build a compact stats line
-    stat_line <- switch(chk$kind,
+    # Build a compact stats line (coerce kind to a safe scalar)
+    kind <- as.character(chk$kind %||% "none")[1]
+    stat_line <- switch(kind,
                         "TN"     = sprintf("TN: %d · nonTN: %d", chk$stats$nTN %||% 0, chk$stats$nNonTN %||% 0),
                         "ERHER2" = sprintf("ER+: %d · ER-: %d · HER2+: %d · HER2-: %d",
                                            chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0,
                                            chk$stats$nHpos  %||% 0, chk$stats$nHneg  %||% 0),
                         "ER"     = sprintf("ER+: %d · ER-: %d", chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0),
                         "HER2"   = sprintf("HER2+: %d · HER2-: %d", chk$stats$nHpos %||% 0, chk$stats$nHneg %||% 0),
-                        "none"   = "No cohort fields detected"
+                        "none"   = "No cohort fields detected",
+                        # default fallback if kind is unexpected
+                        sprintf("Detected cohort kind: %s", kind)
     )
     
     if (isTRUE(chk$ready)) {
@@ -605,12 +613,21 @@ server <- function(input, output, session) {
       if (input$BSmethod == "ssBC") {
         req(se_NC)
         cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
-        need_cols <- switch(input$s, "ER"=c("ER"), "ER.v2"=c("ER","HER2"), "TN"=c("TN"), "TN.v2"=c("TN"))
+        opt <- as.character(input$s %||% "")[1]
+        need_cols <- switch(opt,
+                            "ER"    = c("ER"),
+                            "ER.v2" = c("ER","HER2"),
+                            "TN"    = c("TN"),
+                            "TN.v2" = c("TN"),
+                            character(0)
+        )
         miss <- setdiff(need_cols, names(cd))
-        if (length(miss)) { showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "),
-                                                   "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
-          return(invisible(NULL)) }
-        res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
+        if (length(miss)) {
+          showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "),
+                                 "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
+          return(invisible(NULL))
+        }
+        res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = opt, Subtype = want_4, hasClinical = use_clin)
       }
       
       if (input$BSmethod == "AIMS") {
