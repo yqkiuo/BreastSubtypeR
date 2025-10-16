@@ -39,7 +39,7 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
 .summarize_cohort <- function(ph) {
   out <- list(kind = "none", ok = FALSE, msg = "No cohort columns found", stats = NULL)
   
-  # 1) TN cohort takes precedence if present
+  # TN first (if present)
   if ("TN" %in% names(ph)) {
     vals <- na.omit(as.character(ph$TN))
     bad  <- setdiff(unique(vals), c("TN","nonTN"))
@@ -47,16 +47,17 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
       out$kind <- "TN"; out$msg <- paste("Invalid TN values:", paste(bad, collapse=", "))
       return(out)
     }
-    nTN    <- sum(vals == "TN")
-    nNonTN <- sum(vals == "nonTN")
-    out$kind <- "TN"
-    out$ok   <- TRUE
-    out$msg  <- "OK"
-    out$stats <- list(nTN = nTN, nNonTN = nNonTN)
-    return(out)
+    out$kind  <- "TN"
+    out$ok    <- TRUE
+    out$msg   <- "OK"
+    out$stats <- list(
+      nTN    = sum(ph$TN    == "TN",    na.rm = TRUE),
+      nNonTN = sum(ph$TN    == "nonTN", na.rm = TRUE)
+    )
+    # keep going: if ER/HER2 exist, also report their subgroups as extra context
+    # (we won’t change readiness based on them when TN is present)
   }
   
-  # 2) Otherwise fall back to ER/HER2, if available
   haveER   <- "ER"   %in% names(ph)
   haveHER2 <- "HER2" %in% names(ph)
   if (haveER || haveHER2) {
@@ -71,19 +72,34 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
       badH <- setdiff(unique(h2), c("HER2+","HER2-"))
       if (length(badH)) msg <- c(msg, paste("Invalid HER2:", paste(badH, collapse=", ")))
     }
-    out$kind <- if (haveER && haveHER2) "ERHER2" else if (haveER) "ER" else "HER2"
-    out$ok   <- length(msg) == 0
-    out$msg  <- if (out$ok) "OK" else paste(msg, collapse="; ")
+    
+    kind_here <- if (haveER && haveHER2) "ERHER2" else if (haveER) "ER" else "HER2"
+    ok_here   <- length(msg) == 0
+    
+    # Build/update stats
+    stats_here <- list()
     if (haveER) {
-      out$stats <- c(out$stats,
-                     list(nERpos = sum(ph$ER   == "ER+",   na.rm=TRUE),
-                          nERneg = sum(ph$ER   == "ER-",   na.rm=TRUE)))
+      stats_here$nERpos <- sum(ph$ER == "ER+", na.rm = TRUE)
+      stats_here$nERneg <- sum(ph$ER == "ER-", na.rm = TRUE)
     }
     if (haveHER2) {
-      out$stats <- c(out$stats,
-                     list(nHpos  = sum(ph$HER2 == "HER2+", na.rm=TRUE),
-                          nHneg  = sum(ph$HER2 == "HER2-", na.rm=TRUE)))
+      stats_here$nHpos <- sum(ph$HER2 == "HER2+", na.rm = TRUE)
+      stats_here$nHneg <- sum(ph$HER2 == "HER2-", na.rm = TRUE)
     }
+    # ER×HER2 subgroups when both present
+    if (haveER && haveHER2) {
+      stats_here$n_ERpos_HER2neg <- sum(ph$ER=="ER+" & ph$HER2=="HER2-", na.rm=TRUE)
+      stats_here$n_ERpos_HER2pos <- sum(ph$ER=="ER+" & ph$HER2=="HER2+", na.rm=TRUE)
+      stats_here$n_ERneg_HER2neg <- sum(ph$ER=="ER-" & ph$HER2=="HER2-", na.rm=TRUE)
+      stats_here$n_ERneg_HER2pos <- sum(ph$ER=="ER-" & ph$HER2=="HER2+", na.rm=TRUE)
+    }
+    
+    # Merge with any existing TN stats (if TN was present)
+    out$stats <- c(out$stats, stats_here)
+    out$kind  <- if (out$kind == "TN") "TN+ERHER2" else kind_here
+    # Ready: valid coding for the fields we’re going to use
+    out$ok    <- ok_here || out$kind == "TN+ERHER2" || out$kind == "TN"
+    out$msg   <- if (out$ok) "OK" else paste(msg, collapse="; ")
     return(out)
   }
   
@@ -192,7 +208,7 @@ server <- function(input, output, session) {
       div(class = "method-help",
           tags$b("Expression matrix requirements"),
           tags$ul(
-            tags$li(tags$b("Format:"), " genes × samples ", tags$em("integer raw counts (RNA-seq)"), "."),
+            tags$li(tags$b("Format:"), " genes × samples ", tags$em("integer raw counts (RNA-seq only)"), "."),
             tags$li(tags$b("Rows:"), " gene IDs matching ", tags$code("annotation$probe"), "."),
             tags$li(tags$b("Columns:"), " sample IDs matching ", tags$code("clinical$PatientID"), "."),
             tags$li(tags$b("Processing:"), " NC → log2-CPM (upper quartile); SSP → FPKM (linear) using gene Length.")
@@ -250,18 +266,23 @@ server <- function(input, output, session) {
   
   # Method help + AUTO chip + lock AIMS to 5-class unchanged (shortened)
   output$method_help <- renderUI({
-    m <- input$BSmethod; if (is.null(m)) return(NULL)
+    m <- input$BSmethod
+    if (is.null(m) || length(m) < 1) return(NULL)
+    m <- as.character(m)[1]  # ensure length-1 scalar
+    
     .p <- function(title, items) {
       lis <- Map(function(k, v) tags$li(HTML(paste0("<b>", k, ":</b> ", v))), names(items), items)
       div(class = "method-help", tags$b(title), tags$br(), tags$ul(lis))
     }
+    
     switch(m,
            "AIMS"   = .p("AIMS", list("Category"="SSP-based","Description"="Absolute Intrinsic Molecular Subtyping.","Key refs"="Paquet & Hallett, 2015 JNCI")),
            "sspbc"  = .p("SSPBC", list("Category"="SSP-based","Description"="SCAN-B SSP models (4 or 5 classes).","Key refs"="Staaf et al., 2022 npj Breast Cancer")),
            "PAM50"  = .p("PAM50", list("Variants"="parker.original | genefu.scale | genefu.robust")),
-           "AUTO Mode" = .p("AUTO Mode", list("Description"="Cohort-aware method selection"))
-    )
+           "AUTO Mode" = .p("AUTO Mode", list("Description"="Cohort-aware method selection")),
+           NULL)
   })
+  
   output$auto_chip <- renderUI({
     chk <- auto_requirements()
     cls <- if (isTRUE(chk$ready)) "chip auto ready" else "chip auto blocked"
@@ -330,34 +351,40 @@ server <- function(input, output, session) {
     chk <- auto_requirements()
     if (!isTRUE(chk$show)) return(NULL)
     
-    # Build a compact stats line
-    stat_line <- switch(chk$kind,
-                        "TN"     = sprintf("TN: %d · nonTN: %d", chk$stats$nTN %||% 0, chk$stats$nNonTN %||% 0),
-                        "ERHER2" = sprintf("ER+: %d · ER-: %d · HER2+: %d · HER2-: %d",
-                                           chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0,
-                                           chk$stats$nHpos  %||% 0, chk$stats$nHneg  %||% 0),
-                        "ER"     = sprintf("ER+: %d · ER-: %d", chk$stats$nERpos %||% 0, chk$stats$nERneg %||% 0),
-                        "HER2"   = sprintf("HER2+: %d · HER2-: %d", chk$stats$nHpos %||% 0, chk$stats$nHneg %||% 0),
-                        "none"   = "No cohort fields detected"
+    # Compact lines
+    er_line <- her2_line <- subgroup_line <- tn_line <- NULL
+    s <- chk$stats %||% list()
+    
+    if (!is.null(s$nERpos) || !is.null(s$nERneg))
+      er_line <- sprintf("ER+: %s · ER-: %s", s$nERpos %||% 0, s$nERneg %||% 0)
+    if (!is.null(s$nHpos)  || !is.null(s$nHneg))
+      her2_line <- sprintf("HER2+: %s · HER2-: %s", s$nHpos %||% 0, s$nHneg %||% 0)
+    if (!is.null(s$n_ERpos_HER2neg)) {
+      subgroup_line <- paste(
+        sprintf("ER+/HER2-: %s", s$n_ERpos_HER2neg %||% 0),
+        sprintf("ER-/HER2-: %s", s$n_ERneg_HER2neg %||% 0),
+        sprintf("ER+/HER2+: %s", s$n_ERpos_HER2pos %||% 0),
+        sprintf("ER-/HER2+: %s", s$n_ERneg_HER2pos %||% 0),
+        sep = " · "
+      )
+    }
+    if (!is.null(s$nTN))
+      tn_line <- sprintf("TN: %s · nonTN: %s", s$nTN %||% 0, s$nNonTN %||% 0)
+    
+    body <- tagList(
+      HTML(sprintf("Cohort fields detected: <b>%s</b>", chk$kind)),
+      if (!is.null(er_line))    tagList(tags$br(), HTML(er_line))    else NULL,
+      if (!is.null(her2_line))  tagList(tags$br(), HTML(her2_line))  else NULL,
+      if (!is.null(subgroup_line)) tagList(tags$br(), HTML(subgroup_line)) else NULL,
+      if (!is.null(tn_line))    tagList(tags$br(), HTML(tn_line))    else NULL,
+      tags$br(),
+      tags$small(if (isTRUE(chk$ready)) "Coding OK. You can run AUTO." else sprintf("Issue: %s", chk$msg))
     )
     
     if (isTRUE(chk$ready)) {
-      bs_callout("AUTO preflight: ready",
-                 tagList(
-                   HTML("Cohort fields detected: <b>"), HTML(chk$kind), HTML("</b>"),
-                   tags$br(), HTML(stat_line),
-                   tags$br(), tags$small("Coding OK. You can run AUTO.")
-                 ),
-                 "success")
+      bs_callout("AUTO preflight: ready", body, "success")
     } else {
-      bs_callout("AUTO preflight: action needed",
-                 tagList(
-                   HTML("Cohort fields detected: <b>"), HTML(chk$kind), HTML("</b>"),
-                   tags$br(), HTML(stat_line),
-                   tags$br(), HTML(sprintf("<b>Issue:</b> %s", chk$msg)),
-                   tags$p("Fix the coding or supply the required columns, or choose a single method.")
-                 ),
-                 "danger")
+      bs_callout("AUTO preflight: action needed", body, "danger")
     }
   })
   
@@ -605,12 +632,21 @@ server <- function(input, output, session) {
       if (input$BSmethod == "ssBC") {
         req(se_NC)
         cd <- as.data.frame(SummarizedExperiment::colData(se_NC))
-        need_cols <- switch(input$s, "ER"=c("ER"), "ER.v2"=c("ER","HER2"), "TN"=c("TN"), "TN.v2"=c("TN"))
+        opt <- as.character(input$s %||% "")[1]
+        need_cols <- switch(opt,
+                            "ER"    = c("ER"),
+                            "ER.v2" = c("ER","HER2"),
+                            "TN"    = c("TN"),
+                            "TN.v2" = c("TN"),
+                            character(0)
+        )
         miss <- setdiff(need_cols, names(cd))
-        if (length(miss)) { showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "),
-                                                   "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
-          return(invisible(NULL)) }
-        res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
+        if (length(miss)) {
+          showNotification(paste("ssBC requires:", paste(need_cols, collapse=", "),
+                                 "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
+          return(invisible(NULL))
+        }
+        res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = opt, Subtype = want_4, hasClinical = use_clin)
       }
       
       if (input$BSmethod == "AIMS") {
