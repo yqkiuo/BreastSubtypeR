@@ -14,7 +14,7 @@ single-sample predictor (SSP-based) classifiers and introduces an
 assumption-aware \strong{AUTO mode} that dynamically selects methods compatible
 with the input cohort.
 
-By standardising input handling, applying method-specific normalisation,
+By standardizing input handling, applying method-specific normalization,
 and providing optimised probe-to-gene mapping, BreastSubtypeR reduces
 inconsistencies across platforms and improves reproducibility in translational
 research. A companion Shiny app (\strong{iBreastSubtypeR}) offers an intuitive GUI
@@ -23,13 +23,13 @@ for non-programmers while preserving data privacy.
 \enumerate{
 \item \strong{Data Input}: Supply a gene expression dataset as a \code{SummarizedExperiment}.
 Supported inputs include raw RNA-seq counts (with gene lengths),
-log2(FPKM+1) RNA-seq, or log2-normalised microarray/nCounter data.
+log2(FPKM+1) RNA-seq, or log2-normalized microarray/nCounter data.
 \item \strong{Gene Mapping}: Prepare expression data with \code{\link{Mapping}},
 including Entrez ID-based resolution of duplicates.
 \item \strong{Subtyping}: Apply multiple classifiers simultaneously using
 \code{\link{BS_Multi}}, or enable \strong{AUTO mode} for
 cohort-aware method selection.
-\item \strong{Visualisation}: Summarise and interpret subtyping results with
+\item \strong{visualization}: Summarise and interpret subtyping results with
 \code{\link{Vis_Multi}}.
 }
 }
@@ -41,7 +41,7 @@ harmonised under one interface.
 \item \strong{AUTO mode}: Evaluates cohort composition (e.g., ER/HER2 prevalence,
 subtype purity, subgroup sizes) and disables classifiers with violated
 assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
-\item \strong{Standardised normalisation}: Upper-quartile log2-CPM for NC-based
+\item \strong{standardized normalization}: Upper-quartile log2-CPM for NC-based
 methods; FPKM for SSP-based methods.
 \item \strong{Optimised gene mapping}: Entrez ID-based mapping with conflict resolution.
 \item \strong{Dual accessibility}: A Bioconductor-compliant R API and a local Shiny app

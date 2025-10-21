@@ -84,7 +84,7 @@ Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
 Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
 
 Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-\emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.}
+\emph{The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.}
 Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
 
 Zhao X, Rodland EA, Tibshirani R, Plevritis S.

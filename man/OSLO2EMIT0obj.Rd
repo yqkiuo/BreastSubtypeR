@@ -8,7 +8,7 @@
 A list with:
 \describe{
 \item{\code{se_obj}}{A \code{SummarizedExperiment} containing a subset of the
-log2-transformed, normalised expression matrix (log2(FPKM+0.1)) with \code{colData} clinical
+log2-transformed, normalized expression matrix (log2(FPKM+0.1)) with \code{colData} clinical
 metadata and row-level feature annotations.}
 \item{\code{data_input}}{Example output structure produced by \code{Mapping()}.}
 \item{\code{res}}{Example results from \code{BS_Multi()} run in \emph{AUTO} mode.}

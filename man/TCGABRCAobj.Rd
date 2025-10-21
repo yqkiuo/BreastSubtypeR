@@ -36,7 +36,7 @@ names(TCGABRCAobj)
 }
 \references{
 The Cancer Genome Atlas Network.
-Comprehensive molecular portraits of human breast tumours.
+Comprehensive molecular portraits of human breast tumors.
 \emph{Nature}. 2012;490(7418):61–70. https://doi.org/10.1038/nature11412
 
 Colaprico A, Silva TC, Olsen C, Garofano L, Cava C, Garolini D, et al.

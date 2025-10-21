@@ -24,8 +24,20 @@ and samples as columns.
 }}
 }
 \value{
-A character vector of intrinsic subtype predictions for each sample,
-as estimated by the SSPBC method.
+A \strong{list} with the following elements:
+\itemize{
+\item \code{cl}: Molecular class identified by the sspbc models for each sample
+(one of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, with or without \code{"Normal"}).
+\item \code{prob}: Numeric vector of posterior probabilities corresponding
+to the assigned subtype in \code{cl} (one value per sample).
+\item \code{all.probs}: Matrix of posterior probability values for all samples
+and all subtypes (rows = samples, columns = subtypes).
+\item \code{rules.matrix}: Binary (0/1) matrix of the pairwise gene-expression
+rules (\emph{gene A < gene B}) used for assignment (rows = rules, columns = samples);
+\code{1} indicates the rule evaluated to TRUE for that sample.
+\item \code{data.used}: Expression values actually used to evaluate the simple rules.
+\item \code{EntrezID.used}: Character vector of EntrezGene IDs used for rule evaluation.
+}
 }
 \description{
 Implements \strong{SSPBC (Single Sample Predictor for Breast Cancer)}, a

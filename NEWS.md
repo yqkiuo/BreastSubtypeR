@@ -13,6 +13,13 @@
   - One-click load of a small demo dataset from `inst/RshinyTest/` to explore the UI without uploads.  
   - Shows a notification on success; users can immediately run **Preprocess & map** and analyses.
 
+### Bug fixes
+- **TN cohorts + ssBC**: `BS_Multi()` now respects TN cohorts when methods are specified manually; `ssBC`/`ssBC.v2` switch to `s = "TN"` / `"TN.v2"` when a `TN` column indicates a TN cohort. Falls back to `s = "ER"` / `"ER.v2"` otherwise.
+- **AUTO internals**: fixed variable name typo (`samples_ERHER2.icd`).
+
+### Developer notes
+- Added lightweight internal logger `._msg()` and replaced scattered `message()` calls in AUTO to standardize package output without affecting CRAN/Bioc checks.
+
 ### Documentation
 - README/vignette: brief note on the example-data button and expected file locations.
 
