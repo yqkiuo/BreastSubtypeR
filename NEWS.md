@@ -16,6 +16,7 @@
 ### Bug fixes
 - **TN cohorts + ssBC**: `BS_Multi()` now respects TN cohorts when methods are specified manually; `ssBC`/`ssBC.v2` switch to `s = "TN"` / `"TN.v2"` when a `TN` column indicates a TN cohort. Falls back to `s = "ER"` / `"ER.v2"` otherwise.
 - **AUTO internals**: fixed variable name typo (`samples_ERHER2.icd`).
+- **Mapping():** Robust ENTREZID coercion (from `as.character()` to `as.integer()` with suppressed warnings).  
 
 ### Developer notes
 - Added lightweight internal logger `._msg()` and replaced scattered `message()` calls in AUTO to standardize package output without affecting CRAN/Bioc checks.

@@ -244,7 +244,11 @@ domapping <- function(se_obj,
         stop("Please provide feature annotation to do probeID mapping ")
     }
     ## change data type
-    y$ENTREZID <- as.integer(y$ENTREZID)
+    y$ENTREZID <- suppressWarnings(as.integer(as.character(y$ENTREZID)))
+    n_bad <- sum(is.na(y$ENTREZID))
+    if (verbose && n_bad > 0L) {
+      message(sprintf("Feature rows with non-integer ENTREZID dropped before mapping: %d", n_bad))
+    }
     samplenames <- colnames(x)
 
     # 5. Filter by signature genes and impute
