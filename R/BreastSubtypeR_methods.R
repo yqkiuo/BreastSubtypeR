@@ -1067,6 +1067,20 @@ BS_Multi <- function(
     }
     rownames(pheno) <- pheno$PatientID
 
+    # Detect true TN cohort
+    has_TN_col   <- "TN" %in% colnames(pheno)
+    is_TN_cohort <- has_TN_col && all(na.omit(pheno$TN) == "TN") && nrow(pheno) > 0
+
+    # manual vs AUTO
+    is_manual <- !(length(methods) == 1 && methods[1] == "AUTO")
+    
+    # Only tell users in MANUAL mode that ssBC routing will use TN/TN.v2
+    if (is_manual && is_TN_cohort && any(methods %in% c("ssBC","ssBC.v2"))) {
+      n_tn <- sum(na.omit(pheno$TN) == "TN")
+      .msg("Detected pure TN cohort (TN=100%%, n=%d). Routing ssBC with s='TN' and ssBC.v2 with s='TN.v2'.", 
+           n_tn, origin = "MANUAL")
+    }
+    
     # Check ER and HER2 columns in pheno
     if (!("ER" %in% colnames(pheno)) && any(methods %in%
         c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
@@ -1075,7 +1089,8 @@ BS_Multi <- function(
     if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
         stop("The 'HER2' column is required for the 'ssBC.v2' method.")
     }
-
+    
+    
     ## AUTO mode
     # methods = "AUTO"
     cohort.select <- "ERpos"
@@ -1089,7 +1104,12 @@ BS_Multi <- function(
         methods <- AUTO.output$methods
         cohort.select <- AUTO.output$cohort.select
     }
-
+    
+    # Manual mode: promote a true TN cohort to TNBC locally
+    if (!(length(methods) == 1 && methods[1] == "AUTO")) {
+      if (is_TN_cohort) cohort.select <- "TNBC"
+    }
+    
     ## run each method
     results <- lapply(methods, function(method) {
         ## try NC-based
@@ -1186,7 +1206,7 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                if (!is.null(samples_ER.icd) & length(samples_ERHER2.icd) < nrow(pheno)) {
+                if (!is.null(samples_ER.icd) && length(samples_ER.icd) < nrow(pheno)) {
                     res_ssBC <- BS_ssBC(
                         data_input$se_NC[, samples_ER.icd],
                         s = "ER",
@@ -1237,7 +1257,7 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                if (!is.null(samples_ERHER2.icd) & length(samples_ERHER2.icd) < nrow(pheno)) {
+                if (!is.null(samples_ERHER2.icd) && length(samples_ERHER2.icd) < nrow(pheno)) {
                     res_ssBC.v2 <- BS_ssBC(
                         data_input$se_NC[, samples_ERHER2.icd],
                         s = "ER.v2",

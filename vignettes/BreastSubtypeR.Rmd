@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 
 Install the released version from Bioconductor:
 
-```{r, eval = FALSE}
+```{r installation, eval = FALSE}
 # Requires R >= 4.5.0
 if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 BiocManager::install("BreastSubtypeR")
@@ -48,7 +48,7 @@ If you use **BreastSubtypeR**, please cite:
 
 For BibTeX/LaTeX, run in R:
 
-```{r, eval = FALSE}
+```{r citation, eval = FALSE}
 citation("BreastSubtypeR")
 ```
 
@@ -102,7 +102,7 @@ data("OSLO2EMIT0obj")
 
 **1) Map & prepare (method-specific pre-processing + mapping)**
 
-```{r, eval=TRUE}
+```{r map and prepare, eval=TRUE}
 # Pre-processing: automatically apply tailored normalization, map probes/IDs to Entrez,
 # and (optionally) impute missing values
 data_input <- Mapping(
@@ -129,7 +129,7 @@ data_input <- Mapping(
 
 **2) Multi-method run (user-defined)**
 
-```{r, eval=TRUE}
+```{r multi-method run, eval=TRUE}
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 
 res <- BS_Multi(
@@ -148,7 +148,7 @@ head(res$res_subtypes, 5)
 
 AUTO evaluates cohort diagnostics (for example, ER/HER2 distribution, subtype purity, and subgroup sizes) and selects methods compatible with the cohort. It disables classifiers whose distributional assumptions would likely be violated.
 
-```{r, eval=TRUE}
+```{r auto mode and visualization, eval=TRUE}
 res_auto <- BS_Multi(
     data_input = data_input,
     methods = "AUTO",
@@ -180,7 +180,7 @@ Vis_Multi(res_auto$res_subtypes)
 
 PAM50 (NC-based)
 
-```{r, eval=TRUE}
+```{r pam50 subtyping, eval=TRUE}
 res_pam <- BS_parker(
     se_obj = data_input$se_NC, # object prepared for NC-based methods
     calibration = "Internal",
@@ -192,7 +192,7 @@ res_pam <- BS_parker(
 
 AIMS (SSP-based)
 
-```{r, eval=TRUE}
+```{r aims subtyping, eval=TRUE}
 res_aims <- BS_AIMS(data_input$se_SSP)
 ```
 
@@ -223,13 +223,13 @@ For users new to R, we offer an intuitive Shiny app for interactive molecular su
 
 ## Launch the local Shiny app
 
-```{r, eval = FALSE}
+```{r launch shiny, eval = FALSE}
 BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
 
 If needed, install UI dependencies and re-run:
 
-```{r, eval = FALSE}
+```{r installui dependencies, eval = FALSE}
 install.packages(c("shiny", "bslib"))
 ```
 
@@ -251,7 +251,7 @@ demo cohort (expression, clinical, annotation). After loading, click
 
 Programmatic access to the same files:
 
-```{r, eval = FALSE}
+```{r load example data, eval = FALSE}
 exdir <- system.file("RshinyTest", package = "BreastSubtypeR")
 gex   <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
 clin  <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
@@ -304,6 +304,6 @@ clinical validation requires paired clinical assay data.\
 
 ## Session information
 
-```{r}
+```{r session info}
 sessionInfo()
 ```

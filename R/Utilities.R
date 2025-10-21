@@ -17,6 +17,15 @@
 NULL
 NULL
 
+#' Internal message helper
+#' @noRd
+.msg <- function(fmt, ..., origin = c("AUTO","MANUAL")) {
+  origin <- match.arg(origin)
+  if (isTRUE(getOption("BreastSubtypeR.verbose", TRUE))) {
+    message(sprintf("[%s] %s", origin, sprintf(fmt, ...)))
+  }
+}
+
 #' Impute missing values using k-nearest neighbors
 #'
 #' @param x Numeric matrix with missing values (NA).
@@ -278,8 +287,8 @@ get_methods <- function(pheno) {
   methods <- NULL
   
   if (ncol(pheno) == 0) {
-    message("The pheno table has not been detected.")
-    message("Running methods: AIMS, sspbc")
+    .msg("The pheno table has not been detected.", origin = "AUTO")
+    .msg("Running methods: AIMS, sspbc", origin = "AUTO")
     methods <- c("AIMS", "sspbc")
     
   } else if (!all(c("ER", "HER2") %in% colnames(pheno))) {
@@ -317,17 +326,18 @@ get_methods <- function(pheno) {
         cohort.select <- "TNBC"
         
         if (n_TN >= n_TN_threshold) {
-          message("A TNBC cohort has been detected.")
-          message("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS, sspbc")
+          .msg("A TNBC cohort has been detected.", origin = "AUTO")
+          .msg("Running methods: ssBC (TN), ssBC.v2 (TN), AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
         } else {
-          message("A small number of TNBC samples has been detected.")
-          message("Running methods: AIMS, sspbc")
+          .msg("A small number of TNBC samples has been detected.", origin = "AUTO")
+          .msg("Running methods: AIMS, sspbc", origin = "AUTO")
           methods <- c("AIMS", "sspbc")
         }
         
       } else {
-        message("TN column detected but no samples flagged as TN; proceeding with non-TNBC logic.")
+        .msg("TN column detected but no samples flagged as TN;
+              proceeding with non-TNBC logic.", origin = "AUTO")
       }
     }
     
@@ -335,32 +345,32 @@ get_methods <- function(pheno) {
     if (is.null(methods)) {  # only if TNBC branch did not set methods
       
       if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
-        message("A HER2+ cohort has been detected.")
+        .msg("A HER2+ cohort has been detected.", origin = "AUTO")
         cohort.select <- "HER2pos"
         
         if (n_ERposHER2pos < n_ERposHER2pos_threshold && 
             n_ERnegHER2pos < n_ERnegHER2pos_threshold) {
-          message("A small HER2+ cohort has been detected.")
-          message("Running methods: AIMS, sspbc")
+          .msg("A small HER2+ cohort has been detected.", origin = "AUTO")
+          .msg("Running methods: AIMS, sspbc", origin = "AUTO")
           methods <- c("AIMS", "sspbc")
         } else if (n_ERposHER2pos >= n_ERposHER2pos_threshold 
                    && n_ERnegHER2pos < n_ERnegHER2pos_threshold) {
-          message("A ER+/HER2+ cohort has been detected.")
-          message("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc")
+          .msg("A ER+/HER2+ cohort has been detected.", origin = "AUTO")
+          .msg("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERposHER2pos < n_ERposHER2pos_threshold 
                    && n_ERnegHER2pos >= n_ERnegHER2pos_threshold) {
-          message("A ER-/HER2+ cohort has been detected.")
-          message("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc")
+          .msg("A ER-/HER2+ cohort has been detected.", origin = "AUTO")
+          .msg("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         } else {
-          message("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for HER2+ samples: ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         }
         
       } else if (n_ERpos < n_ERpos_threshold && n_ERneg < n_ERneg_threshold) {
-        message("A small number of ER-/ER+ samples has been detected.")
-        message("Running methods: AIMS, sspbc")
+        .msg("A small number of ER-/ER+ samples has been detected.", origin = "AUTO")
+        .msg("Running methods: AIMS, sspbc", origin = "AUTO")
         methods <- c("AIMS", "sspbc")
         
       } else if (n_ERpos >= n_ERpos_threshold && n_ERneg < n_ERneg_threshold) {
@@ -368,18 +378,18 @@ get_methods <- function(pheno) {
         
         if (n_ERposHER2pos >= n_ERposHER2pos_threshold && 
             n_ERposHER2neg >= n_ERposHER2neg_threshold) {
-          message("Running methods for ER+ samples:\n
-                  ssBC, ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER+ samples:\n
+                  ssBC, ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERposHER2pos >= n_ERposHER2pos_threshold 
                    && n_ERposHER2neg < n_ERposHER2neg_threshold) {
-          message("Running methods for ER+/HER2+ samples:\n
-                  ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER+/HER2+ samples:\n
+                  ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERposHER2pos < n_ERposHER2pos_threshold 
                    && n_ERposHER2neg >= n_ERposHER2neg_threshold) {
-          message("Running methods for ER+/HER2- samples:\n 
-                  ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER+/HER2- samples:\n 
+                  ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         }
         
@@ -388,18 +398,18 @@ get_methods <- function(pheno) {
         
         if (n_ERnegHER2pos >= n_ERnegHER2pos_threshold && 
             n_ERnegHER2neg >= n_ERnegHER2neg_threshold) {
-          message("Running methods for ER- samples:\n
-                  ssBC, ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER- samples:\n
+                  ssBC, ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC", "ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERnegHER2pos >= n_ERnegHER2pos_threshold 
                    && n_ERnegHER2neg < n_ERnegHER2neg_threshold) {
-          message("Running methods for ER-/HER2+ samples:\n
-                  ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER-/HER2+ samples:\n
+                  ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         } else if (n_ERnegHER2pos < n_ERnegHER2pos_threshold && 
                    n_ERnegHER2neg >= n_ERnegHER2neg_threshold) {
-          message("Running methods for ER-/HER2- samples:\n
-                  ssBC.v2, AIMS, sspbc")
+          .msg("Running methods for ER-/HER2- samples:\n
+                  ssBC.v2, AIMS, sspbc", origin = "AUTO")
           methods <- c("ssBC.v2", "AIMS", "sspbc")
         }
         
@@ -408,16 +418,15 @@ get_methods <- function(pheno) {
         ratio_ER <- n_ERpos / (n_ERneg + n_ERpos)
         
         if (ratio_ER > lower_ratio && ratio_ER < upper_ratio) {
-          message("Running methods:\n
+          .msg("Running methods:\n
                   parker.original, genefu.scale, genefu.robust, ssBC, ssBC.v2, 
-                  cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc")
+                  cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc", origin = "AUTO")
           methods <- c("parker.original","genefu.scale","genefu.robust",
                        "ssBC","ssBC.v2","cIHC","cIHC.itr","PCAPAM50","AIMS","sspbc")
         } else {
-          message("The ER+ ratio in the current dataset differs 
-                  from that observed in the UNC232 training cohort.")
-          message("Running methods:\n
-                  genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc")
+          .msg("The ER+ ratio in the current dataset differs from that observed in the UNC232 training cohort.", origin = "AUTO")
+          .msg("Running methods:\n
+                  genefu.robust, ssBC, ssBC.v2, cIHC, cIHC.itr, PCAPAM50, AIMS, sspbc", origin = "AUTO")
           methods <- c("genefu.robust","ssBC","ssBC.v2","cIHC","cIHC.itr",
                        "PCAPAM50","AIMS","sspbc")
         }
@@ -454,7 +463,7 @@ get_methods <- function(pheno) {
       ## and never in pure HER2+ cohorts
       if ("ssBC" %in% methods && cohort.select != "HER2pos") {
         if (length(samples_ER) > 0) {
-          message("ssBC for samples: ", paste(samples_ER, collapse = ", "))
+          .msg("ssBC for samples: %s", paste(samples_ER, collapse = ", "), origin = "AUTO")
           samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
             subtype <- stringr::str_replace_all(subtype, "pos", "+")
             subtype <- stringr::str_replace_all(subtype, "neg", "-")
@@ -466,7 +475,7 @@ get_methods <- function(pheno) {
       ## ssBC.v2 indices/messages only if ssBC.v2 was selected
       if ("ssBC.v2" %in% methods) {
         if (length(samples_ERHER2) > 0) {
-          message("ssBC.v2 for samples: ", paste(samples_ERHER2, collapse = ", "))
+          .msg("ssBC.v2 for samples: %s", paste(samples_ERHER2, collapse = ", "), origin = "AUTO")
           samples_ERHER2.icd <- unlist(lapply(samples_ERHER2, function(subtype) {
             subtype  <- subtype |>
               stringr::str_replace_all("pos", "+") |>
