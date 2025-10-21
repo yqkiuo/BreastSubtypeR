@@ -18,8 +18,20 @@ and samples as columns.
 }}
 }
 \value{
-A character vector of intrinsic subtype predictions assigned to each
-sample using the AIMS method.
+A \strong{list} with the following elements:
+\itemize{
+\item \code{cl}: Character vector of AIMS subtype calls per sample.
+One of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, or \code{"Normal"}.
+\item \code{prob}: Numeric vector of posterior probabilities corresponding
+to the assigned subtype in \code{cl} (one value per sample).
+\item \code{all.probs}: Matrix of posterior probabilities for all samples
+and all subtypes (rows = samples, columns = subtypes).
+\item \code{rules.matrix}: 0/1 matrix of the 100 AIMS rules used for assignment
+(rows = rules, columns = samples); \code{1} indicates the rule evaluated to TRUE.
+\item \code{data.used}: Expression values actually used to evaluate the rules
+(filtered/ordered subset aligned to the AIMS gene set).
+\item \code{EntrezID.used}: Character vector of Entrez IDs used by AIMS.
+}
 }
 \description{
 Implements the \strong{AIMS (Absolute Assignment of Intrinsic Molecular Subtype)}
