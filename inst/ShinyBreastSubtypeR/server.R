@@ -522,7 +522,7 @@ server <- function(input, output, session) {
         })
         reactive_files$data_input <- data_input
         showNotification(HTML(paste(output_text, collapse = "<br>")),
-                         type = "message", duration = NULL)
+                         type = "message", duration = 4)
       }, error = function(e) {
         showNotification(paste("Error in Mapping:", e$message), type = "error", duration = NULL)
       })
@@ -646,7 +646,12 @@ server <- function(input, output, session) {
                                  "| missing:", paste(miss, collapse=", ")), type="error", duration=7)
           return(invisible(NULL))
         }
-        res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = opt, Subtype = want_4, hasClinical = use_clin)
+        withCallingHandlers({
+          res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
+        }, warning = function(w) {
+          showNotification(conditionMessage(w), type = "warning", duration = 7)
+          invokeRestart("muffleWarning")
+        })
       }
       
       if (input$BSmethod == "AIMS") {
