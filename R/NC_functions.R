@@ -1697,7 +1697,7 @@ makeCalls.ssBC <- function(
                                          dimnames = list(samp, colnames(ct)[seq_len(4)]))
               )
               if (Subtype) empty$predictions.FourSubtype <- setNames(NA_character_, samp)
-              warning(sprintf("ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; 0 common PAM50 genes -> label set to NA.",
+              warning(sprintf("ssBC/ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; 0 common PAM50 genes -> label set to NA.",
                               element, length(samp), .short_ids(samp)),
                       call. = FALSE)
               return(empty)
@@ -1754,7 +1754,7 @@ makeCalls.ssBC <- function(
               out_fb$predictions.FourSubtype <- setNames(pred4_chr, samp)
             }
             
-            warning(sprintf("ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; low-confidence label.",
+            warning(sprintf("ssBC/ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; low-confidence label.",
                             element, length(samp), .short_ids(samp)),
                     call. = FALSE)
             return(out_fb)
