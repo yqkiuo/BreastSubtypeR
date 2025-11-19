@@ -157,7 +157,7 @@ server <- function(input, output, session) {
   # --- citation header for exports ---
   PKG_VER      <- as.character(utils::packageVersion("BreastSubtypeR"))
   CITATION_DOI <- "10.1093/nargab/lqaf131"
-  CITATION_NOTE <- sprintf("BreastSubtypeR v%s — NAR Genomics and Bioinformatics (2025) DOI: %s",
+  CITATION_NOTE <- sprintf("BreastSubtypeR v%s - NAR Genomics and Bioinformatics (2025) DOI: %s",
                            PKG_VER, CITATION_DOI)
   
   .write_tsv_with_header <- function(path, df, header_lines = CITATION_NOTE) {
