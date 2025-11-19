@@ -8,7 +8,47 @@
 #' @noRd
 NULL
 
-#'
+#' Function to normalize 4-class columns before RORgroup()
+#' @param x gene expression matrix
+#' @param centroid_cols Centroid columns
+#' @noRd
+.norm_ror4 <- function(x, centroid_cols) {
+  x <- as.data.frame(x, check.names = FALSE)
+  
+  # Canonical set (what ROR expects)
+  canon4 <- c("Basal-like","HER2-enriched","LumA","LumB")
+  
+  # map common synonyms → canonical
+  syn <- list(
+    "Basal-like"    = c("Basal","BasalLike","Basal-like"),
+    "HER2-enriched" = c("HER2","Her2","Her2-enriched","HER2-enriched"),
+    "LumA"          = c("LuminalA","LumA"),
+    "LumB"          = c("LuminalB","LumB")
+  )
+  cur <- colnames(x)
+  for (k in names(syn)) {
+    hit <- intersect(cur, syn[[k]])
+    if (length(hit) == 1L && !(k %in% cur)) {
+      colnames(x)[colnames(x) == hit] <- k
+      cur <- colnames(x)
+    }
+  }
+  
+  # ensure presence of the four columns
+  for (nm in setdiff(canon4, colnames(x))) x[[nm]] <- NA_real_
+  
+  # reorder exactly
+  x[canon4]
+}
+
+#' Function to build a short, readable list of IDs
+#' @param x gene expression matrix
+#' @noRd
+.short_ids <- function(x, n = 3) {
+  if (length(x) <= n) paste(x, collapse = ", ")
+  else paste0(paste(x[seq_len(n)], collapse = ", "), " … (", length(x), " total)")
+}
+
 #' Function for central median
 #' @param x gene expression matrix
 #' @noRd
@@ -791,11 +831,17 @@ makeCalls.parker <- function(mat,
         )
     }
     out$dist.RORSubtype <- -1 * out$dist.RORSubtype
-    out$distances <- -1 * out$distances
-
-
-    ## calculate and grouping
-    out.ROR <- RORgroup(out, df.cln, Subtype = Subtype, hasClinical = hasClinical)
+    out$distances       <- -1 * out$distances
+    
+    # normalize names/presence/order to the canonical 4-class set
+    out$dist.RORSubtype <- .norm_ror4(out$dist.RORSubtype, colnames(BreastSubtypeRobj$centroid))
+    
+    # If there are zero rows, make a 0-row ROR and skip
+    if (nrow(out$dist.RORSubtype) == 0L) {
+      out.ROR <- out$dist.RORSubtype[ , integer(0)]
+    } else {
+      out.ROR <- RORgroup(out, df.cln, hasClinical = hasClinical, Subtype = Subtype)
+    }
 
     return(list(
         BS.all = Int.sbs,
@@ -1576,49 +1622,143 @@ makeCalls.ssBC <- function(
                 return(empty)
             }
 
+            # restrict to PAM50 genes first (keep matrix even for n=1)
             x.m <- mat[rownames(mat) %in% pam50, samp, drop = FALSE]
             if (nrow(x.m) == 0L) {
-                # no overlapping PAM50 genes in this subgroup
-                pred <- setNames(character(0), character(0))
-                empty <- list(
-                    predictions = pred,
-                    testData = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
-                    distances = matrix(numeric(0),
-                        nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
-                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))
-                    ),
-                    dist.RORSubtype = matrix(numeric(0),
-                        nrow = 0, ncol = 4,
-                        dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[seq_len(4)])
-                    )
+              # no overlapping PAM50 genes in this subgroup
+              pred <- setNames(character(0), character(0))
+              empty <- list(
+                predictions = pred,
+                testData = matrix(numeric(0), nrow = length(pam50), ncol = 0, dimnames = list(pam50, NULL)),
+                distances = matrix(numeric(0),
+                                   nrow = 0, ncol = ncol(BreastSubtypeRobj$centroid),
+                                   dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid))
+                ),
+                dist.RORSubtype = matrix(numeric(0),
+                                         nrow = 0, ncol = 4,
+                                         dimnames = list(NULL, colnames(BreastSubtypeRobj$centroid)[seq_len(4)])
                 )
-                if (Subtype) empty$predictions.FourSubtype <- pred
-                return(empty)
+              )
+              if (Subtype) empty$predictions.FourSubtype <- pred
+              return(empty)
             }
-
+            
+            # harden types/dimnames to avoid drop/atomic issues for n=1
+            x.m <- as.matrix(x.m)
+            storage.mode(x.m) <- "double"
+            if (is.null(rownames(x.m))) rownames(x.m) <- pam50[seq_len(nrow(x.m))]
+            if (is.null(colnames(x.m))) colnames(x.m) <- samp
+            rownames(x.m) <- as.character(rownames(x.m))
+            colnames(x.m) <- as.character(colnames(x.m))
+            
             # gene-specific quantiles: align safely
             gene.sigma.o <- gene.sigma[rownames(x.m), element, drop = TRUE]
-
+            
+            # keep an uncentered copy for singleton fallback
+            x.raw <- x.m
+            
             # per-row quantile with guards
             x.sigma <- vapply(seq_len(nrow(x.m)), function(i) {
-                p <- gene.sigma.o[i]
-                if (!is.finite(p)) {
-                    return(NA_real_)
-                }
-                tryCatch(quantile(x.m[i, ], probs = p, na.rm = TRUE, names = FALSE, type = 7),
-                    error = function(e) NA_real_
-                )
+              p <- gene.sigma.o[i]
+              if (!is.finite(p)) return(NA_real_)
+              tryCatch(
+                quantile(x.m[i, ], probs = p, na.rm = TRUE, names = FALSE, type = 7),
+                error = function(e) NA_real_
+              )
             }, numeric(1))
-
+            
             x.m <- sweep(x.m, 1, x.sigma, FUN = "-")
-
-            sspPredict(
+            
+            # --- primary path: original predictor ---
+            res_prim <- tryCatch(
+              sspPredict(
                 BreastSubtypeRobj$centroid,
                 x.m,
                 std = FALSE,
                 distm = "spearman",
                 Subtype = Subtype
+              ),
+              error = function(e) NULL
             )
+            
+            if (!is.null(res_prim)) return(res_prim)
+            
+            # --- fallback for n=1 or corner cases: nearest centroid on Spearman ---
+            ct <- BreastSubtypeRobj$centroid
+            common <- intersect(rownames(ct), rownames(x.m))
+            if (length(common) == 0L) {
+              pred <- setNames(NA_character_, samp)
+              empty <- list(
+                predictions = pred,
+                testData = x.m,
+                distances = matrix(NA_real_, nrow = 1, ncol = ncol(ct),
+                                   dimnames = list(samp, colnames(ct))),
+                dist.RORSubtype = matrix(NA_real_, nrow = 1, ncol = 4,
+                                         dimnames = list(samp, colnames(ct)[seq_len(4)]))
+              )
+              if (Subtype) empty$predictions.FourSubtype <- setNames(NA_character_, samp)
+              warning(sprintf("ssBC/ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; 0 common PAM50 genes -> label set to NA.",
+                              element, length(samp), .short_ids(samp)),
+                      call. = FALSE)
+              return(empty)
+            }
+            
+            xs <- x.raw[common, 1, drop = TRUE] # NEW: use the uncentered vector for correlation when n=1
+            ctc <- ct[common, , drop = FALSE]
+            
+            # Spearman similarity; NA-safe
+            rho <- apply(ctc, 2, function(v)
+              suppressWarnings(cor(xs, v, method = "spearman", use = "pairwise.complete.obs"))
+            )
+            
+            # Pick best label even if some/all are NA
+            if (all(is.na(rho))) {
+              pred_chr <- NA_character_
+              rho_vec  <- setNames(as.numeric(rho), names(rho))
+            } else {
+              # order non-NA decreasing, first is winner
+              valid <- which(!is.na(rho))
+              o <- order(rho[valid], decreasing = TRUE)
+              pred_chr <- names(rho)[valid][o[1]]
+              rho_vec  <- setNames(as.numeric(rho), names(rho))
+            }
+            pred_label <- setNames(pred_chr, samp)
+            
+            # 4-class fallback (drop Normal-like) if requested
+            if (Subtype) {
+              ct4  <- ct[, seq_len(4), drop = FALSE]
+              rho4 <- apply(ct4, 2, function(v)
+                suppressWarnings(cor(xs, v, method = "spearman", use = "pairwise.complete.obs"))
+              )
+              if (all(is.na(rho4))) {
+                pred4_chr <- NA_character_
+              } else {
+                valid4 <- which(!is.na(rho4))
+                o4 <- order(rho4[valid4], decreasing = TRUE)
+                pred4_chr <- colnames(ct4)[valid4][o4[1]]
+              }
+            }
+            
+            # Shape outputs to match expected structures
+            distances_mat <- matrix(rho_vec, nrow = 1,
+                                    dimnames = list(samp, names(rho_vec)))
+            
+            out_fb <- list(
+              predictions = pred_label,
+              testData = x.raw,  # <-- was x.m; use uncentered for singleton
+              distances = distances_mat,
+              dist.RORSubtype = matrix(NA_real_, nrow = 1, ncol = 4,
+                                       dimnames = list(samp, colnames(ct)[seq_len(4)]))
+            )
+            if (Subtype) {
+              out_fb$predictions.FourSubtype <- setNames(pred4_chr, samp)
+            }
+            
+            warning(sprintf("ssBC/ssBC.v2 fallback: subgroup '%s' had n=%d; sample(s): %s; low-confidence label.",
+                            element, length(samp), .short_ids(samp)),
+                    call. = FALSE)
+            return(out_fb)
+            
         },
         names(samples_selected),
         SIMPLIFY = FALSE,
