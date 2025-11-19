@@ -39,7 +39,7 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
 .summarize_cohort <- function(ph) {
   out <- list(kind = "none", ok = FALSE, msg = "No cohort columns found", stats = NULL)
   
-  # TN first (if present)
+  tn_present <- FALSE
   if ("TN" %in% names(ph)) {
     vals <- na.omit(as.character(ph$TN))
     bad  <- setdiff(unique(vals), c("TN","nonTN"))
@@ -47,15 +47,14 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
       out$kind <- "TN"; out$msg <- paste("Invalid TN values:", paste(bad, collapse=", "))
       return(out)
     }
+    tn_present <- TRUE
     out$kind  <- "TN"
     out$ok    <- TRUE
     out$msg   <- "OK"
     out$stats <- list(
-      nTN    = sum(ph$TN    == "TN",    na.rm = TRUE),
-      nNonTN = sum(ph$TN    == "nonTN", na.rm = TRUE)
+      nTN    = sum(ph$TN == "TN",    na.rm = TRUE),
+      nNonTN = sum(ph$TN == "nonTN", na.rm = TRUE)
     )
-    # keep going: if ER/HER2 exist, also report their subgroups as extra context
-    # (we won’t change readiness based on them when TN is present)
   }
   
   haveER   <- "ER"   %in% names(ph)
@@ -73,20 +72,11 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
       if (length(badH)) msg <- c(msg, paste("Invalid HER2:", paste(badH, collapse=", ")))
     }
     
-    kind_here <- if (haveER && haveHER2) "ERHER2" else if (haveER) "ER" else "HER2"
-    ok_here   <- length(msg) == 0
-    
-    # Build/update stats
     stats_here <- list()
-    if (haveER) {
-      stats_here$nERpos <- sum(ph$ER == "ER+", na.rm = TRUE)
-      stats_here$nERneg <- sum(ph$ER == "ER-", na.rm = TRUE)
-    }
-    if (haveHER2) {
-      stats_here$nHpos <- sum(ph$HER2 == "HER2+", na.rm = TRUE)
-      stats_here$nHneg <- sum(ph$HER2 == "HER2-", na.rm = TRUE)
-    }
-    # ER×HER2 subgroups when both present
+    if (haveER)   { stats_here$nERpos <- sum(ph$ER=="ER+",   na.rm=TRUE)
+    stats_here$nERneg <- sum(ph$ER=="ER-",   na.rm=TRUE) }
+    if (haveHER2) { stats_here$nHpos  <- sum(ph$HER2=="HER2+",na.rm=TRUE)
+    stats_here$nHneg  <- sum(ph$HER2=="HER2-",na.rm=TRUE) }
     if (haveER && haveHER2) {
       stats_here$n_ERpos_HER2neg <- sum(ph$ER=="ER+" & ph$HER2=="HER2-", na.rm=TRUE)
       stats_here$n_ERpos_HER2pos <- sum(ph$ER=="ER+" & ph$HER2=="HER2+", na.rm=TRUE)
@@ -94,15 +84,15 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
       stats_here$n_ERneg_HER2pos <- sum(ph$ER=="ER-" & ph$HER2=="HER2+", na.rm=TRUE)
     }
     
-    # Merge with any existing TN stats (if TN was present)
     out$stats <- c(out$stats, stats_here)
-    out$kind  <- if (out$kind == "TN") "TN+ERHER2" else kind_here
-    # Ready: valid coding for the fields we’re going to use
-    out$ok    <- ok_here || out$kind == "TN+ERHER2" || out$kind == "TN"
-    out$msg   <- if (out$ok) "OK" else paste(msg, collapse="; ")
+    # keep kind = "TN" if TN present; otherwise ER/HER2 kind
+    if (!tn_present) {
+      out$kind <- if (haveER && haveHER2) "ERHER2" else if (haveER) "ER" else "HER2"
+      out$ok   <- length(msg) == 0
+      out$msg  <- if (out$ok) "OK" else paste(msg, collapse="; ")
+    }
     return(out)
   }
-  
   out
 }
 
@@ -201,6 +191,11 @@ server <- function(input, output, session) {
     RawCounts = NULL, data_input = NULL,
     download_calls = NULL, download_full = NULL
   )
+  
+  # NEW: if any upload control changes, invalidate the mapped object
+  observeEvent(list(input$GEX, input$clinic, input$anno), {
+    reactive_files$data_input <- NULL  # force preflight to show "Run Step 1..."
+  }, ignoreInit = TRUE)
   
   # ---- UI dynamic help ----
   output$gex_help <- renderUI({
@@ -377,6 +372,7 @@ server <- function(input, output, session) {
       if (!is.null(her2_line))  tagList(tags$br(), HTML(her2_line))  else NULL,
       if (!is.null(subgroup_line)) tagList(tags$br(), HTML(subgroup_line)) else NULL,
       if (!is.null(tn_line))    tagList(tags$br(), HTML(tn_line))    else NULL,
+      if (identical(chk$kind, "TN")) " (ER/HER2 present; TN takes precedence)" else "",
       tags$br(),
       tags$small(if (isTRUE(chk$ready)) "Coding OK. You can run AUTO." else sprintf("Issue: %s", chk$msg))
     )
@@ -404,6 +400,9 @@ server <- function(input, output, session) {
   
   # --- Load example data (hero & step1 buttons share the same handler) ---
   example_loader <- function() {
+    # NEW: invalidate previous mapping so preflight re-checks
+    reactive_files$data_input <- NULL
+    
     example_dir <- system.file("RshinyTest", package = "BreastSubtypeR")
     if (example_dir == "") example_dir <- file.path("inst", "RshinyTest")
     
@@ -415,7 +414,7 @@ server <- function(input, output, session) {
       showNotification("Example files not found in the package installation.", type = "error", duration = 10)
       return(invisible(NULL))
     }
-    
+  
     withProgress(message = "Loading example data...", value = 0, {
       incProgress(0.25, detail = "Clinical...")
       clinic_df <- utils::read.table(clin_path, header = TRUE, sep = "\t",
@@ -649,7 +648,7 @@ server <- function(input, output, session) {
         withCallingHandlers({
           res <- BreastSubtypeR::BS_ssBC(se_obj = se_NC, s = input$s, Subtype = want_4, hasClinical = use_clin)
         }, warning = function(w) {
-          showNotification(conditionMessage(w), type = "warning", duration = 7)
+          showNotification(conditionMessage(w), type = "warning", duration = 15)
           invokeRestart("muffleWarning")
         })
       }
