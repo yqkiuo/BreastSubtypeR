@@ -141,7 +141,6 @@ res <- BS_Multi(
 
 # Per-sample calls (methods × samples)
 head(res$res_subtypes, 5)
-
 ```
 
 **3) AUTO mode (cohort-aware selection) + visualize**
@@ -253,10 +252,12 @@ Programmatic access to the same files:
 
 ```{r load example data, eval = FALSE}
 exdir <- system.file("RshinyTest", package = "BreastSubtypeR")
-gex   <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
-clin  <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
-anno  <- file.path(exdir, "OSLO2EMIT0_anno.txt")
-file.exists(gex); file.exists(clin); file.exists(anno)
+gex <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
+clin <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
+anno <- file.path(exdir, "OSLO2EMIT0_anno.txt")
+file.exists(gex)
+file.exists(clin)
+file.exists(anno)
 ```
 
 # Limitations
