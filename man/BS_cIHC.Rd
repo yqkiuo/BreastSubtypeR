@@ -9,7 +9,7 @@ BS_cIHC(se_obj, Subtype = FALSE, hasClinical = FALSE, seed = 118)
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log2-transformed, normalised expression matrix with
+\item \strong{Assay data}: A log2-transformed, normalized expression matrix with
 genes (Gene Symbols) as rows and samples as columns.
 \item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{

@@ -33,7 +33,7 @@ NULL
 #' assumption-aware **AUTO mode** that dynamically selects methods compatible
 #' with the input cohort.
 #'
-#' By standardising input handling, applying method-specific normalisation,
+#' By standardizing input handling, applying method-specific normalization,
 #' and providing optimised probe-to-gene mapping, BreastSubtypeR reduces
 #' inconsistencies across platforms and improves reproducibility in translational
 #' research. A companion Shiny app (**iBreastSubtypeR**) offers an intuitive GUI
@@ -42,13 +42,13 @@ NULL
 #' ## Workflow
 #' 1. **Data Input**: Supply a gene expression dataset as a `SummarizedExperiment`.
 #'    Supported inputs include raw RNA-seq counts (with gene lengths),
-#'    log2(FPKM+1) RNA-seq, or log2-normalised microarray/nCounter data.
+#'    log2(FPKM+1) RNA-seq, or log2-normalized microarray/nCounter data.
 #' 2. **Gene Mapping**: Prepare expression data with \code{\link{Mapping}},
 #'    including Entrez ID-based resolution of duplicates.
 #' 3. **Subtyping**: Apply multiple classifiers simultaneously using
 #'    \code{\link{BS_Multi}}, or enable **AUTO mode** for
 #'    cohort-aware method selection.
-#' 4. **Visualisation**: Summarise and interpret subtyping results with
+#' 4. **visualization**: Summarise and interpret subtyping results with
 #'    \code{\link{Vis_Multi}}.
 #'
 #'
@@ -58,7 +58,7 @@ NULL
 #' - **AUTO mode**: Evaluates cohort composition (e.g., ER/HER2 prevalence,
 #'   subtype purity, subgroup sizes) and disables classifiers with violated
 #'   assumptions; improves accuracy, Cohen’s kappa, and IHC concordance.
-#' - **Standardised normalisation**: Upper-quartile log2-CPM for NC-based
+#' - **standardized normalization**: Upper-quartile log2-CPM for NC-based
 #'   methods; FPKM for SSP-based methods.
 #' - **Optimised gene mapping**: Entrez ID-based mapping with conflict resolution.
 #' - **Dual accessibility**: A Bioconductor-compliant R API and a local Shiny app
@@ -341,7 +341,7 @@ BS_parker <- function(
 #' violated.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -431,7 +431,7 @@ BS_cIHC <- function(se_obj,
 #' match specific cohort assumptions (e.g., training distribution).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -461,7 +461,7 @@ BS_cIHC <- function(se_obj,
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
+#' *The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.*
 #' Nature. 2012;486(7403):346–352.
 #' https://doi.org/10.1038/nature10983
 #'
@@ -533,7 +533,7 @@ BS_cIHC.itr <- function(se_obj,
 #' approach improves subtype consistency, particularly in ER-skewed cohorts.
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): Must include:
 #'     - `"PatientID"`: Unique sample or patient identifier.
@@ -674,7 +674,7 @@ BS_PCAPAM50 <- function(se_obj,
 #' training cohort (e.g., ER-selected, HER2-enriched, or triple-negative cohorts).
 #'
 #' @param se_obj A `SummarizedExperiment` object containing:
-#'   - **Assay data**: A log2-transformed, normalised expression matrix with
+#'   - **Assay data**: A log2-transformed, normalized expression matrix with
 #'     genes (Gene Symbols) as rows and samples as columns.
 #'   - **Column metadata** (`colData`): If `hasClinical = TRUE`, must include:
 #'     - `"PatientID"`: Unique patient/sample identifier.
@@ -797,8 +797,20 @@ BS_ssBC <- function(se_obj,
 #'     - Expression values must be **positive** (e.g., FPKM or log2(FPKM+1)).
 #'     - Values should not be gene-centered or globally scaled.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the AIMS method.
+#' @return A **list** with the following elements:
+#' \itemize{
+#'   \item \code{cl}: Character vector of AIMS subtype calls per sample.
+#'         One of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, or \code{"Normal"}.
+#'   \item \code{prob}: Numeric vector of posterior probabilities corresponding
+#'         to the assigned subtype in \code{cl} (one value per sample).
+#'   \item \code{all.probs}: Matrix of posterior probabilities for all samples
+#'         and all subtypes (rows = samples, columns = subtypes).
+#'   \item \code{rules.matrix}: 0/1 matrix of the 100 AIMS rules used for assignment
+#'         (rows = rules, columns = samples); \code{1} indicates the rule evaluated to TRUE.
+#'   \item \code{data.used}: Expression values actually used to evaluate the rules
+#'         (filtered/ordered subset aligned to the AIMS gene set).
+#'   \item \code{EntrezID.used}: Character vector of Entrez IDs used by AIMS.
+#' }
 #'
 #' @references
 #' Paquet ER, Hallett MT.
@@ -873,8 +885,20 @@ BS_AIMS <- function(se_obj) {
 #'   - `"ssp.pam50"`: Predicts PAM50-based intrinsic subtypes.
 #'   - `"ssp.subtype"`: Predicts Prosigna-like subtypes (four subtypes, excluding Normal-like).
 #'
-#' @return A character vector of intrinsic subtype predictions for each sample,
-#'   as estimated by the SSPBC method.
+#' @return A **list** with the following elements:
+#' \itemize{
+#'   \item \code{cl}: Molecular class identified by the sspbc models for each sample
+#'         (one of \code{"Basal"}, \code{"Her2"}, \code{"LumA"}, \code{"LumB"}, with or without \code{"Normal"}).
+#'   \item \code{prob}: Numeric vector of posterior probabilities corresponding
+#'         to the assigned subtype in \code{cl} (one value per sample).
+#'   \item \code{all.probs}: Matrix of posterior probability values for all samples
+#'         and all subtypes (rows = samples, columns = subtypes).
+#'   \item \code{rules.matrix}: Binary (0/1) matrix of the pairwise gene-expression
+#'         rules (\emph{gene A < gene B}) used for assignment (rows = rules, columns = samples);
+#'         \code{1} indicates the rule evaluated to TRUE for that sample.
+#'   \item \code{data.used}: Expression values actually used to evaluate the simple rules.
+#'   \item \code{EntrezID.used}: Character vector of EntrezGene IDs used for rule evaluation.
+#' }
 #'
 #' @references
 #' Staaf J, Häkkinen J, Hegardt C, Saal LH, Kimbung S, Hedenfalk I, et al.
@@ -981,7 +1005,7 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' Cell. 2015;163(2):506-519. https://doi.org/10.1016/j.cell.2015.09.033
 #'
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-#' *The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.*
+#' *The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.*
 #' Nature. 2012;486(7403):346-352. https://doi.org/10.1038/nature10983
 #'
 #' Zhao X, Rodland EA, Tibshirani R, Plevritis S.
@@ -1043,6 +1067,20 @@ BS_Multi <- function(
     }
     rownames(pheno) <- pheno$PatientID
 
+    # Detect true TN cohort
+    has_TN_col   <- "TN" %in% colnames(pheno)
+    is_TN_cohort <- has_TN_col && all(na.omit(pheno$TN) == "TN") && nrow(pheno) > 0
+
+    # manual vs AUTO
+    is_manual <- !(length(methods) == 1 && methods[1] == "AUTO")
+    
+    # Only tell users in MANUAL mode that ssBC routing will use TN/TN.v2
+    if (is_manual && is_TN_cohort && any(methods %in% c("ssBC","ssBC.v2"))) {
+      n_tn <- sum(na.omit(pheno$TN) == "TN")
+      .msg("Detected pure TN cohort (TN=100%%, n=%d). Routing ssBC with s='TN' and ssBC.v2 with s='TN.v2'.", 
+           n_tn, origin = "MANUAL")
+    }
+    
     # Check ER and HER2 columns in pheno
     if (!("ER" %in% colnames(pheno)) && any(methods %in%
         c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
@@ -1051,7 +1089,8 @@ BS_Multi <- function(
     if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
         stop("The 'HER2' column is required for the 'ssBC.v2' method.")
     }
-
+    
+    
     ## AUTO mode
     # methods = "AUTO"
     cohort.select <- "ERpos"
@@ -1065,7 +1104,12 @@ BS_Multi <- function(
         methods <- AUTO.output$methods
         cohort.select <- AUTO.output$cohort.select
     }
-
+    
+    # Manual mode: promote a true TN cohort to TNBC locally
+    if (!(length(methods) == 1 && methods[1] == "AUTO")) {
+      if (is_TN_cohort) cohort.select <- "TNBC"
+    }
+    
     ## run each method
     results <- lapply(methods, function(method) {
         ## try NC-based
@@ -1162,7 +1206,7 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                if (!is.null(samples_ER.icd) & length(samples_ERHER2.icd) < nrow(pheno)) {
+                if (!is.null(samples_ER.icd) && length(samples_ER.icd) < nrow(pheno)) {
                     res_ssBC <- BS_ssBC(
                         data_input$se_NC[, samples_ER.icd],
                         s = "ER",
@@ -1213,7 +1257,7 @@ BS_Multi <- function(
                     hasClinical = hasClinical
                 )
             } else {
-                if (!is.null(samples_ERHER2.icd) & length(samples_ERHER2.icd) < nrow(pheno)) {
+                if (!is.null(samples_ERHER2.icd) && length(samples_ERHER2.icd) < nrow(pheno)) {
                     res_ssBC.v2 <- BS_ssBC(
                         data_input$se_NC[, samples_ERHER2.icd],
                         s = "ER.v2",
@@ -1283,10 +1327,9 @@ BS_Multi <- function(
                 ssp.name = "ssp.pam50"
             )
 
-            BS.all <- data.frame(
-                PatientID = rownames(res_sspbc),
-                BS = res_sspbc[, 1],
-                row.names = rownames(res_sspbc)
+            res_sspbc$BS.all <- data.frame(
+                PatientID = rownames(res_sspbc$cl),
+                BS = res_sspbc$cl[, 1]
             )
 
             if (Subtype) {
@@ -1294,10 +1337,10 @@ BS_Multi <- function(
                     se_obj = data_input$se_SSP,
                     ssp.name = "ssp.subtype"
                 )
-                BS.all$BS.Subtype <- res_sspbc.Subtype[, 1]
+                res_sspbc$BS.all$BS.Subtype <- res_sspbc.Subtype$cl[, 1]
             }
 
-            return(list(BS.all = BS.all))
+            return(res_sspbc)
         }
 
         stop("Unknown method: ", method)

@@ -21,162 +21,84 @@ ui <- bslib::page_fluid(
     .method-help ul { margin-bottom: 0; }
     .paper-cite { font-size: 12.5px; color: #555; margin-top: 8px; }
     .paper-cite a { text-decoration: none; }
-    # .chip.doi { background:#eef7ff; border-color:#cfe5ff; }
-    # .chip.doi a { text-decoration:none; }
   "))),
   
+  # HERO styles
   tags$head(tags$style(HTML("
-  /* HERO */
-  .hero-card {
-    background: linear-gradient(135deg, #ffe3f0 0%, #ffffff 60%);
-    border: 1px solid #f1f3f5; border-radius: 12px;
-  }
-  .hero-inner { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: center; }
-  @media (max-width: 768px) { .hero-inner { grid-template-columns: 1fr; text-align:center; } }
-
-  .hero-title { margin: 4px 0 6px; font-weight: 600; }
-  .hero-subtitle { margin: 0 0 10px; color: #4a4f55; }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
-  .chip {
-    font-size: 12px; padding: 4px 8px; background: #f8f9fa;
-    border: 1px solid #e9ecef; border-radius: 999px;
-    display: inline-flex; align-items: center; gap: 6px;
-  }
-  .chip i { opacity: 0.8; }
-
-  .feature-list { margin: 8px 0 0 0; padding-left: 18px; }
-  .feature-list li { margin: 3px 0; }
+    .hero-card { background: linear-gradient(135deg, #ffe3f0 0%, #ffffff 60%); border: 1px solid #f1f3f5; border-radius: 12px; }
+    .hero-inner { display: grid; grid-template-columns: 180px 1fr; gap: 16px; align-items: center; }
+    @media (max-width: 768px) { .hero-inner { grid-template-columns: 1fr; text-align:center; } }
+    .hero-title { margin: 4px 0 6px; font-weight: 600; }
+    .hero-subtitle { margin: 0 0 10px; color: #4a4f55; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+    .chip { font-size: 12px; padding: 4px 8px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; }
+    .chip i { opacity: 0.8; }
+    .feature-list { margin: 8px 0 0 0; padding-left: 18px; }
+    .feature-list li { margin: 3px 0; }
+    .hero-ctas { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+    .btn-pink { background-color:#FF69B4; border:none; color:white; }
+    .btn-outline { border:1px solid #dee2e6; background:#fff; }
+    .chip.auto { border:1px solid; padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center; }
+    .chip.auto.ready   { background:#e6f7ed; border-color:#2fb170; }
+    .chip.auto.blocked { background:#fff5f5; border-color:#e03131; }
+    .chip .chip-note   { font-size:11px; opacity:0.75; }
+  "))),
   
-  
-
-  .hero-ctas { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
-  .btn-pink {
-    background-color:#FF69B4; border:none; color:white;
-  }
-  .btn-outline { border:1px solid #dee2e6; background:#fff; }
-  
-  .chip.auto { border:1px solid; padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px; align-items:center; }
-  .chip.auto.ready   { background:#e6f7ed; border-color:#2fb170; }
-  .chip.auto.blocked { background:#fff5f5; border-color:#e03131; }
-  .chip .chip-note   { font-size:11px; opacity:0.75; }
-
-"))),
-  
+  # Preserve scroll position helper
   tags$head(
     tags$script(HTML("
-    (function () {
-      var lastY = 0;
-      var restoreOnIdle = false;
-
-      function saveScroll() {
-        lastY = window.scrollY || window.pageYOffset || 0;
-      }
-      function restoreScroll() {
-        window.scrollTo(0, lastY || 0);
-      }
-      function scrollToMap() {
-        var el = document.getElementById('map');
-        if (el && el.scrollIntoView) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
-
-      // ---- File inputs: prevent jump on open/close; after anno selection, jump to Map
-      ['GEX','clinic','anno'].forEach(function(id) {
-        $(document).on('mousedown click focusin', 'label[for=\"' + id + '\"], #' + id, function() {
-          saveScroll();
-          setTimeout(restoreScroll, 0);
+      (function () {
+        var lastY = 0, restoreOnIdle = false;
+        function saveScroll(){ lastY = window.scrollY || window.pageYOffset || 0; }
+        function restoreScroll(){ window.scrollTo(0, lastY || 0); }
+        function scrollToMap(){ var el = document.getElementById('map'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+        ['GEX','clinic','anno'].forEach(function(id) {
+          $(document).on('mousedown click focusin', 'label[for=\"'+id+'\"], #'+id, function(){ saveScroll(); setTimeout(restoreScroll, 0); });
+          $(document).on('change', '#'+id, function(){ setTimeout(function(){ restoreScroll(); if (id==='anno') scrollToMap(); }, 50); });
+          $(document).on('focusout', '#'+id, function(){ setTimeout(restoreScroll, 0); });
         });
-        $(document).on('change', '#' + id, function() {
-          setTimeout(function() {
-            restoreScroll();
-            if (id === 'anno') scrollToMap();
-          }, 50);
-        });
-        $(document).on('focusout', '#' + id, function() {
-          setTimeout(restoreScroll, 0);
-        });
-      });
-
-      // ---- Map button: keep position through withProgress
-      $(document).on('mousedown click', '#map', function() {
-        saveScroll();
-        restoreOnIdle = true;
-      });
-
-      // ---- When Shiny finishes the server work, restore where we were
-      $(document).on('shiny:idle', function() {
-        if (restoreOnIdle) {
-          setTimeout(function() {
-            restoreScroll();
-            scrollToMap();
-            restoreOnIdle = false;
-          }, 50);
-        }
-      });
-    })();
-  "))
+        $(document).on('mousedown click', '#map', function(){ saveScroll(); restoreOnIdle = true; });
+        $(document).on('shiny:idle', function(){ if (restoreOnIdle){ setTimeout(function(){ restoreScroll(); scrollToMap(); restoreOnIdle=false; }, 50); }});
+      })();
+    "))
   ),
   
-  
-  # --- Heading ---
+  # Title
   tags$div(class = "app-title", tags$h2("Interactive Breast Cancer Intrinsic Molecular Subtyping")),
   
-  # --- Welcome / hero card ---
-  # --- Welcome / hero card ---
+  # Hero
   bslib::card(
     class = "hero-card",
     bslib::card_body(
       div(class = "hero-inner",
-          # left: logo
           div(bslib::card_image("logo.svg", height = "160px")),
-          # right: text
           div(
             h3(class = "hero-title", "Welcome to iBreastSubtypeR"),
             div(class = "hero-subtitle",
-                "An interactive companion to the BreastSubtypeR Bioconductor package for intrinsic molecular subtyping."
+                "An interactive companion to the BreastSubtypeR Bioconductor package."
             ),
-            # chips row (icons & labels)
             div(class = "chips",
-                span(
-                  class = "chip", icon("bullseye"),
-                  HTML("<b>NC-based:</b> PAM50 (parker.original | genefu.scale | genefu.robust), cIHC / cIHC.itr, PCAPAM50, ssBC / ssBC.v2")
-                ),
-                span(
-                  class = "chip", icon("vial"),
-                  HTML("<b>SSP-based:</b> AIMS, SSPBC")
-                ),
-                span(
-                  class = "chip", icon("chart-line"),
-                  HTML("<b>ROR:</b> research-use Risk of Recurrence (uses TSIZE, NODE; NC methods only)")
-                ),
-                uiOutput("auto_chip"),  # smart AUTO chip (dynamic)
-                # DOI chip
-                # span(
-                #   class = "chip doi", icon("link"),
-                #   HTML("<b>DOI:</b> <a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>10.1093/nargab/lqaf131</a>")
-                # )
+                span(class = "chip", icon("bullseye"),
+                     HTML("<b>NC-based:</b> PAM50 (parker.original | genefu.scale | genefu.robust), cIHC / cIHC.itr, PCAPAM50, ssBC / ssBC.v2")),
+                span(class = "chip", icon("vial"),
+                     HTML("<b>SSP-based:</b> AIMS, SSPBC")),
+                span(class = "chip", icon("chart-line"),
+                     HTML("<b>ROR:</b> research-use Risk of Recurrence (TSIZE, NODE)")),
+                uiOutput("auto_chip")
             ),
-            # short bullets
             tags$ul(class = "feature-list",
-                    tags$li("Assumption-aware AUTO reduces bias in ER/HER2-skewed or subtype-specific cohorts."),
-                    tags$li(HTML("Standardised mapping & normalisation across platforms (<i>log<sub>2</sub></i>-CPM for NC; FPKM for SSP).")),
+                    tags$li("Assumption-aware AUTO reduces bias in ER/HER2-skewed cohorts."),
+                    tags$li(HTML("standardized mapping & normalization (<i>log<sub>2</sub></i>-CPM for NC; FPKM for SSP).")),
                     tags$li("Choose 5-class (incl. Normal-like) or 4-class; AIMS is 5-class only."),
                     tags$li("All computation runs locally; exports are Bioconductor-ready.")
             ),
-            # --- CITATION LINE ---
-            div(
-              class = "paper-cite",
-              HTML(
-                "Please cite: Yang Q., Hartman J., Sifakis E.G. ",
-                "<em>BreastSubtypeR: A Unified R/Bioconductor Package for Intrinsic Molecular Subtyping in Breast Cancer Research</em>. ",
-                "<span class='journal'>NAR Genomics and Bioinformatics</span> (2025). ",
-                "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>https://doi.org/10.1093/nargab/lqaf131</a>"
-              )
+            div(class = "paper-cite",
+                HTML("Please cite: Yang Q., Hartman J., Sifakis E.G. <em>BreastSubtypeR</em>, ",
+                     "<span class='journal'>NAR Genomics and Bioinformatics</span> (2025). ",
+                     "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>https://doi.org/10.1093/nargab/lqaf131</a>")
             ),
-            # CTAs
             div(class = "hero-ctas",
+                actionButton("load_example_step1", "Load example data...", icon = icon("database")),
                 tags$a(class = "btn btn-pink", href = "#step1", icon("upload"), "Go to Step 1"),
                 tags$a(class = "btn btn-outline", href = "#step2", icon("play-circle"), "Go to Step 2"),
                 actionLink("about", "About & Citation", class = "btn btn-outline")
@@ -184,27 +106,25 @@ ui <- bslib::page_fluid(
           )
       )
     )
-  )
-  ,
+  ),
   
   #### Step 1
   h3(id = "step1", "Step 1 · Upload your data"),
-  
   bslib::layout_column_wrap(
     col_width = 3,
     
-    # 1) Gene expression
+    # GEX
     bslib::card(
       bslib::card_header("1) Gene expression (GEX)"),
       fileInput("GEX", "Upload expression matrix",
                 accept = c("text/csv", "text/comma-separated-values,text/plain", ".csv", ".txt")),
       radioButtons("is_raw_counts", "Data type",
-                   choices  = list("Normalized (log2)" = "norm", "Raw counts (RNA-seq)" = "raw"),
+                   choices  = list("normalized (log2)" = "norm", "Raw counts (RNA-seq only)" = "raw"),
                    selected = "norm", inline = TRUE),
       uiOutput("gex_help")
     ),
     
-    # 2) Clinical data
+    # Clinical
     bslib::card(
       bslib::card_header("2) Clinical data"),
       fileInput("clinic", "Upload clinical table",
@@ -212,7 +132,7 @@ ui <- bslib::page_fluid(
       uiOutput("clin_help")
     ),
     
-    # 3) Feature annotation
+    # Annotation
     bslib::card(
       bslib::card_header("3) Feature annotation"),
       fileInput("anno", "Upload annotation table",
@@ -220,7 +140,7 @@ ui <- bslib::page_fluid(
       uiOutput("anno_help")
     )
   ),
-  
+
   bslib::card(
     actionButton("map", "Preprocess & map", icon = icon("sliders")),
     helpText("Runs Mapping() to align IDs and normalize (as needed). When complete, continue to Step 2.")
@@ -232,7 +152,6 @@ ui <- bslib::page_fluid(
   bslib::card(
     style = "overflow: visible;",
     
-    # Subtyping method + AUTO
     selectizeInput(
       "BSmethod", "Subtyping method",
       choices = list(
@@ -251,7 +170,6 @@ ui <- bslib::page_fluid(
     
     uiOutput("auto_preflight"),
     
-    # Global 4 vs 5 classes (AIMS always 5)
     radioButtons(
       "k_subtypes", "Subtype classes",
       choices = list("5 classes (includes Normal-like)" = "5",
@@ -259,16 +177,13 @@ ui <- bslib::page_fluid(
       selected = "5", inline = TRUE
     ),
     
-    # Live per-method help
     uiOutput("method_help"),
     
-    # ROR checkbox (NC methods + AUTO -> disabled for AUTO)
     conditionalPanel(
       condition = "input.BSmethod == 'PAM50' || input.BSmethod == 'cIHC' || input.BSmethod == 'cIHC.itr' || input.BSmethod == 'PCAPAM50' || input.BSmethod == 'ssBC'",
       checkboxInput("hasClinical", "Use clinical variables (ROR)", value = FALSE)
     ),
     
-    # PAM50 calibration row
     conditionalPanel(
       condition = "input.BSmethod == 'PAM50'",
       bslib::card(
@@ -286,7 +201,6 @@ ui <- bslib::page_fluid(
           div(
             style = "position: relative; overflow: visible;",
             
-            # External (reference medians)
             conditionalPanel(
               condition = "input.calibration == 'External'",
               tagList(
@@ -325,20 +239,15 @@ ui <- bslib::page_fluid(
                                  "text/comma-separated-values,text/plain",
                                  ".csv", ".txt")
                     ),
-                    helpText(
-                      HTML(
-                        "Expected format: two columns — ",
-                        "<code>X</code> (gene symbol) and <code>Given.mdns</code> (median). ",
-                        "One row per PAM50 gene; extra genes are ignored; case-sensitive."
-                      )
-                    )
+                    helpText(HTML(
+                      "Expected format: two columns — ",
+                      "<code>X</code> (gene symbol) and <code>Given.mdns</code> (median)."
+                    ))
                   )
                 )
               )
-            )
-            ,
+            ),
             
-            # Internal
             conditionalPanel(
               condition = "input.calibration == 'Internal'",
               selectizeInput(
@@ -359,7 +268,6 @@ ui <- bslib::page_fluid(
     
     uiOutput("calib_help"),
     
-    # cIHC.itr params
     conditionalPanel(
       condition = "input.BSmethod == 'cIHC.itr'",
       bslib::layout_columns(
@@ -369,7 +277,6 @@ ui <- bslib::page_fluid(
       )
     ),
     
-    # ssBC subgroup
     conditionalPanel(
       condition = "input.BSmethod == 'ssBC'",
       bslib::layout_column_wrap(
@@ -384,10 +291,10 @@ ui <- bslib::page_fluid(
     )
   ),
   
-  # Visualization (rendered after run)
+  # Visualization
   uiOutput("plotSection"),
   
-  # --- Export controls + Download ---
+  # Export
   bslib::card(
     bslib::layout_columns(
       col_widths = c(8,4),
@@ -396,10 +303,7 @@ ui <- bslib::page_fluid(
           downloadButton(
             "download",
             HTML("Download results<br>(.tsv)"),
-            style = "
-            width: 220px; height: auto; padding: 10px 16px;
-            white-space: normal; line-height: 1.2;
-            background-color: #FF69B4; color: white; border: none;"
+            style = "width: 220px; height: auto; padding: 10px 16px; white-space: normal; line-height: 1.2; background-color: #FF69B4; color: white; border: none;"
           )
       )
     )
@@ -409,11 +313,8 @@ ui <- bslib::page_fluid(
   tags$footer(
     class = "text-center",
     tags$small(
-      HTML(
-        "&copy; Karolinska Institutet — BreastSubtypeR. DOI: ",
-        "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>10.1093/nargab/lqaf131</a>"
-      )
+      HTML("&copy; Karolinska Institutet — BreastSubtypeR. DOI: ",
+           "<a href='https://doi.org/10.1093/nargab/lqaf131' target='_blank' rel='noopener noreferrer'>10.1093/nargab/lqaf131</a>")
     )
   )
-  
 )

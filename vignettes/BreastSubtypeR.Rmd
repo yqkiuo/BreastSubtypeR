@@ -33,7 +33,7 @@ knitr::opts_chunk$set(
 
 Install the released version from Bioconductor:
 
-```{r, eval = FALSE}
+```{r installation, eval = FALSE}
 # Requires R >= 4.5.0
 if (!require("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 BiocManager::install("BreastSubtypeR")
@@ -48,16 +48,16 @@ If you use **BreastSubtypeR**, please cite:
 
 For BibTeX/LaTeX, run in R:
 
-```{r, eval = FALSE}
+```{r citation, eval = FALSE}
 citation("BreastSubtypeR")
 ```
 
 
 # Brief description
 
-Breast cancer (BC) is a biologically heterogeneous disease with intrinsic molecular subtypes (e.g., Luminal A, Luminal B, HER2-enriched, Basal-like, Normal-like) that inform biological interpretation and clinical decision-making. While clinical assays such as **Prosigna** provide standardised subtyping in the clinic, research implementations have proliferated and diverge in pre-processing, gene mapping, and algorithmic assumptions—reducing reproducibility and complicating cross-cohort analyses.
+Breast cancer (BC) is a biologically heterogeneous disease with intrinsic molecular subtypes (e.g., Luminal A, Luminal B, HER2-enriched, Basal-like, Normal-like) that inform biological interpretation and clinical decision-making. While clinical assays such as **Prosigna** provide standardized subtyping in the clinic, research implementations have proliferated and diverge in pre-processing, gene mapping, and algorithmic assumptions—reducing reproducibility and complicating cross-cohort analyses.
 
-**BreastSubtypeR** consolidates multiple published gene-expression signature classifiers into a unified, assumption-aware Bioconductor package with: - a unified multi-method API (run many classifiers in one call), - **AUTO** mode for cohort-aware method selection, - standardised, method-specific pre-processing for multiple input types (raw counts, FPKM, log2-processed arrays), - Entrez ID–based probe/gene mapping, - and a local Shiny app (`iBreastSubtypeR`) for non-programmers.
+**BreastSubtypeR** consolidates multiple published gene-expression signature classifiers into a unified, assumption-aware Bioconductor package with: - a unified multi-method API (run many classifiers in one call), - **AUTO** mode for cohort-aware method selection, - standardized, method-specific pre-processing for multiple input types (raw counts, FPKM, log2-processed arrays), - Entrez ID–based probe/gene mapping, - and a local Shiny app (`iBreastSubtypeR`) for non-programmers.
 
 
 ## Features
@@ -102,8 +102,8 @@ data("OSLO2EMIT0obj")
 
 **1) Map & prepare (method-specific pre-processing + mapping)**
 
-```{r, eval=TRUE}
-# Pre-processing: automatically apply tailored normalisation, map probes/IDs to Entrez,
+```{r map and prepare, eval=TRUE}
+# Pre-processing: automatically apply tailored normalization, map probes/IDs to Entrez,
 # and (optionally) impute missing values
 data_input <- Mapping(
     OSLO2EMIT0obj$se_obj,
@@ -117,19 +117,19 @@ data_input <- Mapping(
 ***Notes***
 
 -   `Mapping()` prepares expression inputs for downstream subtyping functions by:
-    -   automatically applying tailored normalisation workflows depending on input type
-        -   **Raw RNA-seq counts (+ gene lengths):** converted to log2-CPM (upper-quartile normalised) for NC-based methods; converted to linear FPKM for SSP-based methods.\
+    -   automatically applying tailored normalization workflows depending on input type
+        -   **Raw RNA-seq counts (+ gene lengths):** converted to log2-CPM (upper-quartile normalized) for NC-based methods; converted to linear FPKM for SSP-based methods.\
         -   **Precomputed RNA-seq FPKM (log₂-transformed):** used directly for NC-based methods; back-transformed to linear scale (`2^x`) for SSP-based methods.\
         -   **Microarray/nCounter (log₂-processed):** used directly for NC-based methods; back-transformed to linear scale (`2^x`) for SSP-based methods.\
     -   resolving probe/ID → Entrez mappings,\
     -   selecting or collapsing multiple probes per gene (`method` argument),\
     -   optionally imputing missing marker values,\
     -   and returning a packaged object ready for `BS_Multi` or single-method callers.
--   See `?Mapping` for the full parameter list (e.g., `RawCounts`, `method`, `impute`, `verbose`) and [Methods (Sections 2.3–2.4) in the paper](https://doi.org/10.1093/nargab/lqaf131) for a complete description of the input/normalisation pipeline.
+-   See `?Mapping` for the full parameter list (e.g., `RawCounts`, `method`, `impute`, `verbose`) and [Methods (Sections 2.3–2.4) in the paper](https://doi.org/10.1093/nargab/lqaf131) for a complete description of the input/normalization pipeline.
 
 **2) Multi-method run (user-defined)**
 
-```{r, eval=TRUE}
+```{r multi-method run, eval=TRUE}
 methods <- c("parker.original", "PCAPAM50", "sspbc")
 
 res <- BS_Multi(
@@ -148,7 +148,7 @@ head(res$res_subtypes, 5)
 
 AUTO evaluates cohort diagnostics (for example, ER/HER2 distribution, subtype purity, and subgroup sizes) and selects methods compatible with the cohort. It disables classifiers whose distributional assumptions would likely be violated.
 
-```{r, eval=TRUE}
+```{r auto mode and visualization, eval=TRUE}
 res_auto <- BS_Multi(
     data_input = data_input,
     methods = "AUTO",
@@ -156,7 +156,7 @@ res_auto <- BS_Multi(
     hasClinical = FALSE
 )
 
-# Visualise multi-method output and concordance
+# visualize multi-method output and concordance
 Vis_Multi(res_auto$res_subtypes)
 ```
 
@@ -180,7 +180,7 @@ Vis_Multi(res_auto$res_subtypes)
 
 PAM50 (NC-based)
 
-```{r, eval=TRUE}
+```{r pam50 subtyping, eval=TRUE}
 res_pam <- BS_parker(
     se_obj = data_input$se_NC, # object prepared for NC-based methods
     calibration = "Internal",
@@ -192,7 +192,7 @@ res_pam <- BS_parker(
 
 AIMS (SSP-based)
 
-```{r, eval=TRUE}
+```{r aims subtyping, eval=TRUE}
 res_aims <- BS_AIMS(data_input$se_SSP)
 ```
 
@@ -223,24 +223,41 @@ For users new to R, we offer an intuitive Shiny app for interactive molecular su
 
 ## Launch the local Shiny app
 
-```{r, eval = FALSE}
+```{r launch shiny, eval = FALSE}
 BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
 
 If needed, install UI dependencies and re-run:
 
-```{r, eval = FALSE}
+```{r installui dependencies, eval = FALSE}
 install.packages(c("shiny", "bslib"))
 ```
 
 The app runs locally; **no data leave your machine**.
 
 **What you can do**:\
-- Upload expression, clinical, and feature-annotation tables (clinical lives in `colData`). - Run single methods, or run multiple classifiers at once with `BS_Multi` and `AUTO` enabled for cohort-aware selection.\
+- Upload expression, clinical, and feature-annotation tables (clinical lives in `colData`).\
+- Run single methods, or run multiple classifiers at once with `BS_Multi` and `AUTO` enabled for cohort-aware selection.\
 - Choose 5-class (incl. Normal-like) or 4-class (AIMS is 5-class only).\
 - Inspect per-sample concordance (entropy), heatmap and pie summaries.\
 - Export Calls-only or Full metrics. ROR is available for NC methods when `TSIZE`/`NODE` are present and numeric.
 
+
+## Example data (for Shiny & scripts)
+
+The Shiny UI provides a **“Load example data…”** button that preloads a small
+demo cohort (expression, clinical, annotation). After loading, click
+**Preprocess & map** (Step 1), then proceed to analyses (Step 2).
+
+Programmatic access to the same files:
+
+```{r load example data, eval = FALSE}
+exdir <- system.file("RshinyTest", package = "BreastSubtypeR")
+gex   <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
+clin  <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
+anno  <- file.path(exdir, "OSLO2EMIT0_anno.txt")
+file.exists(gex); file.exists(clin); file.exists(anno)
+```
 
 # Limitations
 
@@ -272,7 +289,7 @@ clinical validation requires paired clinical assay data.\
 
 - Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, *et al.* (2015). Comprehensive molecular portraits of invasive lobular breast cancer. *Cell*, 163(2):506–519. <https://doi.org/10.1016/j.cell.2015.09.033>
 
--  Curtis C, Shah SP, Chin S-F, Turashvili G, Rueda OM, Dunning MJ, *et al.* (2012). The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups. *Nature*, 486:346–352. <https://doi.org/10.1038/nature10983>
+-  Curtis C, Shah SP, Chin S-F, Turashvili G, Rueda OM, Dunning MJ, *et al.* (2012). The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups. *Nature*, 486:346–352. <https://doi.org/10.1038/nature10983>
 
 - Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, Hu H. (2019). PCA-PAM50 improves subtype assignment in ER-positive breast cancer. *Sci Rep*, 9:14386. <https://doi.org/10.1038/s41598-019-44339-4>
 
@@ -287,6 +304,6 @@ clinical validation requires paired clinical assay data.\
 
 ## Session information
 
-```{r}
+```{r session info}
 sessionInfo()
 ```

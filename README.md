@@ -11,7 +11,7 @@
 It consolidates published intrinsic subtyping methods under one API and lets you run multiple classifiers at once.
 **AUTO** inspects cohort diagnostics to select compatible methods and reduce misclassification.
 
-> *Research use only; in clinical practice, intrinsic molecular subtyping is standardised via approved diagnostics (e.g., Prosigna®).*
+> *Research use only; in clinical practice, intrinsic molecular subtyping is standardized via approved diagnostics (e.g., Prosigna®).*
 
 📄 **Publication:** *NAR Genomics and Bioinformatics* (2025), **Editor’s Choice** → [doi:10.1093/nargab/lqaf131](https://doi.org/10.1093/nargab/lqaf131)
 
@@ -146,12 +146,31 @@ as additional simulations become available.
 ``` r
 BreastSubtypeR::iBreastSubtypeR() # interactive GUI (local)
 ```
+
 ***Notes:***
--   The app runs locally; no data leave your machine.
--   If you see a missing UI dependency:
+
+- The app runs locally; no data leave your machine.
+
+- If you see a missing UI dependency:
 
 ``` r
 install.packages(c("shiny","bslib"))
+```
+
+***Example data (for Shiny & scripts)***
+
+You can explore the app without preparing files:
+
+- In **iBreastSubtypeR**, click **“Load example data…”** to pre-fill
+  the UI with a small demo cohort. Then click **Preprocess & map** and proceed to Step 2.
+
+- Programmatically, the same files are shipped inside the package:
+```r
+  exdir   <- system.file("RshinyTest", package = "BreastSubtypeR")
+  gex     <- file.path(exdir, "OSLO2EMIT0_GEX_log2.FPKM.txt")
+  clin    <- file.path(exdir, "OSLO2EMIT0_clinical.txt")
+  anno    <- file.path(exdir, "OSLO2EMIT0_anno.txt")
+  stopifnot(all(file.exists(gex, clin, anno)))
 ```
 
 ## Vignette & documentation

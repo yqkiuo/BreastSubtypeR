@@ -16,7 +16,7 @@ BS_cIHC.itr(
 \arguments{
 \item{se_obj}{A \code{SummarizedExperiment} object containing:
 \itemize{
-\item \strong{Assay data}: A log2-transformed, normalised expression matrix with
+\item \strong{Assay data}: A log2-transformed, normalized expression matrix with
 genes (Gene Symbols) as rows and samples as columns.
 \item \strong{Column metadata} (\code{colData}): Must include:
 \itemize{
@@ -73,7 +73,7 @@ res <- BS_cIHC.itr(
 }
 \references{
 Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
-\emph{The genomic and transcriptomic architecture of 2,000 breast tumours reveals novel subgroups.}
+\emph{The genomic and transcriptomic architecture of 2,000 breast tumors reveals novel subgroups.}
 Nature. 2012;486(7403):346–352.
 https://doi.org/10.1038/nature10983
 }

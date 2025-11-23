@@ -25,7 +25,7 @@ applySSP <- function(
         gex = NULL,
         id = NULL,
         id.type = "Gene.ID",
-        full.out = FALSE,
+        full.out = TRUE,
         output) {
     data_env <- new.env(parent = emptyenv())
     data("Gene.ID.ann", envir = data_env, package = "BreastSubtypeR")
