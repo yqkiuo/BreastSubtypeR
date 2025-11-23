@@ -18,7 +18,7 @@ NULL
   # Canonical set (what ROR expects)
   canon4 <- c("Basal-like","HER2-enriched","LumA","LumB")
   
-  # map common synonyms → canonical
+  # map common synonyms -> canonical
   syn <- list(
     "Basal-like"    = c("Basal","BasalLike","Basal-like"),
     "HER2-enriched" = c("HER2","Her2","Her2-enriched","HER2-enriched"),
@@ -46,7 +46,7 @@ NULL
 #' @noRd
 .short_ids <- function(x, n = 3) {
   if (length(x) <= n) paste(x, collapse = ", ")
-  else paste0(paste(x[seq_len(n)], collapse = ", "), " … (", length(x), " total)")
+  else paste0(paste(x[seq_len(n)], collapse = ", "), " ... (", length(x), " total)")
 }
 
 #' Function for central median
@@ -444,7 +444,7 @@ RORgroup <- function(out,
     # node-negative
     cpl.Subtype.NODE.0 <- 40
     cph.Subtype.NODE.0 <- 60
-    # node-positive (1–3 nodes)
+    # node-positive (1-3 nodes)
     cpl.Subtype.NODE <- 15
     cph.Subtype.NODE <- 40
     ## >= 4 nodes would be assigned as high-risk
