@@ -142,12 +142,11 @@ NULL
 #'
 #' @export
 
-Mapping <- function(
-        se_obj,
-        RawCounts = FALSE,
-        method = c("max", "mean", "median", "iqr", "stdev"),
-        impute = TRUE,
-        verbose = TRUE) {
+Mapping <- function(se_obj,
+    RawCounts = FALSE,
+    method = c("max", "mean", "median", "iqr", "stdev"),
+    impute = TRUE,
+    verbose = TRUE) {
     method <- match.arg(method)
 
     arguments <- rlang::dots_list(
@@ -254,14 +253,13 @@ Mapping <- function(
 #'
 #' @export
 
-BS_parker <- function(
-        se_obj,
-        calibration = "None",
-        internal = NA,
-        external = NA,
-        medians = NA,
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_parker <- function(se_obj,
+    calibration = "None",
+    internal = NA,
+    external = NA,
+    medians = NA,
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -377,10 +375,11 @@ BS_parker <- function(
 #' @export
 
 
-BS_cIHC <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -476,12 +475,13 @@ BS_cIHC <- function(se_obj,
 #'
 #' @export
 
-BS_cIHC.itr <- function(se_obj,
-    iteration = 100,
-    ratio = 54 / 64,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_cIHC.itr <- function(
+        se_obj,
+        iteration = 100,
+        ratio = 54 / 64,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -568,10 +568,11 @@ BS_cIHC.itr <- function(se_obj,
 #'
 #' @export
 
-BS_PCAPAM50 <- function(se_obj,
-    Subtype = FALSE,
-    hasClinical = FALSE,
-    seed = 118) {
+BS_PCAPAM50 <- function(
+        se_obj,
+        Subtype = FALSE,
+        hasClinical = FALSE,
+        seed = 118) {
     # Check if input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -721,10 +722,11 @@ BS_PCAPAM50 <- function(se_obj,
 #'
 #' @export
 
-BS_ssBC <- function(se_obj,
-    s,
-    Subtype = FALSE,
-    hasClinical = FALSE) {
+BS_ssBC <- function(
+        se_obj,
+        s,
+        Subtype = FALSE,
+        hasClinical = FALSE) {
     # Check that input is a SummarizedExperiment object
     if (!inherits(se_obj, "SummarizedExperiment")) {
         stop("Input must be a SummarizedExperiment object.")
@@ -1037,11 +1039,10 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #'
 #' @export
 
-BS_Multi <- function(
-        data_input,
-        methods = "AUTO",
-        Subtype = FALSE,
-        hasClinical = FALSE) {
+BS_Multi <- function(data_input,
+    methods = "AUTO",
+    Subtype = FALSE,
+    hasClinical = FALSE) {
     valid_methods <- c(
         "parker.original", "genefu.scale", "genefu.robust",
         "ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50",
@@ -1068,19 +1069,21 @@ BS_Multi <- function(
     rownames(pheno) <- pheno$PatientID
 
     # Detect true TN cohort
-    has_TN_col   <- "TN" %in% colnames(pheno)
+    has_TN_col <- "TN" %in% colnames(pheno)
     is_TN_cohort <- has_TN_col && all(na.omit(pheno$TN) == "TN") && nrow(pheno) > 0
 
     # manual vs AUTO
     is_manual <- !(length(methods) == 1 && methods[1] == "AUTO")
-    
+
     # Only tell users in MANUAL mode that ssBC routing will use TN/TN.v2
-    if (is_manual && is_TN_cohort && any(methods %in% c("ssBC","ssBC.v2"))) {
-      n_tn <- sum(na.omit(pheno$TN) == "TN")
-      .msg("Detected pure TN cohort (TN=100%%, n=%d). Routing ssBC with s='TN' and ssBC.v2 with s='TN.v2'.", 
-           n_tn, origin = "MANUAL")
+    if (is_manual && is_TN_cohort && any(methods %in% c("ssBC", "ssBC.v2"))) {
+        n_tn <- sum(na.omit(pheno$TN) == "TN")
+        .msg("Detected pure TN cohort (TN=100%%, n=%d). Routing ssBC with s='TN' and ssBC.v2 with s='TN.v2'.",
+            n_tn,
+            origin = "MANUAL"
+        )
     }
-    
+
     # Check ER and HER2 columns in pheno
     if (!("ER" %in% colnames(pheno)) && any(methods %in%
         c("ssBC", "ssBC.v2", "cIHC", "cIHC.itr", "PCAPAM50"))) {
@@ -1089,8 +1092,8 @@ BS_Multi <- function(
     if (!("HER2" %in% colnames(pheno)) && "ssBC.v2" %in% methods) {
         stop("The 'HER2' column is required for the 'ssBC.v2' method.")
     }
-    
-    
+
+
     ## AUTO mode
     # methods = "AUTO"
     cohort.select <- "ERpos"
@@ -1104,12 +1107,12 @@ BS_Multi <- function(
         methods <- AUTO.output$methods
         cohort.select <- AUTO.output$cohort.select
     }
-    
+
     # Manual mode: promote a true TN cohort to TNBC locally
     if (!(length(methods) == 1 && methods[1] == "AUTO")) {
-      if (is_TN_cohort) cohort.select <- "TNBC"
+        if (is_TN_cohort) cohort.select <- "TNBC"
     }
-    
+
     ## run each method
     results <- lapply(methods, function(method) {
         ## try NC-based

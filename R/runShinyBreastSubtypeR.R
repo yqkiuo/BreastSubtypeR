@@ -18,9 +18,10 @@
 #' }
 #'
 #' @export
-iBreastSubtypeR <- function(attach = c("shiny", "bslib"),
-    attach_tidyverse = FALSE,
-    max_upload_mb = 1000) {
+iBreastSubtypeR <- function(
+        attach = c("shiny", "bslib"),
+        attach_tidyverse = FALSE,
+        max_upload_mb = 1000) {
     # helper: check install + attach quietly
     .attach_if <- function(pkgs) {
         pkgs <- unique(pkgs)
