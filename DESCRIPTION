@@ -52,11 +52,12 @@ Suggests:
     BiocStyle,
     knitr,
     rmarkdown,
-    testthat
+    testthat (>= 3.2.0)
 URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR,https://github.com/yqkiuo/BreastSubtypeR,https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR
 BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
 License: GPL-3
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE, roclets = c("rd", "namespace", "collate"))
+Config/testthat/edition: 3
 LazyData: FALSE
 RoxygenNote: 7.3.3
