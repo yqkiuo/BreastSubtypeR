@@ -381,6 +381,9 @@ get_methods <- function(pheno) {
         n_ERnegHER2neg <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2-", na.rm = TRUE)
         n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+", na.rm = TRUE)
         n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-", na.rm = TRUE)
+
+        # Evaluable HER2 values (AUTO HER2+ cohort detection)
+        n_HER2_known <- sum(pheno$HER2 %in% c("HER2+", "HER2-"))
         
         # Set thresholds
         n_ERpos_threshold <- 15 # simulation-based cut-off
@@ -423,7 +426,12 @@ get_methods <- function(pheno) {
         ## ---- main panel (non-TNBC) ---------------------------------------
         if (is.null(methods)) { # only if TNBC branch did not set methods
 
-            if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
+            if (n_HER2_known > 0L &&
+                n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
+                ## HER2+ cohort: at least one evaluable HER2 value and no
+                ## HER2- sample among the ER-evaluable samples. Cohorts
+                ## without any HER2 information fall through to the ER-based
+                ## rules below instead of being treated as HER2+.
                 .msg("A HER2+ cohort has been detected.", origin = "AUTO")
                 cohort.select <- "HER2pos"
 

@@ -1,5 +1,17 @@
 # Unreleased
 
+## AUTO routing
+
+- AUTO no longer treats a cohort without any evaluable HER2 value as a HER2+
+  cohort. Previously the HER2+ branch was entered whenever no HER2-negative
+  sample was counted, so a mixed ER cohort with HER2 entirely missing (or
+  coded with unrecognized values) ran `AIMS` and `sspbc` only. The HER2+
+  branch now additionally requires at least one evaluable HER2 value; cohorts
+  without HER2 information follow the ER-based rules (for example a 60/40 ER
+  cohort gets the balanced mixed panel, with `ssBC.v2` returning `NA`).
+  Cohorts with HER2 information are routed exactly as before. Added tests,
+  including regression tests for the size-gated ER/HER2-defined cohorts.
+
 ## Bug fixes
 
 - Fixed the `ROR-C Group (Subtype + Clinic)` column in the ROR output of the
