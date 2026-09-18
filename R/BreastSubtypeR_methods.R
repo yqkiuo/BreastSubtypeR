@@ -395,8 +395,17 @@ BS_parker <- function(se_obj,
 #'
 #' @param seed Integer. Random seed for reproducibility of ER-balancing.
 #'
-#' @return A `data.frame` containing intrinsic subtype assignments estimated
-#'   using the conventional IHC (cIHC) approach.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns`: `data.frame` of gene medians used for centering (reference
+#'     platform medians plus the ER-balanced cohort medians).
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
@@ -479,9 +488,15 @@ BS_cIHC <- function(
 #' @param iteration Integer. Number of iterations for the ER-balancing procedure.
 #'   Default: 100.
 #'
-#' @param ratio Numeric. Target ER+/ER– ratio for balancing. Options:
+#' @param ratio Numeric. Target ratio for ER balancing. Options:
 #'   - `1:1`: Equal balancing.
-#'   - `54:64`: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.
+#'   - `54:64`: Default; reflects the ER+/ER- ratio in the UNC232 training cohort.
+#'
+#'   The ratio is applied to the larger ER group relative to the smaller one:
+#'   in each iteration `ceiling(ratio * n_smaller)` samples are drawn from the
+#'   larger ER group and combined with all samples of the smaller group. This
+#'   equals the ER+/ER- ratio when ER+ is the larger group and its inverse when
+#'   ER- is the larger group. `ratio` must not exceed `n_larger / n_smaller`.
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
 #'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
@@ -493,10 +508,23 @@ BS_cIHC <- function(
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
-#' @return A list containing:
-#'   - `subtypes`: Intrinsic subtype predictions across iterations.
-#'   - `confidence`: Confidence estimates for each assigned subtype.
-#'   - `ER_balance`: Proportions of ER+ and ER– subsets observed across iterations.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class consensus call
+#'     across iterations) and, when `Subtype = TRUE`, `BS.Subtype` (four-class
+#'     consensus call). The consensus is the most frequent call over the
+#'     iterations; ties are resolved in favour of the alphabetically first
+#'     subtype (Basal, Her2, LumA, LumB, Normal).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations
+#'     (averaged over the iterations whose call equals the consensus call),
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups computed from these averages; with
+#'     `hasClinical = TRUE` also the ROR-C and ROR-PC scores and risk groups.
+#'   - `outList`: list with the consensus predictions, the averaged test data
+#'     and distances, and the centroids.
+#'   - `BS.itr.keep`: character matrix of the five-class calls per sample
+#'     (rows) and iteration (columns).
+#'   - `BS.itr.keep.Subtype`: the four-class analogue, present when
+#'     `Subtype = TRUE`.
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
@@ -589,8 +617,17 @@ BS_cIHC.itr <- function(
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the PCA-PAM50 method.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns.fl`: `data.frame` of gene medians used for centering (reference
+#'     platform medians plus the PCA-PAM50 refined cohort medians).
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.
@@ -736,8 +773,18 @@ BS_PCAPAM50 <- function(
 #' - "TSIZE": Tumor size (0 = \eqn{\le 2}{<= 2} cm; 1 = \eqn{> 2}{> 2} cm).
 #' - "NODE": Lymph node status (0 = negative; \eqn{\ge 1}{>= 1} = positive). Must be numeric.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the ssBC method.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call). Samples whose
+#'     subgroup (`s`) status is missing receive `NA`.
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns`: `data.frame` of the precomputed subgroup-specific quantiles used
+#'     for gene centering.
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Zhao X, Rodland EA, Tibshirani R, Plevritis S.

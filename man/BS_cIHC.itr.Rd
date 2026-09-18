@@ -28,11 +28,17 @@ genes (Gene Symbols) as rows and samples as columns.
 \item{iteration}{Integer. Number of iterations for the ER-balancing procedure.
 Default: 100.}
 
-\item{ratio}{Numeric. Target ER+/ER– ratio for balancing. Options:
+\item{ratio}{Numeric. Target ratio for ER balancing. Options:
 \itemize{
 \item \code{1:1}: Equal balancing.
-\item \code{54:64}: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.
-}}
+\item \code{54:64}: Default; reflects the ER+/ER- ratio in the UNC232 training cohort.
+}
+
+The ratio is applied to the larger ER group relative to the smaller one:
+in each iteration \code{ceiling(ratio * n_smaller)} samples are drawn from the
+larger ER group and combined with all samples of the smaller group. This
+equals the ER+/ER- ratio when ER+ is the larger group and its inverse when
+ER- is the larger group. \code{ratio} must not exceed \code{n_larger / n_smaller}.}
 
 \item{Subtype}{Logical. If \code{TRUE}, returns only the four main subtypes
 (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.}
@@ -47,11 +53,24 @@ variables from \code{colData(se_obj)}. Required columns:
 \item{seed}{Integer. Random seed for reproducibility.}
 }
 \value{
-A list containing:
+A list with the following elements:
 \itemize{
-\item \code{subtypes}: Intrinsic subtype predictions across iterations.
-\item \code{confidence}: Confidence estimates for each assigned subtype.
-\item \code{ER_balance}: Proportions of ER+ and ER– subsets observed across iterations.
+\item \code{BS.all}: \code{data.frame} with \code{PatientID}, \code{BS} (five-class consensus call
+across iterations) and, when \code{Subtype = TRUE}, \code{BS.Subtype} (four-class
+consensus call). The consensus is the most frequent call over the
+iterations; ties are resolved in favour of the alphabetically first
+subtype (Basal, Her2, LumA, LumB, Normal).
+\item \code{score.ROR}: \code{data.frame} with the per-sample centroid correlations
+(averaged over the iterations whose call equals the consensus call),
+calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+and risk groups computed from these averages; with
+\code{hasClinical = TRUE} also the ROR-C and ROR-PC scores and risk groups.
+\item \code{outList}: list with the consensus predictions, the averaged test data
+and distances, and the centroids.
+\item \code{BS.itr.keep}: character matrix of the five-class calls per sample
+(rows) and iteration (columns).
+\item \code{BS.itr.keep.Subtype}: the four-class analogue, present when
+\code{Subtype = TRUE}.
 }
 }
 \description{
