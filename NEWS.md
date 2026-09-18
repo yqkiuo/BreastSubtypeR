@@ -31,6 +31,9 @@
 - `Mapping(RawCounts = TRUE, impute = TRUE)`: the FPKM matrix is now checked
   for missing values itself before imputation (the guard tested the already
   imputed log-CPM matrix, so the FPKM matrix was never imputed).
+- `BS_Multi()`: the warning issued when PCAPAM50 fails now includes the
+  underlying error message (it previously ended after "failed in this
+  iteration: ").
 
 ## Tests
 

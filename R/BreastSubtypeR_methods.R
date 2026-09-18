@@ -1229,8 +1229,12 @@ BS_Multi <- function(data_input,
                     )
                 },
                 error = function(e) {
-                    # Error handling
-                    warning("PCAPAM50 failed in this iteration: ")
+                    # Error handling: keep the original error text
+                    warning(
+                        "PCAPAM50 failed in this iteration: ",
+                        conditionMessage(e),
+                        call. = FALSE
+                    )
                     return(NULL) # Return NULL or a dummy tibble with NAs
                 }
             )
