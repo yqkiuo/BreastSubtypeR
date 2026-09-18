@@ -178,31 +178,33 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
              gsub("\\+","POSITIVE", pos_label), pos_label)
     neg <- c("NEGATIVE","NEG","0","FALSE","F","NO","N",
              gsub("-","NEGATIVE", neg_label), neg_label)
+    ## as.character(): with a factor column the ifelse() fallback would
+    ## otherwise return the integer codes of unmatched levels
     out <- ifelse(x0 %in% pos, pos_label,
-                  ifelse(x0 %in% neg, neg_label, x))
+                  ifelse(x0 %in% neg, neg_label, as.character(x)))
     out
   }
   
   if ("ER" %in% names(df)) {
-    old <- df$ER
-    df$ER <- map_bin(df$ER, "ER+", "ER-")
+    old <- as.character(df$ER)
+    df$ER <- map_bin(old, "ER+", "ER-")
     if (!identical(old, df$ER))
       warning("Phenodata: coerced ER values to {ER+, ER-}.", call. = FALSE)
   }
   if ("HER2" %in% names(df)) {
-    old <- df$HER2
+    old <- as.character(df$HER2)
     has2p <- grepl("\\b2\\+\\b", old, ignore.case = TRUE)
     df$HER2 <- ifelse(has2p, old, map_bin(old, "HER2+", "HER2-"))
     if (!identical(old, df$HER2))
       warning("Phenodata: coerced HER2 values to {HER2+, HER2-} (skipped '2+').", call. = FALSE)
   }
   if ("TN" %in% names(df)) {
-    old <- df$TN
-    x0  <- canon(df$TN)
+    old <- as.character(df$TN)
+    x0  <- canon(old)
     pos <- c("TRUE","T","YES","Y","1","TN","TNBC")
     neg <- c("FALSE","F","NO","N","0","NON-TN","NONTN","NON_TN")
     df$TN <- ifelse(x0 %in% pos, "TN",
-                    ifelse(x0 %in% neg, "nonTN", df$TN))
+                    ifelse(x0 %in% neg, "nonTN", old))
     if (!identical(old, df$TN))
       warning("Phenodata: coerced TN values to {TN, nonTN}.", call. = FALSE)
   }
@@ -318,7 +320,7 @@ domapping <- function(
     y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
     x <- x[y$probe, , drop = FALSE]
     if (impute && anyNA(x)) x <- impute_missing(x, verbose)
-    if (RawCounts && impute && anyNA(x)) {
+    if (RawCounts && impute && anyNA(counts.fpkm)) {
         counts.fpkm <- impute_missing(counts.fpkm, verbose)
     }
 
