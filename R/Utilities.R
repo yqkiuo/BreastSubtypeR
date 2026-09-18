@@ -546,7 +546,9 @@ get_methods <- function(pheno) {
                     samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
                         subtype <- stringr::str_replace_all(subtype, "pos", "+")
                         subtype <- stringr::str_replace_all(subtype, "neg", "-")
-                        rownames(pheno)[pheno$ER == subtype]
+                        ## which() drops samples with missing ER, which would
+                        ## otherwise contribute NA sample names
+                        rownames(pheno)[which(pheno$ER == subtype)]
                     }))
                 }
             }
@@ -561,7 +563,7 @@ get_methods <- function(pheno) {
                             stringr::str_replace_all("neg", "-")
                         ER_sts <- substr(subtype, 1, 3)
                         HER2_sts <- substr(subtype, 4, 8)
-                        rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
+                        rownames(pheno)[which(pheno$ER == ER_sts & pheno$HER2 == HER2_sts)]
                     }))
                 }
             }
