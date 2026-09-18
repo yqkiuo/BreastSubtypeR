@@ -52,6 +52,11 @@
   `BS_cIHC.itr()` `ratio` argument is now documented as applied to the larger
   ER group relative to the smaller one, and the alphabetical tie-break of its
   consensus call is stated. No code changes.
+- `BS_cIHC()`, `BS_cIHC.itr()` and `BS_PCAPAM50()` now stop with a clear
+  message when the cohort lacks one of the two ER (or luminal/non-luminal IHC)
+  groups needed for ER balancing, instead of failing with "undefined columns
+  selected" or "arguments imply differing number of rows". Cohorts with both
+  groups are unaffected. Added tests.
 
 ## Tests
 
