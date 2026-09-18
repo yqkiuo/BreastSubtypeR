@@ -572,7 +572,16 @@ get_methods <- function(pheno) {
 
     if (length(samples_ER.icd) == 0) samples_ER.icd <- NULL
     if (length(samples_ERHER2.icd) == 0) samples_ERHER2.icd <- NULL
-    if (is.null(methods)) methods <- c("AIMS", "sspbc") # safety net
+    if (is.null(methods)) {
+        ## safety net: reached by ER+-only or ER--only cohorts whose HER2
+        ## subgroups are all below their thresholds (for example when many
+        ## HER2 values are missing); say so instead of falling back silently
+        .msg(
+            "No cohort rule matched the ER/HER2 subgroup sizes; running the single-sample predictors AIMS and sspbc only.",
+            origin = "AUTO"
+        )
+        methods <- c("AIMS", "sspbc")
+    }
 
     list(
         samples_ER.icd = samples_ER.icd,

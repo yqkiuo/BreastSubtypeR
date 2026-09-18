@@ -14,6 +14,9 @@
   long as the cohort, silently skipped the intended subsetting. Missing values
   are now dropped with `which()`, matching `makeCalls.ssBC()`. Cohorts without
   missing ER/HER2 values are unaffected. Added regression tests.
+- AUTO now reports when no cohort rule matches the ER/HER2 subgroup sizes and
+  it falls back to the single-sample predictors AIMS and sspbc (previously a
+  silent fallback). The selected methods are unchanged.
 
 ## Tests
 

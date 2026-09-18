@@ -62,3 +62,23 @@ test_that("missing HER2 values do not leak NA sample names into the ssBC.v2 subs
     ## SummarizedExperiment with it; every name must be a real sample.
     expect_lt(length(out$samples_ER.icd), nrow(pheno))
 })
+
+test_that("the AUTO fallback to AIMS and sspbc is announced", {
+    old <- options(BreastSubtypeR.verbose = TRUE)
+    on.exit(options(old), add = TRUE)
+
+    ## ER+ only, 17 samples, HER2+ 5 and HER2- 6 (both below 8), 6 missing:
+    ## no ER+ sub-rule matches, so get_methods() falls back to AIMS and sspbc.
+    pheno <- make_pheno(
+        er = rep("ER+", 17),
+        her2 = c(rep("HER2+", 5), rep("HER2-", 6), rep(NA_character_, 6))
+    )
+    expect_message(
+        out <- BreastSubtypeR:::get_methods(pheno),
+        "running the single-sample predictors AIMS and sspbc only",
+        fixed = TRUE
+    )
+    expect_identical(out$methods, c("AIMS", "sspbc"))
+    expect_null(out$samples_ER.icd)
+    expect_null(out$samples_ERHER2.icd)
+})
