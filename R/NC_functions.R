@@ -605,7 +605,7 @@ RORgroup <- function(
 
             ROR.combined <- data.frame(
                 "ROR-C (Subtype + Clinic)" = combined,
-                "ROR-C Group (Subtype + Clinic)" = cpriskgroups,
+                "ROR-C Group (Subtype + Clinic)" = criskgroups,
                 "ROR-PC (Subtype + Clinic + Prolif)" = combinedWprolif,
                 "ROR-PC Group (Subtype + Clinic + Prolif)" = cpriskgroups,
                 check.names = FALSE

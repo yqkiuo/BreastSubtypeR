@@ -1,5 +1,13 @@
 # Unreleased
 
+## Bug fixes
+
+- Fixed the `ROR-C Group (Subtype + Clinic)` column in the ROR output of the
+  nearest-centroid methods when `hasClinical = TRUE`: it was a copy of the
+  `ROR-PC Group (Subtype + Clinic + Prolif)` column instead of the risk group
+  derived from the ROR-C score (thresholds -0.1 and 0.2). The ROR-C score and
+  all other columns are unchanged. Added a synthetic regression test.
+
 ## Tests
 
 - `tests/testthat.R` now calls `test_check("BreastSubtypeR")`, so the files
