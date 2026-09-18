@@ -1246,6 +1246,29 @@ makeCalls_ihc.iterative <- function(
 #### form secondary ER-balanced set (refer to paper) leveraging PCA and
 #### subsequent intermediate intrinsic subtypes
 
+#' Classify IHC labels into luminal / non-luminal status
+#'
+#' The PCA-PAM50 reference implementation (Raj-Kumar et al., CRAN package
+#' PCAPAM50) expects a complete, user-supplied IHC subtype column in which
+#' ER-positive subtypes start with "L" and every other label is ER-negative;
+#' it never produces missing labels. `BS_PCAPAM50()` derives the column from
+#' the ER status instead, so a sample whose ER is missing or non-canonical
+#' becomes NA. Such samples carry no information about the IHC-guided
+#' boundary and are therefore reported as not evaluable here, rather than
+#' being swept into the ER-negative group by `!grepl("^L", IHC)`.
+#'
+#' @param ihc Character vector of IHC labels.
+#' @return Character vector of "luminal", "nonluminal" or NA, one per input.
+#' @noRd
+.ihc_status <- function(ihc) {
+    lab <- toupper(trimws(as.character(ihc)))
+    evaluable <- !is.na(lab) & nzchar(lab)
+    out <- rep(NA_character_, length(lab))
+    out[evaluable & grepl("^L", lab)] <- "luminal"
+    out[evaluable & !grepl("^L", lab)] <- "nonluminal"
+    out
+}
+
 #' Function for the first step of PCA-PAM50 approach
 #' @param mat gene expression matrix
 #' @param df.cln clinical information table
@@ -1309,8 +1332,20 @@ makeCalls.PC1ihc <- function(mat,
 
     #--our function works best if majority of ER- cases
     # fall in the positive PC1 axis--check
-    # Identify ER-negative cases
-    er_negative <- !grepl("^L", df.pca1$IHC)
+    # Identify ER-negative cases among the samples with an evaluable IHC
+    # label; samples without one take no part in the steps guided by IHC.
+    ihc_status <- .ihc_status(df.pca1$IHC)
+    is_luminal <- !is.na(ihc_status) & ihc_status == "luminal"
+    is_nonluminal <- !is.na(ihc_status) & ihc_status == "nonluminal"
+    n_unevaluable <- sum(is.na(ihc_status))
+    if (n_unevaluable > 0L) {
+        message(
+            "PCAPAM50: ", n_unevaluable, " sample(s) without an evaluable ",
+            "ER/IHC status are excluded from the PC1 cutoff search and the ",
+            "ER-balanced centering set; they are still classified."
+        )
+    }
+    er_negative <- is_nonluminal
 
     # Determine if the majority of ER-negative cases fall in the negative axis
     # of PC1
@@ -1330,8 +1365,8 @@ makeCalls.PC1ihc <- function(mat,
     # Both IHC classes are needed for the PC1 cutoff search and the balanced
     # median set; otherwise the search below yields an empty set and fails
     # with an uninformative subsetting error.
-    n_luminal <- sum(grepl("^L", df.pca1$IHC))
-    n_nonluminal <- sum(!grepl("^L", df.pca1$IHC))
+    n_luminal <- sum(is_luminal)
+    n_nonluminal <- sum(is_nonluminal)
     if (n_luminal == 0L || n_nonluminal == 0L) {
         stop(
             "PCAPAM50 requires both luminal (ER+) and non-luminal (ER-) IHC ",
@@ -1345,10 +1380,10 @@ makeCalls.PC1ihc <- function(mat,
     # Function to count the number of misclassified cases
     # on a given PC1 point ---find the cutoff
     getno <- function(x) {
-        p.rgt <- length(which(grepl("^L", df.pca1$IHC) &
-            df.pca1$PC1 > x)) / length(which(grepl("^L", df.pca1$IHC)))
-        n.lft <- length(which(!grepl("^L", df.pca1$IHC) &
-            df.pca1$PC1 < x)) / length(which(!grepl("^L", df.pca1$IHC)))
+        p.rgt <- length(which(is_luminal &
+            df.pca1$PC1 > x)) / length(which(is_luminal))
+        n.lft <- length(which(is_nonluminal &
+            df.pca1$PC1 < x)) / length(which(is_nonluminal))
         tot <- (p.rgt + n.lft) * 100
         return(list(PC1 = x, Mis = tot))
     }
@@ -1358,9 +1393,9 @@ makeCalls.PC1ihc <- function(mat,
     num.min <- df.mis$PC1[which(df.mis$Mis == min(df.mis$Mis))]
 
     # used mean to overcome situation where there are two minimum
-    ERP.pc1ihc <- df.pca1[which(grepl("^L", df.pca1$IHC) &
+    ERP.pc1ihc <- df.pca1[which(is_luminal &
         df.pca1$PC1 <= mean(num.min)), ]
-    ERN.pc1ihc <- df.pca1[which(!grepl("^L", df.pca1$IHC) &
+    ERN.pc1ihc <- df.pca1[which(is_nonluminal &
         df.pca1$PC1 > mean(num.min)), ]
 
     # dim(ERP.pc1ihc)

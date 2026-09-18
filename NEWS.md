@@ -85,6 +85,18 @@
   `"median"`, `"iqr"` and `"stdev"` options derive. The help text now says so
   and notes that `"max"` (largest row sum) is an addition of this package. No
   code or mapped values changed.
+- `BS_PCAPAM50()` no longer treats samples with an unknown ER status as
+  ER-negative. The IHC label is derived from the `ER` column, so a missing or
+  non-canonical ER value yields `NA`, and the reference test
+  `!grepl("^L", IHC)` is `TRUE` for `NA`; such samples were therefore counted
+  as ER-negative in the PC1 axis check, in the misclassification-minimizing
+  cutoff search and in the ER-balanced gene-centering set. They are now
+  excluded from those three steps, a message reports how many were excluded,
+  and they are still classified. Cohorts with a complete ER column are
+  unaffected: the packaged OSLO2-EMIT0 example reproduces its stored PCAPAM50
+  calls exactly. This also aligns `BS_PCAPAM50()` with `BS_cIHC()` and
+  `BS_cIHC.itr()`, which already exclude unknown ER from their balancing.
+  Added tests.
 - `BS_cIHC()`, `BS_cIHC.itr()` and `BS_PCAPAM50()` now stop with a clear
   message when the cohort lacks one of the two ER (or luminal/non-luminal IHC)
   groups needed for ER balancing, instead of failing with "undefined columns

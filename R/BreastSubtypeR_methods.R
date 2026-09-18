@@ -624,6 +624,21 @@ BS_cIHC.itr <- function(
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
+#' @details
+#' The PC1-guided step uses the IHC-defined ER status as the reference labels
+#' for the cutoff search and for building the ER-balanced gene-centering set.
+#' `BS_PCAPAM50()` derives those labels from the `ER` column, so a sample whose
+#' ER status is missing or not coded as `"ER+"`/`"ER-"` has no evaluable label.
+#' Such samples are excluded from the PC1 axis check, from the
+#' misclassification-minimizing cutoff search and from the ER-balanced median
+#' set, and a message reports how many were excluded; they are still classified
+#' and appear in the returned calls. Cohorts with a complete ER column are
+#' unaffected. The reference implementation (Raj-Kumar et al., CRAN package
+#' PCAPAM50) expects a complete, user-supplied IHC subtype column in which
+#' ER-positive subtypes start with "L" and all other labels are ER-negative;
+#' it does not define behaviour for missing labels.
+#'
+#'
 #' @return A list with the following elements:
 #'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
 #'     when `Subtype = TRUE`, `BS.Subtype` (four-class call).

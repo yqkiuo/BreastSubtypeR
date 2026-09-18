@@ -51,6 +51,20 @@ Analysis (PCA)} of ESR1 expression to adjust for estrogen receptor (ER)
 imbalance prior to applying the PAM50 nearest-centroid classifier. This
 approach improves subtype consistency, particularly in ER-skewed cohorts.
 }
+\details{
+The PC1-guided step uses the IHC-defined ER status as the reference labels
+for the cutoff search and for building the ER-balanced gene-centering set.
+\code{BS_PCAPAM50()} derives those labels from the \code{ER} column, so a sample whose
+ER status is missing or not coded as \code{"ER+"}/\code{"ER-"} has no evaluable label.
+Such samples are excluded from the PC1 axis check, from the
+misclassification-minimizing cutoff search and from the ER-balanced median
+set, and a message reports how many were excluded; they are still classified
+and appear in the returned calls. Cohorts with a complete ER column are
+unaffected. The reference implementation (Raj-Kumar et al., CRAN package
+PCAPAM50) expects a complete, user-supplied IHC subtype column in which
+ER-positive subtypes start with "L" and all other labels are ER-negative;
+it does not define behaviour for missing labels.
+}
 \examples{
 data("OSLO2EMIT0obj")
 res <- BS_PCAPAM50(
