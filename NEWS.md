@@ -34,6 +34,12 @@
 - `BS_Multi()`: the warning issued when PCAPAM50 fails now includes the
   underlying error message (it previously ended after "failed in this
   iteration: ").
+- `iBreastSubtypeR()`: the launcher's dependency helper called
+  `requireNamespace()` with unsupported arguments, so it failed silently and
+  loaded nothing (the app still started because `shiny::runApp()` attaches
+  shiny itself). The helper (`.load_app_dependencies()`) now loads the
+  requested namespaces and stops with a clear message if a package is missing
+  or cannot be loaded. Added a test.
 
 ## Tests
 
