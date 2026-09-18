@@ -23,6 +23,14 @@
   positive length". The collapsed gene-by-sample matrix is now built
   explicitly; results for multi-sample input are identical for all `method`
   values. Present in 1.4.0 and 1.5.1. Added regression tests.
+- Phenotype tables with factor `ER`, `HER2` or `TN` columns are now normalized
+  exactly like character columns; previously unmatched factor levels were
+  replaced by their integer codes (for example "Unknown" -> "3") on the
+  `BS_Multi()` / `get_methods()` path, which bypasses the factor conversion in
+  `Mapping()`. Added regression tests.
+- `Mapping(RawCounts = TRUE, impute = TRUE)`: the FPKM matrix is now checked
+  for missing values itself before imputation (the guard tested the already
+  imputed log-CPM matrix, so the FPKM matrix was never imputed).
 
 ## Tests
 
