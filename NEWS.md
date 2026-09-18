@@ -2,15 +2,23 @@
 
 ## AUTO routing
 
-- AUTO no longer treats a cohort without any evaluable HER2 value as a HER2+
-  cohort. Previously the HER2+ branch was entered whenever no HER2-negative
-  sample was counted, so a mixed ER cohort with HER2 entirely missing (or
-  coded with unrecognized values) ran `AIMS` and `sspbc` only. The HER2+
-  branch now additionally requires at least one evaluable HER2 value; cohorts
-  without HER2 information follow the ER-based rules (for example a 60/40 ER
-  cohort gets the balanced mixed panel, with `ssBC.v2` returning `NA`).
-  Cohorts with HER2 information are routed exactly as before. Added tests,
-  including regression tests for the size-gated ER/HER2-defined cohorts.
+- AUTO now decides whether a cohort is HER2+ from the HER2 column alone: the
+  HER2+ branch requires at least one evaluable HER2 value and every evaluable
+  HER2 value to be `HER2+`. Previously the branch was entered whenever the
+  joint ER/HER2 counts held no HER2-negative sample, which had two
+  consequences. A cohort with HER2 entirely missing, or coded with
+  unrecognized values, was routed as HER2+ and ran `AIMS` and `sspbc` only;
+  such cohorts now follow the ER-based rules (for example a 60/40 ER cohort
+  gets the balanced mixed panel, with `ssBC.v2` returning `NA`). And a
+  HER2-negative sample whose ER value was missing was left out of the joint
+  counts, so one such sample did not end the HER2+ classification while an
+  otherwise identical sample with a known ER value did; the classification no
+  longer depends on whether ER was recorded. Missing values and equivocal
+  codes such as `"2+"` are treated alike, as not evaluable, and AUTO now
+  reports how many samples had no evaluable HER2 value and therefore took no
+  part in the decision. Cohorts with complete HER2 information are routed
+  exactly as before. Added tests, including regression tests for the
+  size-gated ER/HER2-defined cohorts.
 - AUTO sample subsetting for `ssBC` and `ssBC.v2` now uses the same inclusive
   minimums as method selection (`>=`). Previously a subgroup whose size was
   exactly the minimum (ER+ 15, ER- 18, HER2 subgroups 8/9) was accepted by the
@@ -22,8 +30,8 @@
   those tumors; with `>=` it does. A regression test asserts this.
 - README and vignette: the AUTO bullet for ER/HER2-defined cohorts now states
   the size gating (ER group minimum and HER2 subgroup minimum; smaller cohorts
-  run AIMS and sspbc only) and the treatment of cohorts without evaluable HER2
-  values.
+  run AIMS and sspbc only), the HER2+ cohort detection rule, and the treatment
+  of cohorts without evaluable HER2 values.
 
 ## Bug fixes
 

@@ -80,18 +80,54 @@ test_that("HER2+ cohorts are still detected with partially missing HER2", {
     expect_identical(her2_pos$cohort.select, "HER2pos")
     expect_identical(her2_pos$methods, c("ssBC.v2", "AIMS", "sspbc"))
 
-    ## A HER2- sample whose ER is missing is excluded from the subgroup counts
-    ## (as the AUTO message states), so the cohort is still treated as HER2+.
-    her2_pos_na_er <- auto(make_pheno(
-        c(rep("ER+", 10), rep("ER-", 10), NA_character_),
-        c(rep("HER2+", 20), "HER2-")
+    ## An equivocal HER2 code is not evaluable either, and is treated the
+    ## same way as a missing value.
+    her2_pos_equivocal <- auto(make_pheno(
+        c(rep("ER+", 10), rep("ER-", 10), "ER+"),
+        c(rep("HER2+", 20), "2+")
     ))
-    expect_identical(her2_pos_na_er$cohort.select, "HER2pos")
+    expect_identical(her2_pos_equivocal$cohort.select, "HER2pos")
+})
 
-    ## One HER2- sample with known ER ends the HER2+ classification.
-    not_her2_pos <- auto(make_pheno(
+test_that("one HER2- sample ends the HER2+ classification whatever its ER", {
+    ## The HER2+ test reads the HER2 column alone, so a HER2- sample counts
+    ## whether or not its ER value is known. Before this rule the joint
+    ## ER/HER2 counts silently ignored a HER2- sample with missing ER and the
+    ## cohort was still routed as HER2+.
+    her2_neg_known_er <- auto(make_pheno(
         c(rep("ER+", 10), rep("ER-", 10), "ER+"),
         c(rep("HER2+", 20), "HER2-")
     ))
-    expect_false(identical(not_her2_pos$cohort.select, "HER2pos"))
+    expect_false(identical(her2_neg_known_er$cohort.select, "HER2pos"))
+
+    her2_neg_na_er <- auto(make_pheno(
+        c(rep("ER+", 10), rep("ER-", 10), NA_character_),
+        c(rep("HER2+", 20), "HER2-")
+    ))
+    expect_false(identical(her2_neg_na_er$cohort.select, "HER2pos"))
+
+    ## Both routes agree, which is the point of the rule.
+    expect_identical(
+        her2_neg_na_er$cohort.select,
+        her2_neg_known_er$cohort.select
+    )
+})
+
+test_that("AUTO reports the samples that took no part in the HER2+ decision", {
+    pheno <- make_pheno(
+        c(rep("ER+", 10), rep("ER-", 10), "ER+", "ER-"),
+        c(rep("HER2+", 20), NA_character_, NA_character_)
+    )
+    expect_message(
+        BreastSubtypeR:::get_methods(pheno),
+        "2 of 22 samples have no evaluable HER2 value"
+    )
+
+    ## Nothing is reported when every HER2 value is evaluable.
+    complete <- make_pheno(
+        c(rep("ER+", 10), rep("ER-", 10)),
+        rep("HER2+", 20)
+    )
+    msgs <- testthat::capture_messages(BreastSubtypeR:::get_methods(complete))
+    expect_false(any(grepl("took no part in this decision", msgs, fixed = TRUE)))
 })

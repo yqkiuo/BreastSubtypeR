@@ -382,8 +382,13 @@ get_methods <- function(pheno) {
         n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+", na.rm = TRUE)
         n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-", na.rm = TRUE)
 
-        # Evaluable HER2 values (AUTO HER2+ cohort detection)
+        # Evaluable HER2 values (AUTO HER2+ cohort detection). Values
+        # outside {HER2+, HER2-} are not evaluable: missing values and
+        # equivocal codes such as "2+", which .normalize_er_her2_tn() leaves
+        # unchanged, both fall in this group.
         n_HER2_known <- sum(pheno$HER2 %in% c("HER2+", "HER2-"))
+        n_HER2pos_known <- sum(pheno$HER2 %in% "HER2+")
+        n_HER2_unevaluable <- nrow(pheno) - n_HER2_known
         
         # Set thresholds
         n_ERpos_threshold <- 15 # simulation-based cut-off
@@ -426,13 +431,22 @@ get_methods <- function(pheno) {
         ## ---- main panel (non-TNBC) ---------------------------------------
         if (is.null(methods)) { # only if TNBC branch did not set methods
 
-            if (n_HER2_known > 0L &&
-                n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
-                ## HER2+ cohort: at least one evaluable HER2 value and no
-                ## HER2- sample among the ER-evaluable samples. Cohorts
-                ## without any HER2 information fall through to the ER-based
-                ## rules below instead of being treated as HER2+.
+            if (n_HER2_known > 0L && n_HER2pos_known == n_HER2_known) {
+                ## HER2+ cohort: at least one evaluable HER2 value, and every
+                ## evaluable HER2 value is HER2+. The test reads the HER2
+                ## column alone. A HER2- sample therefore ends the HER2+
+                ## classification whether or not its ER value is known, and a
+                ## sample without an evaluable HER2 value neither creates nor
+                ## removes a HER2+ cohort. Cohorts without any evaluable HER2
+                ## value fall through to the ER-based rules below.
                 .msg("A HER2+ cohort has been detected.", origin = "AUTO")
+                if (n_HER2_unevaluable > 0L) {
+                    .msg(
+                        "%d of %d samples have no evaluable HER2 value and took no part in this decision.",
+                        n_HER2_unevaluable, nrow(pheno),
+                        origin = "AUTO"
+                    )
+                }
                 cohort.select <- "HER2pos"
 
                 if (n_ERposHER2pos < n_ERposHER2pos_threshold &&
