@@ -81,11 +81,13 @@ test_that("HER2+ cohorts are still detected with partially missing HER2", {
     expect_identical(her2_pos$methods, c("ssBC.v2", "AIMS", "sspbc"))
 
     ## An equivocal HER2 code is not evaluable either, and is treated the
-    ## same way as a missing value.
-    her2_pos_equivocal <- auto(make_pheno(
+    ## same way as a missing value. The call is wrapped because a build that
+    ## flags ambiguous HER2 codes warns here; the routing verdict is what
+    ## this asserts.
+    her2_pos_equivocal <- suppressWarnings(auto(make_pheno(
         c(rep("ER+", 10), rep("ER-", 10), "ER+"),
         c(rep("HER2+", 20), "2+")
-    ))
+    )))
     expect_identical(her2_pos_equivocal$cohort.select, "HER2pos")
 })
 
