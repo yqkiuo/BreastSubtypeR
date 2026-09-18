@@ -73,6 +73,14 @@
   `BS_cIHC.itr()` `ratio` argument is now documented as applied to the larger
   ER group relative to the smaller one, and the alphabetical tie-break of its
   consensus call is stated. No code changes.
+- Documentation: `Mapping(method = "mean")` and `"median"` were described as
+  keeping "the probe with the highest mean/median expression"; the
+  implementation collapses the duplicate probes of a gene into their per-sample
+  mean or median, exactly as `collapseIDs()` in the original PAM50
+  bioclassifier code (Parker et al., 2009), from which the `"mean"`,
+  `"median"`, `"iqr"` and `"stdev"` options derive. The help text now says so
+  and notes that `"max"` (largest row sum) is an addition of this package. No
+  code or mapped values changed.
 - `BS_cIHC()`, `BS_cIHC.itr()` and `BS_PCAPAM50()` now stop with a clear
   message when the cohort lacks one of the two ER (or luminal/non-luminal IHC)
   groups needed for ER balancing, instead of failing with "undefined columns

@@ -115,12 +115,19 @@ NULL
 #'   - NC-based methods: log2-CPM (upper-quartile normalization).
 #'   - SSP-based methods: linear FPKM (not log-transformed).
 #'
-#' @param method Strategy for resolving duplicate probes/genes. Options:
-#'   - `"iqr"`: probe with highest interquartile range (short-oligo arrays, e.g., Affymetrix).
-#'   - `"mean"`: probe with highest mean expression (long-oligo arrays, e.g., Agilent/Illumina).
-#'   - `"max"`: probe with highest expression value (often used for RNA-seq).
-#'   - `"stdev"`: probe with highest standard deviation.
-#'   - `"median"`: probe with highest median expression.
+#' @param method Strategy for resolving duplicate probes/genes, i.e. several
+#'   rows mapping to the same Entrez ID. `"mean"`, `"median"`, `"iqr"` and
+#'   `"stdev"` follow `collapseIDs()` of the original PAM50 bioclassifier code
+#'   (Parker et al., 2009); `"max"` is an addition of this package. Options:
+#'   - `"mean"`: per-sample mean across the duplicate probes (collapses the
+#'     probes into one row; long-oligo arrays, e.g., Agilent/Illumina).
+#'   - `"median"`: per-sample median across the duplicate probes (collapses
+#'     the probes into one row).
+#'   - `"iqr"`: keeps the single probe with the highest interquartile range
+#'     (short-oligo arrays, e.g., Affymetrix).
+#'   - `"stdev"`: keeps the single probe with the highest standard deviation.
+#'   - `"max"`: keeps the single probe with the largest row sum across samples
+#'     (often used for RNA-seq).
 #'
 #' @param impute Logical. If `TRUE`, applies KNN-based imputation to missing values.
 #'
