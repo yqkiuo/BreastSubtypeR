@@ -40,6 +40,10 @@
   shiny itself). The helper (`.load_app_dependencies()`) now loads the
   requested namespaces and stops with a clear message if a package is missing
   or cannot be loaded. Added a test.
+- Shiny app: the cohort preflight reported "ready" when only one of the ER and
+  HER2 columns (or only TN) was present, and the AUTO run then failed with
+  "requires both 'ER' and 'HER2' columns". The preflight now names the missing
+  column(s) and blocks the run. Added tests.
 
 ## Tests
 
