@@ -62,7 +62,7 @@ duplicate_genes <- function(x, y, method) {
     entrezid <- entrezid[probeid]
     ## remove NA
     entrezid <- entrezid[!(is.na(entrezid))]
-    x <- x[names(entrezid), ]
+    x <- x[names(entrezid), , drop = FALSE]
     entrezid <- factor(entrezid, levels = unique(entrezid))
     ## names are unique probeid and content are redundant entrezid
 
@@ -94,17 +94,15 @@ duplicate_genes <- function(x, y, method) {
         )
     }
 
-    ## keep processed x
-    x <- mapply(
-        calculate_stat,
-        split_mat,
-        MoreArgs = list(method = method),
-        SIMPLIFY = TRUE,
-        USE.NAMES = TRUE
-    )
-    x <- apply(x, 1, unlist)
+    ## one row per Entrez ID, one column per sample; built explicitly so that
+    ## single-sample matrices keep their dimensions
+    collapsed <- lapply(split_mat, function(mat) {
+        as.numeric(unlist(calculate_stat(mat, method), use.names = FALSE))
+    })
+    out <- do.call(rbind, collapsed)
+    dimnames(out) <- list(names(split_mat), colnames(x))
 
-    return(x)
+    return(out)
 }
 
 
@@ -128,7 +126,7 @@ prepare_nc_matrix <- function(x, genes.sig50, samplenames, verbose) {
 
     ## get matrix for NC (symbol as rows, sample as col)
     genes_nc <- genes.sig50$EntrezGene.ID
-    x_NC <- x[na.omit(match(genes_nc, rownames(x))), ]
+    x_NC <- x[na.omit(match(genes_nc, rownames(x))), , drop = FALSE]
     rownames(x_NC) <- genes.sig50$Symbol[match(rownames(x_NC), genes_nc)]
     x_NC <- data.frame(x_NC)
     colnames(x_NC) <- samplenames
@@ -318,7 +316,7 @@ domapping <- function(
     # 5. Filter by signature genes and impute
     ## filter by ENTREZID
     y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
-    x <- x[y$probe, ]
+    x <- x[y$probe, , drop = FALSE]
     if (impute && anyNA(x)) x <- impute_missing(x, verbose)
     if (RawCounts && impute && anyNA(x)) {
         counts.fpkm <- impute_missing(counts.fpkm, verbose)
