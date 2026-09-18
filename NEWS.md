@@ -17,6 +17,12 @@
 - AUTO now reports when no cohort rule matches the ER/HER2 subgroup sizes and
   it falls back to the single-sample predictors AIMS and sspbc (previously a
   silent fallback). The selected methods are unchanged.
+- `Mapping()` now accepts a `SummarizedExperiment` with a single sample.
+  `duplicate_genes()`, `prepare_nc_matrix()` and the probe filter dropped the
+  matrix dimensions of one-sample input and failed with "dim(X) must have a
+  positive length". The collapsed gene-by-sample matrix is now built
+  explicitly; results for multi-sample input are identical for all `method`
+  values. Present in 1.4.0 and 1.5.1. Added regression tests.
 
 ## Tests
 
