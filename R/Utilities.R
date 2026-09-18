@@ -532,17 +532,19 @@ get_methods <- function(pheno) {
                 ERnegHER2neg = n_ERnegHER2neg
             )
 
+            ## >= : the same minimums that select the methods above also
+            ## admit a subgroup to the ssBC / ssBC.v2 sample subsets
             er_idx <- c(
-                ERpos = ERHER2_counts["ERpos"] > n_ERpos_threshold,
-                ERneg = ERHER2_counts["ERneg"] > n_ERneg_threshold
+                ERpos = ERHER2_counts["ERpos"] >= n_ERpos_threshold,
+                ERneg = ERHER2_counts["ERneg"] >= n_ERneg_threshold
             )
             samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
 
             erher2_idx <- c(
-                ERposHER2pos = ERHER2_counts["ERposHER2pos"] > n_ERposHER2pos_threshold,
-                ERposHER2neg = ERHER2_counts["ERposHER2neg"] > n_ERposHER2neg_threshold,
-                ERnegHER2pos = ERHER2_counts["ERnegHER2pos"] > n_ERnegHER2pos_threshold,
-                ERnegHER2neg = ERHER2_counts["ERnegHER2neg"] > n_ERnegHER2neg_threshold
+                ERposHER2pos = ERHER2_counts["ERposHER2pos"] >= n_ERposHER2pos_threshold,
+                ERposHER2neg = ERHER2_counts["ERposHER2neg"] >= n_ERposHER2neg_threshold,
+                ERnegHER2pos = ERHER2_counts["ERnegHER2pos"] >= n_ERnegHER2pos_threshold,
+                ERnegHER2neg = ERHER2_counts["ERnegHER2neg"] >= n_ERnegHER2neg_threshold
             )
             samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
 

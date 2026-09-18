@@ -82,3 +82,46 @@ test_that("the AUTO fallback to AIMS and sspbc is announced", {
     expect_null(out$samples_ER.icd)
     expect_null(out$samples_ERHER2.icd)
 })
+
+test_that("subgroups exactly at their minimum are included in the ssBC subsets", {
+    old <- options(BreastSubtypeR.verbose = FALSE)
+    on.exit(options(old), add = TRUE)
+
+    ## 15 ER+ (minimum 15) and 40 ER-: both ER groups qualify for ssBC.
+    pheno <- make_pheno(
+        er = c(rep("ER+", 15), rep("ER-", 40)),
+        her2 = c(rep(c("HER2-", "HER2+"), 7), "HER2-", rep(c("HER2-", "HER2+"), 20))
+    )
+    out <- BreastSubtypeR:::get_methods(pheno)
+    expect_identical(out$cohort.select, "mixed")
+    expect_true("ssBC" %in% out$methods)
+    expect_setequal(out$samples_ER.icd, rownames(pheno))
+
+    ## ER+ only with HER2+ 9 and HER2- 8 (minimum 8): both HER2 subgroups
+    ## qualify for ssBC.v2.
+    pheno2 <- make_pheno(
+        er = rep("ER+", 17),
+        her2 = c(rep("HER2+", 9), rep("HER2-", 8))
+    )
+    out2 <- BreastSubtypeR:::get_methods(pheno2)
+    expect_identical(out2$methods, c("ssBC", "ssBC.v2", "AIMS", "sspbc"))
+    expect_setequal(out2$samples_ERHER2.icd, rownames(pheno2))
+    expect_setequal(out2$samples_ER.icd, rownames(pheno2))
+})
+
+test_that("the packaged OSLO2-EMIT0 cohort runs ssBC on all tumors", {
+    old <- options(BreastSubtypeR.verbose = FALSE)
+    on.exit(options(old), add = TRUE)
+
+    data("OSLO2EMIT0obj", package = "BreastSubtypeR")
+    pheno <- as.data.frame(SummarizedExperiment::colData(OSLO2EMIT0obj$data_input$se_NC))
+    ## 84 ER+ and 18 ER- tumors; the ER- count equals the ER- minimum of 18.
+    expect_identical(sum(pheno$ER == "ER-"), 18L)
+    out <- BreastSubtypeR:::get_methods(pheno)
+    expect_identical(out$cohort.select, "mixed")
+    expect_setequal(out$samples_ER.icd, pheno$PatientID)
+    ## ssBC.v2 subsets: ER+/HER2- (80) and ER-/HER2- (14); the two HER2+
+    ## subgroups (4 each) stay below their minimums of 8 and 9.
+    expect_length(out$samples_ERHER2.icd, 94L)
+    expect_true(all(pheno$HER2[match(out$samples_ERHER2.icd, pheno$PatientID)] == "HER2-"))
+})

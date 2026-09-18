@@ -11,6 +11,15 @@
   cohort gets the balanced mixed panel, with `ssBC.v2` returning `NA`).
   Cohorts with HER2 information are routed exactly as before. Added tests,
   including regression tests for the size-gated ER/HER2-defined cohorts.
+- AUTO sample subsetting for `ssBC` and `ssBC.v2` now uses the same inclusive
+  minimums as method selection (`>=`). Previously a subgroup whose size was
+  exactly the minimum (ER+ 15, ER- 18, HER2 subgroups 8/9) was accepted by the
+  selection step but excluded from the subset, so its samples received `NA`
+  from `ssBC`/`ssBC.v2` while the method was reported as running. The packaged
+  OSLO2-EMIT0 example is such a case (18 ER- tumors): with the strict
+  comparison a fresh `BS_Multi(methods = "AUTO")` run did not reproduce the
+  packaged frozen result `OSLO2EMIT0obj$res`, which carries `ssBC` calls for
+  those tumors; with `>=` it does. A regression test asserts this.
 
 ## Bug fixes
 
