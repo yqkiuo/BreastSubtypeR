@@ -2,10 +2,9 @@
 ##
 ## table() drops missing values, so a row in which every executed method
 ## returned NA used to yield -sum(numeric(0)) = 0, the same value as unanimous
-## agreement. Such a row has no call distribution and is now reported as NA,
-## matching the ENSEMBLE diagnostics. Rows with at least one call are
-## unchanged, and the definition of the statistic (unnormalized, in bits) is
-## untouched.
+## agreement. Such a row has no call distribution and is now reported as NA.
+## Rows with at least one call are unchanged, and the definition of the
+## statistic (unnormalized, in bits) is untouched.
 
 test_that("entropy is NA only when no method returned a call", {
     expect_identical(BreastSubtypeR:::get_entropy(c(NA, NA, NA)), NA_real_)

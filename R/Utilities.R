@@ -631,9 +631,8 @@ get_consensus_subtype <- function(patient_row) {
 #' row. `table()` drops missing values, so a row in which every executed method
 #' returned `NA` used to give `-sum(numeric(0))`, that is 0 - the same value a
 #' row gets when every method agrees. Such a row has no call distribution and
-#' therefore no entropy, and is reported as `NA` instead, matching the ENSEMBLE
-#' diagnostics, which already return `NA` when there are no valid votes. Rows
-#' with at least one call keep exactly the value computed before.
+#' therefore no entropy, and is reported as `NA` instead. Rows with at least
+#' one call keep exactly the value computed before.
 #'
 #' @param patient_row Character vector of per-method calls for one sample.
 #' @return Raw Shannon entropy in bits, or `NA_real_` when no call is present.

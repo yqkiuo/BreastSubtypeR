@@ -93,14 +93,13 @@
   `"median"`, `"iqr"` and `"stdev"` options derive. The help text now says so
   and notes that `"max"` (largest row sum) is an addition of this package. No
   code or mapped values changed.
-- The per-sample entropy reported by `BS_Multi()` outside ENSEMBLE is now `NA`
-  when no executed method returned a call for that sample. `table()` drops
-  missing values, so such a row previously gave `-sum(numeric(0))`, that is 0 -
-  the same value as unanimous agreement. Rows with at least one call are
-  unchanged, and the statistic itself (raw, unnormalized Shannon entropy in
-  bits) is untouched. This matches the ENSEMBLE diagnostics, where
-  `raw_vote_entropy` is already `NA` when there are no valid votes. The
-  situation cannot arise in AUTO, whose panels always include AIMS and sspbc;
+- The per-sample entropy reported by `BS_Multi()` is now `NA` when no executed
+  method returned a call for that sample. `table()` drops missing values, so
+  such a row previously gave `-sum(numeric(0))`, that is 0 - the same value as
+  unanimous agreement. Rows with at least one call are unchanged, and the
+  statistic itself (raw, unnormalized Shannon entropy in bits) is untouched.
+  The situation cannot arise in AUTO, whose panels always include AIMS and
+  sspbc;
   it arises in manual runs of nearest-centroid-only method sets, where a sample
   with unknown ER/HER2 status receives no call. Note that `Vis_Multi()` orders
   by entropy, so such samples now sort last instead of appearing among the
