@@ -235,15 +235,15 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
 #' Map Gene IDs and Handle missing data
 #'
 #' @param method A string specifying the method for resolving duplicate probes
-#' in microarray or RNA-seq data. Options include:
-#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR),
+#' in microarray or RNA-seq data (see `duplicate_genes()`; "mean", "median",
+#' "iqr" and "stdev" follow collapseIDs() of the original PAM50 code):
+#'   - `"mean"`: per-sample mean across the duplicate probes.
+#'   - `"median"`: per-sample median across the duplicate probes.
+#'   - `"iqr"`: keeps the probe with the highest interquartile range (IQR),
 #'   typically used for short-oligo arrays (e.g., Affymetrix).
-#'   - `"mean"`: Chooses the probe with the highest average expression,
-#'   commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-#'   - `"max"`: Retains the probe with the highest expression value,
+#'   - `"stdev"`: keeps the probe with the highest standard deviation.
+#'   - `"max"`: keeps the probe with the largest row sum across samples,
 #'   often used for RNA-seq data.
-#'   - `"stdev"`: Selects the probe with the highest standard deviation.
-#'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
 domapping <- function(
