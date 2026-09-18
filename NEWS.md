@@ -7,6 +7,13 @@
   `ROR-PC Group (Subtype + Clinic + Prolif)` column instead of the risk group
   derived from the ROR-C score (thresholds -0.1 and 0.2). The ROR-C score and
   all other columns are unchanged. Added a synthetic regression test.
+- Fixed the AUTO-mode sample subsets passed to ssBC and ssBC.v2: samples with
+  a missing ER (or HER2) value produced NA sample names in `samples_ER.icd` /
+  `samples_ERHER2.icd`, which either failed the SummarizedExperiment subsetting
+  in `BS_Multi()` ("index out of bounds: NA") or, when the padded vector was as
+  long as the cohort, silently skipped the intended subsetting. Missing values
+  are now dropped with `which()`, matching `makeCalls.ssBC()`. Cohorts without
+  missing ER/HER2 values are unaffected. Added regression tests.
 
 ## Tests
 
