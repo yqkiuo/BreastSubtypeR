@@ -44,6 +44,14 @@
   HER2 columns (or only TN) was present, and the AUTO run then failed with
   "requires both 'ER' and 'HER2' columns". The preflight now names the missing
   column(s) and blocks the run. Added tests.
+- Documentation: the `@return` sections of `BS_cIHC()`, `BS_cIHC.itr()`,
+  `BS_PCAPAM50()` and `BS_ssBC()` now describe the list that is actually
+  returned (`BS.all`, `score.ROR`, `mdns`/`mdns.fl`, `outList`, and for
+  `BS_cIHC.itr()` the per-iteration call matrices); they previously described
+  a character vector, a data.frame or non-existent elements. The
+  `BS_cIHC.itr()` `ratio` argument is now documented as applied to the larger
+  ER group relative to the smaller one, and the alphabetical tie-break of its
+  consensus call is stated. No code changes.
 
 ## Tests
 
