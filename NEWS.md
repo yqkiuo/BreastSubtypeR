@@ -1,3 +1,14 @@
+# Unreleased
+
+## Tests
+
+- `tests/testthat.R` now calls `test_check("BreastSubtypeR")`, so the files
+  under `tests/testthat/` run during `R CMD check`. Previously the file held a
+  single inline test and `test-tn-cohort-detection.R` was never executed. The
+  inline `BS_Multi()` test moved to `tests/testthat/test-bs-multi-manual.R`.
+  testthat edition 3 is declared (`Config/testthat/edition`), and the Suggests
+  entry requires testthat >= 3.2.0.
+
 # BreastSubtypeR 1.5.1
 
 ## Bug fixes
