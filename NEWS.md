@@ -20,6 +20,10 @@
   comparison a fresh `BS_Multi(methods = "AUTO")` run did not reproduce the
   packaged frozen result `OSLO2EMIT0obj$res`, which carries `ssBC` calls for
   those tumors; with `>=` it does. A regression test asserts this.
+- README and vignette: the AUTO bullet for ER/HER2-defined cohorts now states
+  the size gating (ER group minimum and HER2 subgroup minimum; smaller cohorts
+  run AIMS and sspbc only) and the treatment of cohorts without evaluable HER2
+  values.
 
 ## Bug fixes
 
