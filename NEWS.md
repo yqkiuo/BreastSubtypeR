@@ -1,4 +1,4 @@
-# Unreleased
+# BreastSubtypeR 1.5.2
 
 ## AUTO routing
 
@@ -27,7 +27,12 @@
   OSLO2-EMIT0 example is such a case (18 ER- tumors): with the strict
   comparison a fresh `BS_Multi(methods = "AUTO")` run did not reproduce the
   packaged frozen result `OSLO2EMIT0obj$res`, which carries `ssBC` calls for
-  those tumors; with `>=` it does. A regression test asserts this.
+  those tumors; with `>=` it does. A regression test asserts this. Note that
+  the pseudocode in the supplementary methods of the published paper (Yang et
+  al. 2025, NAR Genomics and Bioinformatics, doi:10.1093/nargab/lqaf131)
+  records the strict comparison in this subsetting step while using `>=` for
+  method selection; the package now applies `>=` in both, and the shipped
+  example is the behavior the package reproduces.
 - README and vignette: the AUTO bullet for ER/HER2-defined cohorts now states
   the size gating (ER group minimum and HER2 subgroup minimum; smaller cohorts
   run AIMS and sspbc only), the HER2+ cohort detection rule, and the treatment
