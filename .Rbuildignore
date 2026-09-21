@@ -1,0 +1,7 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github(/|$)
+^Rplots\.pdf$
+^doc$
+^Meta$
+^MANIFEST\.txt$
