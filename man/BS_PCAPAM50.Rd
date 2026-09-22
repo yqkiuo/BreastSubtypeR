@@ -31,14 +31,39 @@ variables from \code{colData(se_obj)}. Required columns:
 \item{seed}{Integer. Random seed for reproducibility.}
 }
 \value{
-A character vector of intrinsic subtype predictions assigned to each
-sample using the PCA-PAM50 method.
+A list with the following elements:
+\itemize{
+\item \code{BS.all}: \code{data.frame} with \code{PatientID}, \code{BS} (five-class call) and,
+when \code{Subtype = TRUE}, \code{BS.Subtype} (four-class call).
+\item \code{score.ROR}: \code{data.frame} with the per-sample centroid correlations,
+calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+and risk groups; with \code{hasClinical = TRUE} also the ROR-C and ROR-PC
+scores and risk groups.
+\item \code{mdns.fl}: \code{data.frame} of gene medians used for centering (reference
+platform medians plus the PCA-PAM50 refined cohort medians).
+\item \code{outList}: list with the internal nearest-centroid results
+(\code{predictions}, \code{distances}, \code{centroids}, ...).
+}
 }
 \description{
 Implements the PCA-PAM50 method, which integrates \strong{Principal Component
 Analysis (PCA)} of ESR1 expression to adjust for estrogen receptor (ER)
 imbalance prior to applying the PAM50 nearest-centroid classifier. This
 approach improves subtype consistency, particularly in ER-skewed cohorts.
+}
+\details{
+The PC1-guided step uses the IHC-defined ER status as the reference labels
+for the cutoff search and for building the ER-balanced gene-centering set.
+\code{BS_PCAPAM50()} derives those labels from the \code{ER} column, so a sample whose
+ER status is missing or not coded as \code{"ER+"}/\code{"ER-"} has no evaluable label.
+Such samples are excluded from the PC1 axis check, from the
+misclassification-minimizing cutoff search and from the ER-balanced median
+set, and a message reports how many were excluded; they are still classified
+and appear in the returned calls. Cohorts with a complete ER column are
+unaffected. The reference implementation (Raj-Kumar et al., CRAN package
+PCAPAM50) expects a complete, user-supplied IHC subtype column in which
+ER-positive subtypes start with "L" and all other labels are ER-negative;
+it does not define behaviour for missing labels.
 }
 \examples{
 data("OSLO2EMIT0obj")

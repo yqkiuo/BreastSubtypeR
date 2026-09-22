@@ -65,13 +65,20 @@ In this case, \code{rowData()} must also provide gene lengths
 \item SSP-based methods: linear FPKM (not log-transformed).
 }}
 
-\item{method}{Strategy for resolving duplicate probes/genes. Options:
+\item{method}{Strategy for resolving duplicate probes/genes, i.e. several
+rows mapping to the same Entrez ID. \code{"mean"}, \code{"median"}, \code{"iqr"} and
+\code{"stdev"} follow \code{collapseIDs()} of the original PAM50 bioclassifier code
+(Parker et al., 2009); \code{"max"} is an addition of this package. Options:
 \itemize{
-\item \code{"iqr"}: probe with highest interquartile range (short-oligo arrays, e.g., Affymetrix).
-\item \code{"mean"}: probe with highest mean expression (long-oligo arrays, e.g., Agilent/Illumina).
-\item \code{"max"}: probe with highest expression value (often used for RNA-seq).
-\item \code{"stdev"}: probe with highest standard deviation.
-\item \code{"median"}: probe with highest median expression.
+\item \code{"mean"}: per-sample mean across the duplicate probes (collapses the
+probes into one row; long-oligo arrays, e.g., Agilent/Illumina).
+\item \code{"median"}: per-sample median across the duplicate probes (collapses
+the probes into one row).
+\item \code{"iqr"}: keeps the single probe with the highest interquartile range
+(short-oligo arrays, e.g., Affymetrix).
+\item \code{"stdev"}: keeps the single probe with the highest standard deviation.
+\item \code{"max"}: keeps the single probe with the largest row sum across samples
+(often used for RNA-seq).
 }}
 
 \item{impute}{Logical. If \code{TRUE}, applies KNN-based imputation to missing values.}

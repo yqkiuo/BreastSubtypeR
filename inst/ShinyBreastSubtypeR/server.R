@@ -35,8 +35,22 @@ bs_callout <- function(title, body, color = c("info","success","warning","danger
   paste(sprintf("%s=%s", names(tab), as.integer(tab)), collapse = " · ")
 }
 
-# Helper: summarize cohort depending on what columns exist
+# Helper: summarize cohort depending on what columns exist. The cohort-aware
+# modes call get_methods(), which requires both ER and HER2 columns (TN is
+# optional), so readiness is FALSE whenever one of them is absent even if the
+# present columns are validly coded.
 .summarize_cohort <- function(ph) {
+  out <- .summarize_cohort_columns(ph)
+  missing_cols <- setdiff(c("ER", "HER2"), names(ph))
+  if (isTRUE(out$ok) && length(missing_cols)) {
+    out$ok  <- FALSE
+    out$msg <- sprintf("Cohort-aware analysis requires both 'ER' and 'HER2' columns; missing: %s",
+                       paste(missing_cols, collapse = ", "))
+  }
+  out
+}
+
+.summarize_cohort_columns <- function(ph) {
   out <- list(kind = "none", ok = FALSE, msg = "No cohort columns found", stats = NULL)
   
   tn_present <- FALSE
