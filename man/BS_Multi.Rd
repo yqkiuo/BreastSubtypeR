@@ -44,6 +44,13 @@ HER2-enriched, Basal-like), excluding Normal-like.}
 }
 \value{
 A list containing per-method subtype assignments for each sample.
+\code{res_subtypes} holds one column per executed method plus an \code{entropy}
+column: the raw Shannon entropy in bits of the calls that the executed
+methods returned for that sample. It is 0 when every contributing method
+agrees and \code{NA} when no method returned a call. The entropy is computed
+over the contributing methods only, so a low value obtained from few
+contributing methods reflects few available calls rather than strong
+agreement; the per-method columns show which methods contributed.
 }
 \description{
 Executes multiple intrinsic molecular subtyping methods in parallel.

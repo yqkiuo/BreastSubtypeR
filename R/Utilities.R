@@ -62,7 +62,7 @@ duplicate_genes <- function(x, y, method) {
     entrezid <- entrezid[probeid]
     ## remove NA
     entrezid <- entrezid[!(is.na(entrezid))]
-    x <- x[names(entrezid), ]
+    x <- x[names(entrezid), , drop = FALSE]
     entrezid <- factor(entrezid, levels = unique(entrezid))
     ## names are unique probeid and content are redundant entrezid
 
@@ -94,17 +94,15 @@ duplicate_genes <- function(x, y, method) {
         )
     }
 
-    ## keep processed x
-    x <- mapply(
-        calculate_stat,
-        split_mat,
-        MoreArgs = list(method = method),
-        SIMPLIFY = TRUE,
-        USE.NAMES = TRUE
-    )
-    x <- apply(x, 1, unlist)
+    ## one row per Entrez ID, one column per sample; built explicitly so that
+    ## single-sample matrices keep their dimensions
+    collapsed <- lapply(split_mat, function(mat) {
+        as.numeric(unlist(calculate_stat(mat, method), use.names = FALSE))
+    })
+    out <- do.call(rbind, collapsed)
+    dimnames(out) <- list(names(split_mat), colnames(x))
 
-    return(x)
+    return(out)
 }
 
 
@@ -128,7 +126,7 @@ prepare_nc_matrix <- function(x, genes.sig50, samplenames, verbose) {
 
     ## get matrix for NC (symbol as rows, sample as col)
     genes_nc <- genes.sig50$EntrezGene.ID
-    x_NC <- x[na.omit(match(genes_nc, rownames(x))), ]
+    x_NC <- x[na.omit(match(genes_nc, rownames(x))), , drop = FALSE]
     rownames(x_NC) <- genes.sig50$Symbol[match(rownames(x_NC), genes_nc)]
     x_NC <- data.frame(x_NC)
     colnames(x_NC) <- samplenames
@@ -180,31 +178,33 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
              gsub("\\+","POSITIVE", pos_label), pos_label)
     neg <- c("NEGATIVE","NEG","0","FALSE","F","NO","N",
              gsub("-","NEGATIVE", neg_label), neg_label)
+    ## as.character(): with a factor column the ifelse() fallback would
+    ## otherwise return the integer codes of unmatched levels
     out <- ifelse(x0 %in% pos, pos_label,
-                  ifelse(x0 %in% neg, neg_label, x))
+                  ifelse(x0 %in% neg, neg_label, as.character(x)))
     out
   }
   
   if ("ER" %in% names(df)) {
-    old <- df$ER
-    df$ER <- map_bin(df$ER, "ER+", "ER-")
+    old <- as.character(df$ER)
+    df$ER <- map_bin(old, "ER+", "ER-")
     if (!identical(old, df$ER))
       warning("Phenodata: coerced ER values to {ER+, ER-}.", call. = FALSE)
   }
   if ("HER2" %in% names(df)) {
-    old <- df$HER2
+    old <- as.character(df$HER2)
     has2p <- grepl("\\b2\\+\\b", old, ignore.case = TRUE)
     df$HER2 <- ifelse(has2p, old, map_bin(old, "HER2+", "HER2-"))
     if (!identical(old, df$HER2))
       warning("Phenodata: coerced HER2 values to {HER2+, HER2-} (skipped '2+').", call. = FALSE)
   }
   if ("TN" %in% names(df)) {
-    old <- df$TN
-    x0  <- canon(df$TN)
+    old <- as.character(df$TN)
+    x0  <- canon(old)
     pos <- c("TRUE","T","YES","Y","1","TN","TNBC")
     neg <- c("FALSE","F","NO","N","0","NON-TN","NONTN","NON_TN")
     df$TN <- ifelse(x0 %in% pos, "TN",
-                    ifelse(x0 %in% neg, "nonTN", df$TN))
+                    ifelse(x0 %in% neg, "nonTN", old))
     if (!identical(old, df$TN))
       warning("Phenodata: coerced TN values to {TN, nonTN}.", call. = FALSE)
   }
@@ -235,15 +235,15 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
 #' Map Gene IDs and Handle missing data
 #'
 #' @param method A string specifying the method for resolving duplicate probes
-#' in microarray or RNA-seq data. Options include:
-#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR),
+#' in microarray or RNA-seq data (see `duplicate_genes()`; "mean", "median",
+#' "iqr" and "stdev" follow collapseIDs() of the original PAM50 code):
+#'   - `"mean"`: per-sample mean across the duplicate probes.
+#'   - `"median"`: per-sample median across the duplicate probes.
+#'   - `"iqr"`: keeps the probe with the highest interquartile range (IQR),
 #'   typically used for short-oligo arrays (e.g., Affymetrix).
-#'   - `"mean"`: Chooses the probe with the highest average expression,
-#'   commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-#'   - `"max"`: Retains the probe with the highest expression value,
+#'   - `"stdev"`: keeps the probe with the highest standard deviation.
+#'   - `"max"`: keeps the probe with the largest row sum across samples,
 #'   often used for RNA-seq data.
-#'   - `"stdev"`: Selects the probe with the highest standard deviation.
-#'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
 domapping <- function(
@@ -318,9 +318,9 @@ domapping <- function(
     # 5. Filter by signature genes and impute
     ## filter by ENTREZID
     y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
-    x <- x[y$probe, ]
+    x <- x[y$probe, , drop = FALSE]
     if (impute && anyNA(x)) x <- impute_missing(x, verbose)
-    if (RawCounts && impute && anyNA(x)) {
+    if (RawCounts && impute && anyNA(counts.fpkm)) {
         counts.fpkm <- impute_missing(counts.fpkm, verbose)
     }
 
@@ -381,6 +381,14 @@ get_methods <- function(pheno) {
         n_ERnegHER2neg <- sum(pheno$ER == "ER-" & pheno$HER2 == "HER2-", na.rm = TRUE)
         n_ERposHER2pos <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2+", na.rm = TRUE)
         n_ERposHER2neg <- sum(pheno$ER == "ER+" & pheno$HER2 == "HER2-", na.rm = TRUE)
+
+        # Evaluable HER2 values (AUTO HER2+ cohort detection). Values
+        # outside {HER2+, HER2-} are not evaluable: missing values and
+        # equivocal codes such as "2+", which .normalize_er_her2_tn() leaves
+        # unchanged, both fall in this group.
+        n_HER2_known <- sum(pheno$HER2 %in% c("HER2+", "HER2-"))
+        n_HER2pos_known <- sum(pheno$HER2 %in% "HER2+")
+        n_HER2_unevaluable <- nrow(pheno) - n_HER2_known
         
         # Set thresholds
         n_ERpos_threshold <- 15 # simulation-based cut-off
@@ -423,8 +431,22 @@ get_methods <- function(pheno) {
         ## ---- main panel (non-TNBC) ---------------------------------------
         if (is.null(methods)) { # only if TNBC branch did not set methods
 
-            if (n_ERposHER2neg == 0 && n_ERnegHER2neg == 0) {
+            if (n_HER2_known > 0L && n_HER2pos_known == n_HER2_known) {
+                ## HER2+ cohort: at least one evaluable HER2 value, and every
+                ## evaluable HER2 value is HER2+. The test reads the HER2
+                ## column alone. A HER2- sample therefore ends the HER2+
+                ## classification whether or not its ER value is known, and a
+                ## sample without an evaluable HER2 value neither creates nor
+                ## removes a HER2+ cohort. Cohorts without any evaluable HER2
+                ## value fall through to the ER-based rules below.
                 .msg("A HER2+ cohort has been detected.", origin = "AUTO")
+                if (n_HER2_unevaluable > 0L) {
+                    .msg(
+                        "%d of %d samples have no evaluable HER2 value and took no part in this decision.",
+                        n_HER2_unevaluable, nrow(pheno),
+                        origin = "AUTO"
+                    )
+                }
                 cohort.select <- "HER2pos"
 
                 if (n_ERposHER2pos < n_ERposHER2pos_threshold &&
@@ -524,17 +546,19 @@ get_methods <- function(pheno) {
                 ERnegHER2neg = n_ERnegHER2neg
             )
 
+            ## >= : the same minimums that select the methods above also
+            ## admit a subgroup to the ssBC / ssBC.v2 sample subsets
             er_idx <- c(
-                ERpos = ERHER2_counts["ERpos"] > n_ERpos_threshold,
-                ERneg = ERHER2_counts["ERneg"] > n_ERneg_threshold
+                ERpos = ERHER2_counts["ERpos"] >= n_ERpos_threshold,
+                ERneg = ERHER2_counts["ERneg"] >= n_ERneg_threshold
             )
             samples_ER <- names(ERHER2_counts)[seq(1, 2)][er_idx]
 
             erher2_idx <- c(
-                ERposHER2pos = ERHER2_counts["ERposHER2pos"] > n_ERposHER2pos_threshold,
-                ERposHER2neg = ERHER2_counts["ERposHER2neg"] > n_ERposHER2neg_threshold,
-                ERnegHER2pos = ERHER2_counts["ERnegHER2pos"] > n_ERnegHER2pos_threshold,
-                ERnegHER2neg = ERHER2_counts["ERnegHER2neg"] > n_ERnegHER2neg_threshold
+                ERposHER2pos = ERHER2_counts["ERposHER2pos"] >= n_ERposHER2pos_threshold,
+                ERposHER2neg = ERHER2_counts["ERposHER2neg"] >= n_ERposHER2neg_threshold,
+                ERnegHER2pos = ERHER2_counts["ERnegHER2pos"] >= n_ERnegHER2pos_threshold,
+                ERnegHER2neg = ERHER2_counts["ERnegHER2neg"] >= n_ERnegHER2neg_threshold
             )
             samples_ERHER2 <- names(ERHER2_counts)[seq(3, 6)][erher2_idx]
 
@@ -546,7 +570,9 @@ get_methods <- function(pheno) {
                     samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
                         subtype <- stringr::str_replace_all(subtype, "pos", "+")
                         subtype <- stringr::str_replace_all(subtype, "neg", "-")
-                        rownames(pheno)[pheno$ER == subtype]
+                        ## which() drops samples with missing ER, which would
+                        ## otherwise contribute NA sample names
+                        rownames(pheno)[which(pheno$ER == subtype)]
                     }))
                 }
             }
@@ -561,7 +587,7 @@ get_methods <- function(pheno) {
                             stringr::str_replace_all("neg", "-")
                         ER_sts <- substr(subtype, 1, 3)
                         HER2_sts <- substr(subtype, 4, 8)
-                        rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
+                        rownames(pheno)[which(pheno$ER == ER_sts & pheno$HER2 == HER2_sts)]
                     }))
                 }
             }
@@ -570,7 +596,16 @@ get_methods <- function(pheno) {
 
     if (length(samples_ER.icd) == 0) samples_ER.icd <- NULL
     if (length(samples_ERHER2.icd) == 0) samples_ERHER2.icd <- NULL
-    if (is.null(methods)) methods <- c("AIMS", "sspbc") # safety net
+    if (is.null(methods)) {
+        ## safety net: reached by ER+-only or ER--only cohorts whose HER2
+        ## subgroups are all below their thresholds (for example when many
+        ## HER2 values are missing); say so instead of falling back silently
+        .msg(
+            "No cohort rule matched the ER/HER2 subgroup sizes; running the single-sample predictors AIMS and sspbc only.",
+            origin = "AUTO"
+        )
+        methods <- c("AIMS", "sspbc")
+    }
 
     list(
         samples_ER.icd = samples_ER.icd,
@@ -591,9 +626,23 @@ get_consensus_subtype <- function(patient_row) {
 }
 
 #' Function for entropy calculation
+#'
+#' Raw Shannon entropy in bits over the calls that are actually present in the
+#' row. `table()` drops missing values, so a row in which every executed method
+#' returned `NA` used to give `-sum(numeric(0))`, that is 0 - the same value a
+#' row gets when every method agrees. Such a row has no call distribution and
+#' therefore no entropy, and is reported as `NA` instead. Rows with at least
+#' one call keep exactly the value computed before.
+#'
+#' @param patient_row Character vector of per-method calls for one sample.
+#' @return Raw Shannon entropy in bits, or `NA_real_` when no call is present.
 #' @noRd
 get_entropy <- function(patient_row) {
-    freq <- table(patient_row)
+    calls <- patient_row[!is.na(patient_row)]
+    if (length(calls) == 0L) {
+        return(NA_real_)
+    }
+    freq <- table(calls)
     prob <- freq / sum(freq)
     entropy <- -sum(prob * log2(prob))
     return(entropy)

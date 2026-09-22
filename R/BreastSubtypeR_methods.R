@@ -115,12 +115,19 @@ NULL
 #'   - NC-based methods: log2-CPM (upper-quartile normalization).
 #'   - SSP-based methods: linear FPKM (not log-transformed).
 #'
-#' @param method Strategy for resolving duplicate probes/genes. Options:
-#'   - `"iqr"`: probe with highest interquartile range (short-oligo arrays, e.g., Affymetrix).
-#'   - `"mean"`: probe with highest mean expression (long-oligo arrays, e.g., Agilent/Illumina).
-#'   - `"max"`: probe with highest expression value (often used for RNA-seq).
-#'   - `"stdev"`: probe with highest standard deviation.
-#'   - `"median"`: probe with highest median expression.
+#' @param method Strategy for resolving duplicate probes/genes, i.e. several
+#'   rows mapping to the same Entrez ID. `"mean"`, `"median"`, `"iqr"` and
+#'   `"stdev"` follow `collapseIDs()` of the original PAM50 bioclassifier code
+#'   (Parker et al., 2009); `"max"` is an addition of this package. Options:
+#'   - `"mean"`: per-sample mean across the duplicate probes (collapses the
+#'     probes into one row; long-oligo arrays, e.g., Agilent/Illumina).
+#'   - `"median"`: per-sample median across the duplicate probes (collapses
+#'     the probes into one row).
+#'   - `"iqr"`: keeps the single probe with the highest interquartile range
+#'     (short-oligo arrays, e.g., Affymetrix).
+#'   - `"stdev"`: keeps the single probe with the highest standard deviation.
+#'   - `"max"`: keeps the single probe with the largest row sum across samples
+#'     (often used for RNA-seq).
 #'
 #' @param impute Logical. If `TRUE`, applies KNN-based imputation to missing values.
 #'
@@ -395,8 +402,17 @@ BS_parker <- function(se_obj,
 #'
 #' @param seed Integer. Random seed for reproducibility of ER-balancing.
 #'
-#' @return A `data.frame` containing intrinsic subtype assignments estimated
-#'   using the conventional IHC (cIHC) approach.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns`: `data.frame` of gene medians used for centering (reference
+#'     platform medians plus the ER-balanced cohort medians).
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Ciriello G, Gatza ML, Beck AH, Wilkerson MD, Rhie SK, Pastore A, et al.
@@ -479,9 +495,15 @@ BS_cIHC <- function(
 #' @param iteration Integer. Number of iterations for the ER-balancing procedure.
 #'   Default: 100.
 #'
-#' @param ratio Numeric. Target ER+/ER– ratio for balancing. Options:
+#' @param ratio Numeric. Target ratio for ER balancing. Options:
 #'   - `1:1`: Equal balancing.
-#'   - `54:64`: Default; reflects the ER+/ER– ratio in the UNC232 training cohort.
+#'   - `54:64`: Default; reflects the ER+/ER- ratio in the UNC232 training cohort.
+#'
+#'   The ratio is applied to the larger ER group relative to the smaller one:
+#'   in each iteration `ceiling(ratio * n_smaller)` samples are drawn from the
+#'   larger ER group and combined with all samples of the smaller group. This
+#'   equals the ER+/ER- ratio when ER+ is the larger group and its inverse when
+#'   ER- is the larger group. `ratio` must not exceed `n_larger / n_smaller`.
 #'
 #' @param Subtype Logical. If `TRUE`, returns only the four main subtypes
 #'   (Luminal A, Luminal B, HER2-enriched, Basal-like), excluding Normal-like.
@@ -493,10 +515,23 @@ BS_cIHC <- function(
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
-#' @return A list containing:
-#'   - `subtypes`: Intrinsic subtype predictions across iterations.
-#'   - `confidence`: Confidence estimates for each assigned subtype.
-#'   - `ER_balance`: Proportions of ER+ and ER– subsets observed across iterations.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class consensus call
+#'     across iterations) and, when `Subtype = TRUE`, `BS.Subtype` (four-class
+#'     consensus call). The consensus is the most frequent call over the
+#'     iterations; ties are resolved in favour of the alphabetically first
+#'     subtype (Basal, Her2, LumA, LumB, Normal).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations
+#'     (averaged over the iterations whose call equals the consensus call),
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups computed from these averages; with
+#'     `hasClinical = TRUE` also the ROR-C and ROR-PC scores and risk groups.
+#'   - `outList`: list with the consensus predictions, the averaged test data
+#'     and distances, and the centroids.
+#'   - `BS.itr.keep`: character matrix of the five-class calls per sample
+#'     (rows) and iteration (columns).
+#'   - `BS.itr.keep.Subtype`: the four-class analogue, present when
+#'     `Subtype = TRUE`.
 #'
 #' @references
 #' Curtis C, Shah SP, Chin SF, Turashvili G, Rueda OM, Dunning MJ, et al.
@@ -589,8 +624,32 @@ BS_cIHC.itr <- function(
 #'
 #' @param seed Integer. Random seed for reproducibility.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the PCA-PAM50 method.
+#' @details
+#' The PC1-guided step uses the IHC-defined ER status as the reference labels
+#' for the cutoff search and for building the ER-balanced gene-centering set.
+#' `BS_PCAPAM50()` derives those labels from the `ER` column, so a sample whose
+#' ER status is missing or not coded as `"ER+"`/`"ER-"` has no evaluable label.
+#' Such samples are excluded from the PC1 axis check, from the
+#' misclassification-minimizing cutoff search and from the ER-balanced median
+#' set, and a message reports how many were excluded; they are still classified
+#' and appear in the returned calls. Cohorts with a complete ER column are
+#' unaffected. The reference implementation (Raj-Kumar et al., CRAN package
+#' PCAPAM50) expects a complete, user-supplied IHC subtype column in which
+#' ER-positive subtypes start with "L" and all other labels are ER-negative;
+#' it does not define behaviour for missing labels.
+#'
+#'
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call).
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns.fl`: `data.frame` of gene medians used for centering (reference
+#'     platform medians plus the PCA-PAM50 refined cohort medians).
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Raj-Kumar PK, Liu J, Hooke JA, Kovatich AJ, Kvecher L, Shriver CD, et al.
@@ -736,8 +795,18 @@ BS_PCAPAM50 <- function(
 #' - "TSIZE": Tumor size (0 = \eqn{\le 2}{<= 2} cm; 1 = \eqn{> 2}{> 2} cm).
 #' - "NODE": Lymph node status (0 = negative; \eqn{\ge 1}{>= 1} = positive). Must be numeric.
 #'
-#' @return A character vector of intrinsic subtype predictions assigned to each
-#'   sample using the ssBC method.
+#' @return A list with the following elements:
+#'   - `BS.all`: `data.frame` with `PatientID`, `BS` (five-class call) and,
+#'     when `Subtype = TRUE`, `BS.Subtype` (four-class call). Samples whose
+#'     subgroup (`s`) status is missing receive `NA`.
+#'   - `score.ROR`: `data.frame` with the per-sample centroid correlations,
+#'     calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+#'     and risk groups; with `hasClinical = TRUE` also the ROR-C and ROR-PC
+#'     scores and risk groups.
+#'   - `mdns`: `data.frame` of the precomputed subgroup-specific quantiles used
+#'     for gene centering.
+#'   - `outList`: list with the internal nearest-centroid results
+#'     (`predictions`, `distances`, `centroids`, ...).
 #'
 #' @references
 #' Zhao X, Rodland EA, Tibshirani R, Plevritis S.
@@ -1028,6 +1097,13 @@ BS_sspbc <- function(se_obj, ssp.name = "ssp.pam50") {
 #' - "NODE": Lymph node status (0 = negative; \eqn{\ge 1}{>= 1} = positive).
 #'
 #' @return A list containing per-method subtype assignments for each sample.
+#'   `res_subtypes` holds one column per executed method plus an `entropy`
+#'   column: the raw Shannon entropy in bits of the calls that the executed
+#'   methods returned for that sample. It is 0 when every contributing method
+#'   agrees and `NA` when no method returned a call. The entropy is computed
+#'   over the contributing methods only, so a low value obtained from few
+#'   contributing methods reflects few available calls rather than strong
+#'   agreement; the per-method columns show which methods contributed.
 #'
 #' @references
 #' Yang Q, Hartman J, Sifakis EG.
@@ -1229,8 +1305,12 @@ BS_Multi <- function(data_input,
                     )
                 },
                 error = function(e) {
-                    # Error handling
-                    warning("PCAPAM50 failed in this iteration: ")
+                    # Error handling: keep the original error text
+                    warning(
+                        "PCAPAM50 failed in this iteration: ",
+                        conditionMessage(e),
+                        call. = FALSE
+                    )
                     return(NULL) # Return NULL or a dummy tibble with NAs
                 }
             )
