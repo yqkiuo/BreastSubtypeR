@@ -22,38 +22,12 @@ iBreastSubtypeR <- function(
         attach = c("shiny", "bslib"),
         attach_tidyverse = FALSE,
         max_upload_mb = 1000) {
-    # helper: check install + attach quietly
-    .attach_if <- function(pkgs) {
-        pkgs <- unique(pkgs)
-        if (!length(pkgs)) {
-            return(invisible(NULL))
-        }
-        installed <- rownames(utils::installed.packages())
-        missing <- setdiff(pkgs, installed)
-        if (length(missing)) {
-            stop(
-                sprintf(
-                    "Please install required package(s) before launching the app: %s",
-                    paste(missing, collapse = ", ")
-                ),
-                call. = FALSE
-            )
-        }
-        # Attach to search path so ui.R/server.R can use unqualified calls
-        for (p in pkgs) {
-            suppressPackageStartupMessages(
-                requireNamespace(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)
-            )
-        }
-        invisible(NULL)
-    }
-
-    # Attach Shiny/Bslib (and optionally tidyverse) for this R session
-    .attach_if(attach)
+    # Load Shiny/bslib (and optionally tidyverse) namespaces for this session.
+    # ui.R/server.R use qualified calls and shiny::runApp() attaches shiny
+    # itself, so loading the namespaces is sufficient.
+    .load_app_dependencies(attach)
     if (isTRUE(attach_tidyverse) && "tidyverse" %in% rownames(utils::installed.packages())) {
-        suppressPackageStartupMessages(
-            requireNamespace("tidyverse", quietly = TRUE, warn.conflicts = FALSE, character.only = TRUE)
-        )
+        .load_app_dependencies("tidyverse")
     }
 
     # App directory shipped inside the package
@@ -66,6 +40,43 @@ iBreastSubtypeR <- function(
     options(shiny.maxRequestSize = max_upload_mb * 1024^2)
 
     shiny::runApp(appDir, display.mode = "normal")
+}
+
+#' Check that app dependencies are installed and load their namespaces
+#'
+#' @param pkgs Character vector of package names.
+#' @return `invisible(NULL)`. Stops with the list of missing packages, or with
+#'   the name of a package that is installed but cannot be loaded.
+#' @keywords internal
+#' @noRd
+.load_app_dependencies <- function(pkgs) {
+    pkgs <- unique(pkgs)
+    if (!length(pkgs)) {
+        return(invisible(NULL))
+    }
+    installed <- rownames(utils::installed.packages())
+    missing <- setdiff(pkgs, installed)
+    if (length(missing)) {
+        stop(
+            sprintf(
+                "Please install required package(s) before launching the app: %s",
+                paste(missing, collapse = ", ")
+            ),
+            call. = FALSE
+        )
+    }
+    for (p in pkgs) {
+        loaded <- suppressPackageStartupMessages(
+            requireNamespace(p, quietly = TRUE)
+        )
+        if (!isTRUE(loaded)) {
+            stop(
+                sprintf("Package '%s' is installed but could not be loaded.", p),
+                call. = FALSE
+            )
+        }
+    }
+    invisible(NULL)
 }
 
 #' (Deprecated) Run iBreastSubtypeR

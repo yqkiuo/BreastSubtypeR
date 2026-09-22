@@ -62,7 +62,7 @@ duplicate_genes <- function(x, y, method) {
     entrezid <- entrezid[probeid]
     ## remove NA
     entrezid <- entrezid[!(is.na(entrezid))]
-    x <- x[names(entrezid), ]
+    x <- x[names(entrezid), , drop = FALSE]
     entrezid <- factor(entrezid, levels = unique(entrezid))
     ## names are unique probeid and content are redundant entrezid
 
@@ -94,17 +94,15 @@ duplicate_genes <- function(x, y, method) {
         )
     }
 
-    ## keep processed x
-    x <- mapply(
-        calculate_stat,
-        split_mat,
-        MoreArgs = list(method = method),
-        SIMPLIFY = TRUE,
-        USE.NAMES = TRUE
-    )
-    x <- apply(x, 1, unlist)
+    ## one row per Entrez ID, one column per sample; built explicitly so that
+    ## single-sample matrices keep their dimensions
+    collapsed <- lapply(split_mat, function(mat) {
+        as.numeric(unlist(calculate_stat(mat, method), use.names = FALSE))
+    })
+    out <- do.call(rbind, collapsed)
+    dimnames(out) <- list(names(split_mat), colnames(x))
 
-    return(x)
+    return(out)
 }
 
 
@@ -128,7 +126,7 @@ prepare_nc_matrix <- function(x, genes.sig50, samplenames, verbose) {
 
     ## get matrix for NC (symbol as rows, sample as col)
     genes_nc <- genes.sig50$EntrezGene.ID
-    x_NC <- x[na.omit(match(genes_nc, rownames(x))), ]
+    x_NC <- x[na.omit(match(genes_nc, rownames(x))), , drop = FALSE]
     rownames(x_NC) <- genes.sig50$Symbol[match(rownames(x_NC), genes_nc)]
     x_NC <- data.frame(x_NC)
     colnames(x_NC) <- samplenames
@@ -180,31 +178,33 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
              gsub("\\+","POSITIVE", pos_label), pos_label)
     neg <- c("NEGATIVE","NEG","0","FALSE","F","NO","N",
              gsub("-","NEGATIVE", neg_label), neg_label)
+    ## as.character(): with a factor column the ifelse() fallback would
+    ## otherwise return the integer codes of unmatched levels
     out <- ifelse(x0 %in% pos, pos_label,
-                  ifelse(x0 %in% neg, neg_label, x))
+                  ifelse(x0 %in% neg, neg_label, as.character(x)))
     out
   }
   
   if ("ER" %in% names(df)) {
-    old <- df$ER
-    df$ER <- map_bin(df$ER, "ER+", "ER-")
+    old <- as.character(df$ER)
+    df$ER <- map_bin(old, "ER+", "ER-")
     if (!identical(old, df$ER))
       warning("Phenodata: coerced ER values to {ER+, ER-}.", call. = FALSE)
   }
   if ("HER2" %in% names(df)) {
-    old <- df$HER2
+    old <- as.character(df$HER2)
     has2p <- grepl("\\b2\\+\\b", old, ignore.case = TRUE)
     df$HER2 <- ifelse(has2p, old, map_bin(old, "HER2+", "HER2-"))
     if (!identical(old, df$HER2))
       warning("Phenodata: coerced HER2 values to {HER2+, HER2-} (skipped '2+').", call. = FALSE)
   }
   if ("TN" %in% names(df)) {
-    old <- df$TN
-    x0  <- canon(df$TN)
+    old <- as.character(df$TN)
+    x0  <- canon(old)
     pos <- c("TRUE","T","YES","Y","1","TN","TNBC")
     neg <- c("FALSE","F","NO","N","0","NON-TN","NONTN","NON_TN")
     df$TN <- ifelse(x0 %in% pos, "TN",
-                    ifelse(x0 %in% neg, "nonTN", df$TN))
+                    ifelse(x0 %in% neg, "nonTN", old))
     if (!identical(old, df$TN))
       warning("Phenodata: coerced TN values to {TN, nonTN}.", call. = FALSE)
   }
@@ -212,19 +212,38 @@ prepare_ssp_matrix <- function(x, genes.s, RawCounts, samplenames, verbose) {
   df
 }
 
+#' Summarize TN annotations for cohort-level TN-only detection
+#'
+#' @keywords internal
+#' @noRd
+.tn_only_summary <- function(tn_flag) {
+    tn_chr <- toupper(trimws(as.character(tn_flag)))
+    tn_evaluable <- !is.na(tn_chr) & nzchar(tn_chr)
+    tn_truthy <- tn_chr %in% c("TN", "TRUE", "T", "YES", "Y", "1")
+
+    n_tn <- sum(tn_truthy & tn_evaluable)
+    n_evaluable_tn <- sum(tn_evaluable)
+
+    list(
+        n_tn = n_tn,
+        n_evaluable_tn = n_evaluable_tn,
+        is_tn_only = n_evaluable_tn > 0L && n_tn == n_evaluable_tn
+    )
+}
+
 
 #' Map Gene IDs and Handle missing data
 #'
 #' @param method A string specifying the method for resolving duplicate probes
-#' in microarray or RNA-seq data. Options include:
-#'   - `"iqr"`: Selects the probe with the highest interquartile range (IQR),
+#' in microarray or RNA-seq data (see `duplicate_genes()`; "mean", "median",
+#' "iqr" and "stdev" follow collapseIDs() of the original PAM50 code):
+#'   - `"mean"`: per-sample mean across the duplicate probes.
+#'   - `"median"`: per-sample median across the duplicate probes.
+#'   - `"iqr"`: keeps the probe with the highest interquartile range (IQR),
 #'   typically used for short-oligo arrays (e.g., Affymetrix).
-#'   - `"mean"`: Chooses the probe with the highest average expression,
-#'   commonly used for long-oligo arrays (e.g., Agilent, Illumina).
-#'   - `"max"`: Retains the probe with the highest expression value,
+#'   - `"stdev"`: keeps the probe with the highest standard deviation.
+#'   - `"max"`: keeps the probe with the largest row sum across samples,
 #'   often used for RNA-seq data.
-#'   - `"stdev"`: Selects the probe with the highest standard deviation.
-#'   - `"median"`: Chooses the probe with the highest median expression value.
 #' @noRd
 
 domapping <- function(
@@ -299,9 +318,9 @@ domapping <- function(
     # 5. Filter by signature genes and impute
     ## filter by ENTREZID
     y <- y[y$ENTREZID %in% genes.s$EntrezGene.ID, ]
-    x <- x[y$probe, ]
+    x <- x[y$probe, , drop = FALSE]
     if (impute && anyNA(x)) x <- impute_missing(x, verbose)
-    if (RawCounts && impute && anyNA(x)) {
+    if (RawCounts && impute && anyNA(counts.fpkm)) {
         counts.fpkm <- impute_missing(counts.fpkm, verbose)
     }
 
@@ -376,11 +395,11 @@ get_methods <- function(pheno) {
 
         ## ---- TNBC handling ------------------------------------------------
         if ("TN" %in% colnames(pheno)) {
-            # Accept common truthy markers in TN (case-insensitive)
-            tn_flag <- toupper(trimws(as.character(pheno$TN)))
-            n_TN <- sum(tn_flag %in% c("TN", "TRUE", "T", "YES", "Y", "1"), na.rm = TRUE)
+            # Use TNBC cohort handling only when all evaluable TN annotations are TN.
+            tn_summary <- .tn_only_summary(pheno$TN)
+            n_TN <- tn_summary$n_tn
 
-            if (n_TN > 0) {
+            if (tn_summary$is_tn_only) {
                 cohort.select <- "TNBC"
 
                 if (n_TN >= n_TN_threshold) {
@@ -392,8 +411,11 @@ get_methods <- function(pheno) {
                     .msg("Running methods: AIMS, sspbc", origin = "AUTO")
                     methods <- c("AIMS", "sspbc")
                 }
+            } else if (tn_summary$n_evaluable_tn > 0L) {
+                .msg("TN column detected but not all evaluable samples are TN;
+              proceeding with non-TNBC logic.", origin = "AUTO")
             } else {
-                .msg("TN column detected but no samples flagged as TN;
+                .msg("TN column detected but no evaluable samples flagged as TN;
               proceeding with non-TNBC logic.", origin = "AUTO")
             }
         }
@@ -524,7 +546,9 @@ get_methods <- function(pheno) {
                     samples_ER.icd <- unlist(lapply(samples_ER, function(subtype) {
                         subtype <- stringr::str_replace_all(subtype, "pos", "+")
                         subtype <- stringr::str_replace_all(subtype, "neg", "-")
-                        rownames(pheno)[pheno$ER == subtype]
+                        ## which() drops samples with missing ER, which would
+                        ## otherwise contribute NA sample names
+                        rownames(pheno)[which(pheno$ER == subtype)]
                     }))
                 }
             }
@@ -539,7 +563,7 @@ get_methods <- function(pheno) {
                             stringr::str_replace_all("neg", "-")
                         ER_sts <- substr(subtype, 1, 3)
                         HER2_sts <- substr(subtype, 4, 8)
-                        rownames(pheno)[pheno$ER == ER_sts & pheno$HER2 == HER2_sts]
+                        rownames(pheno)[which(pheno$ER == ER_sts & pheno$HER2 == HER2_sts)]
                     }))
                 }
             }

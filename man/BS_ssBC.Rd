@@ -40,8 +40,20 @@ variables from \code{colData(se_obj)}. Required columns:
 }}
 }
 \value{
-A character vector of intrinsic subtype predictions assigned to each
-sample using the ssBC method.
+A list with the following elements:
+\itemize{
+\item \code{BS.all}: \code{data.frame} with \code{PatientID}, \code{BS} (five-class call) and,
+when \code{Subtype = TRUE}, \code{BS.Subtype} (four-class call). Samples whose
+subgroup (\code{s}) status is missing receive \code{NA}.
+\item \code{score.ROR}: \code{data.frame} with the per-sample centroid correlations,
+calls, confidence, ESR1/ERBB2 expression and the ROR-S and ROR-P scores
+and risk groups; with \code{hasClinical = TRUE} also the ROR-C and ROR-PC
+scores and risk groups.
+\item \code{mdns}: \code{data.frame} of the precomputed subgroup-specific quantiles used
+for gene centering.
+\item \code{outList}: list with the internal nearest-centroid results
+(\code{predictions}, \code{distances}, \code{centroids}, ...).
+}
 }
 \description{
 Implements the \strong{subgroup-specific gene-centering (ssBC)} method for breast
