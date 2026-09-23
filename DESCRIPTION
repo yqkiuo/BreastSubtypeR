@@ -10,15 +10,15 @@ Description: BreastSubtypeR provides an assumption-aware, multi-method framework
     (iBreastSubtypeR) is included for interactive analyses and to support users
     without programming experience.
 Encoding: UTF-8
-Version: 1.5.2
+Version: 1.5.3
 biocViews: RNASeq, Software, GeneExpression, Classification, Preprocessing, Visualization
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
-	   role = c("aut", "cre"), 
+	   role = c("aut"), 
            email="yq.kiuo@gmail.com", 
            comment = c(ORCID = "0000-0002-4098-3246")),
     person(given = "Emmanouil G.", family = "Sifakis",
-           role = c("aut"),
+           role = c("aut", "cre"),
            email = "emmanouil.sifakis@ki.se",
            comment = c(ORCID = "0000-0001-9919-4471"))
  )
