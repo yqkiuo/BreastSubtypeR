@@ -10,7 +10,7 @@ Description: BreastSubtypeR provides an assumption-aware, multi-method framework
     (iBreastSubtypeR) is included for interactive analyses and to support users
     without programming experience.
 Encoding: UTF-8
-Version: 1.5.3
+Version: 1.5.4
 biocViews: RNASeq, Software, GeneExpression, Classification, Preprocessing, Visualization
 Authors@R: c(
     person(given = "Qiao", family = "Yang", 
@@ -53,8 +53,8 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.2.0)
-URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR,https://github.com/yqkiuo/BreastSubtypeR,https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR
-BugReports: https://github.com/yqkiuo/BreastSubtypeR/issues
+URL: https://doi.org/10.18129/B9.bioc.BreastSubtypeR,https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR
+BugReports: https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR/issues
 License: GPL-3
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE, roclets = c("rd", "namespace", "collate"))

@@ -1,4 +1,4 @@
-# BreastSubtypeR <a href='https://github.com/yqkiuo/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" alt="BreastSubtypeR logo" align="right" height="110"/></a>
+# BreastSubtypeR <a href='https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR'><img src="inst/ShinyBreastSubtypeR/logo.svg" alt="BreastSubtypeR logo" align="right" height="110"/></a>
 
 <!-- badges: start -->
 [![Bioconductor Release](https://bioconductor.org/shields/years-in-bioc/BreastSubtypeR.svg)](https://bioconductor.org/packages/BreastSubtypeR)
@@ -89,7 +89,7 @@ Or install from GitHub:
 
 ``` r
 if (!require("remotes", quietly = TRUE)) install.packages("remotes")
-remotes::install_github("yqkiuo/BreastSubtypeR")
+remotes::install_github("JohanHartmanGroupBioteam/BreastSubtypeR")
 ```
 
 ## Quick start
@@ -194,10 +194,10 @@ See function help pages for specifics (e.g., `?BS_Multi`, `?Mapping`, `?iBreastS
 **Canonical source**  
 Bioconductor package page: <https://bioconductor.org/packages/BreastSubtypeR>  
 Bioconductor DOI: <https://doi.org/10.18129/B9.bioc.BreastSubtypeR>  
-Mirrors: <https://github.com/yqkiuo/BreastSubtypeR> (personal), <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR> (org)
+Development repository: <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR>
 
 **Support & bugs**  
-Bugs/PRs: <https://github.com/yqkiuo/BreastSubtypeR/issues>
+Bugs/PRs: <https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR/issues>
 
 ## License
 

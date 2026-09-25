@@ -1,3 +1,14 @@
+# BreastSubtypeR 1.5.4
+
+## Documentation
+
+- The `URL` and `BugReports` fields in DESCRIPTION, the README and the
+  vignette now point to the development repository
+  https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR and its issue
+  tracker instead of the former personal repository, which redirects there.
+  The mirroring workflow `.github/workflows/sync-to-org.yml`, obsolete since
+  the repository moved to the organization, was removed. No code changes.
+
 # BreastSubtypeR 1.5.3
 
 ## Maintainer
