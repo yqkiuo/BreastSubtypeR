@@ -1,3 +1,12 @@
+# BreastSubtypeR 1.5.3
+
+## Maintainer
+
+- Emmanouil G. Sifakis (emmanouil.sifakis@ki.se) is the package maintainer
+  from this version on; Qiao Yang remains an author. The public repository
+  moved to https://github.com/JohanHartmanGroupBioteam/BreastSubtypeR (the
+  previous address redirects). No code changes.
+
 # BreastSubtypeR 1.5.2
 
 ## AUTO routing
